@@ -165,9 +165,8 @@ Renderer::~Renderer()
 {
 }
 
-void Renderer::Clear(const Vector4f& color)
+void Renderer::BeginFrame()
 {
-  // Clear Rendertarget
   myCommandAllocator_p->Reset();
   myCommandList4_p->Reset(myCommandAllocator_p, nullptr);
   uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
@@ -181,8 +180,20 @@ void Renderer::Clear(const Vector4f& color)
   cpuDescHndl.ptr += backBufferIdx * myRenderTargetDescriptorSize;
 
   myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, NULL);
-  myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
+}
 
+void Renderer::Clear(const Vector4f& color)
+{
+  uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl = myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHndl.ptr += backBufferIdx * myRenderTargetDescriptorSize;
+
+  myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
+}
+
+void Renderer::EndFrame()
+{
+  uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
   SetResourceTransitionBarrier(myCommandList4_p,
     myRenderTargets_pp[backBufferIdx],
     D3D12_RESOURCE_STATE_RENDER_TARGET,

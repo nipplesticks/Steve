@@ -12,8 +12,11 @@ class Renderer
 public:
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
+  void BeginFrame();
 
   void Clear(const Vector4f& color = Vector4f());
+
+  void EndFrame();
 
 private:
   void SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p,
