@@ -105,6 +105,11 @@ void Window::PollEvents()
   }
 }
 
+HWND Window::GetHwnd() const
+{
+  return myHwnd;
+}
+
 ////////////////////////////////////////////////////
 LRESULT CALLBACK procProxy(HWND aHandle, UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {

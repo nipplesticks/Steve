@@ -21,15 +21,27 @@
     <ClCompile Include="src\window\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utility\typedef.h">
+    <ClInclude Include="src\utility\Typedef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utility\vector2u.h">
+    <ClInclude Include="src\utility\Vector2u.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\Vector3f.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\Vector4f.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
 #include <Windows.h>
-#include "../utility/vector2u.h"
+#include "../utility/Vector2u.h"
 #include <string>
 
 class Window
@@ -13,7 +13,7 @@ public:
   bool IsOpen() const;
 
   void PollEvents();
-
+  HWND GetHwnd() const;
 
   void SetFullscreen(bool isFullscreen);
   Vector2u GetSize() const;
