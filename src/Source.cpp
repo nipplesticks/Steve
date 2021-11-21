@@ -12,7 +12,9 @@ int main()
 
     // Must be first
     ren.BeginFrame();
-    ren.Clear();
+
+    ren.Clear(Vector4f(1.0f, 0.0f, 0.0f, 1.0f));
+    ren.DrawTriangle();
 
     // Must be last
     ren.EndFrame();

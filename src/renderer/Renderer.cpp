@@ -2,6 +2,7 @@
 
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
 #include <d3dcompiler.h>
+#include "../utility/RenderUtility.h"
 
 #pragma comment (lib, "d3d12.lib")
 #pragma comment (lib, "DXGI.lib")
@@ -131,6 +132,17 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
 
     SafeRelease(&factory_p);
   }
+  // Setup Viewport
+  {
+    uint width = 0u;
+    uint height = 0u;
+    mySwapChain4_p->GetSourceSize(&width, &height);
+    myViewport.Width = (float)width;
+    myViewport.Height = (float)height;
+
+    myScissorRect.right = (long)INT_MAX;
+    myScissorRect.bottom = (long)INT_MAX;
+  }
   // Create Fence And Event Handle
   {
     myDevice5_p->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence_p));
@@ -159,6 +171,9 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
       cdh.ptr += myRenderTargetDescriptorSize;
     }
   }
+
+  //Setup Vertex Buffer
+  _SetupVertexBuffer();
 }
 
 Renderer::~Renderer()
@@ -169,9 +184,10 @@ void Renderer::BeginFrame()
 {
   myCommandAllocator_p->Reset();
   myCommandList4_p->Reset(myCommandAllocator_p, nullptr);
+
   uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
 
-  SetResourceTransitionBarrier(myCommandList4_p,
+  _SetResourceTransitionBarrier(myCommandList4_p,
     myRenderTargets_pp[backBufferIdx],
     D3D12_RESOURCE_STATE_PRESENT,
     D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -180,6 +196,18 @@ void Renderer::BeginFrame()
   cpuDescHndl.ptr += backBufferIdx * myRenderTargetDescriptorSize;
 
   myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, NULL);
+}
+
+void Renderer::DrawTriangle()
+{
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &myVertexBufferView);
+  myCommandList4_p->DrawInstanced(3, 1, 0, 0);
 }
 
 void Renderer::Clear(const Vector4f& color)
@@ -194,12 +222,12 @@ void Renderer::Clear(const Vector4f& color)
 void Renderer::EndFrame()
 {
   uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
-  SetResourceTransitionBarrier(myCommandList4_p,
+  _SetResourceTransitionBarrier(myCommandList4_p,
     myRenderTargets_pp[backBufferIdx],
     D3D12_RESOURCE_STATE_RENDER_TARGET,
     D3D12_RESOURCE_STATE_PRESENT);
 
-  myCommandList4_p->Close();
+  HR_ASSERT(myCommandList4_p->Close());
 
   // Send to queue
   myCommandQueue_p->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&myCommandList4_p));
@@ -216,10 +244,10 @@ void Renderer::EndFrame()
   myFenceValue++;
 
   // Present
-  mySwapChain4_p->Present(0, 0);
+  HR_ASSERT(mySwapChain4_p->Present(0, 0));
 }
 
-void Renderer::SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
+void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
 {
   D3D12_RESOURCE_BARRIER barrierDesc = {};
 
@@ -230,4 +258,204 @@ void Renderer::SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandLi
   barrierDesc.Transition.StateAfter = StateAfter;
 
   commandList_p->ResourceBarrier(1, &barrierDesc);
+}
+
+void Renderer::_SetupVertexBuffer()
+{
+  // Init vertex buffer
+  {
+    D3D12_HEAP_PROPERTIES heapProp = {};
+    heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+    D3D12_RESOURCE_DESC desc = {};
+    desc.DepthOrArraySize = 1;
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    desc.Format = DXGI_FORMAT_UNKNOWN;
+    desc.Height = 1;
+    desc.Width = sizeof(gTriangle);
+    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc.MipLevels = 1;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+  
+    HR_ASSERT(myDevice5_p->CreateCommittedResource(&heapProp,
+      D3D12_HEAP_FLAG_NONE,
+      &desc,
+      D3D12_RESOURCE_STATE_GENERIC_READ,
+      nullptr,
+      IID_PPV_ARGS(&myVertexBuffer_p)));
+
+    void* adress_p = nullptr;
+    HR_ASSERT(myVertexBuffer_p->Map(0, nullptr, &adress_p));
+    memcpy(adress_p, &gTriangle[0], sizeof(gTriangle));
+    myVertexBuffer_p->Unmap(0, nullptr);
+
+    myVertexBufferView.BufferLocation =
+      myVertexBuffer_p->GetGPUVirtualAddress();
+    myVertexBufferView.SizeInBytes = sizeof(gTriangle);
+    myVertexBufferView.StrideInBytes = sizeof(DirectX::XMFLOAT4A);
+  }
+
+  // Create root signature
+  {
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
+    rootSigDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_0;
+    rootSigDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.MaxAnisotropy = 16;
+    samplerDesc.RegisterSpace = 0;
+    samplerDesc.MinLOD = -D3D12_FLOAT32_MAX;
+    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+    samplerDesc.MipLODBias = 0;
+    samplerDesc.ShaderRegister = 0;
+    samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    rootSigDesc.Desc_1_0.pStaticSamplers = &samplerDesc;
+    rootSigDesc.Desc_1_0.NumStaticSamplers = 1;
+
+    ID3DBlob* errorBlob_p = nullptr;
+    ID3DBlob* signatureBlob_p = nullptr;
+
+    HR_ASSERT(D3D12SerializeRootSignature(&rootSigDesc.Desc_1_0,
+      rootSigDesc.Version,
+      &signatureBlob_p,
+      &errorBlob_p));
+
+    if (errorBlob_p != nullptr)
+      printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+
+    HR_ASSERT(myDevice5_p->CreateRootSignature(0,
+      signatureBlob_p->GetBufferPointer(),
+      signatureBlob_p->GetBufferSize(),
+      IID_PPV_ARGS(&myRootSignature_p)));
+  }
+
+  // Setup Shaders
+  {
+    // Compile shaders
+    {
+      ID3DBlob* errorBlob_p = nullptr;
+      UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    
+      HR_ASSERT(D3DCompileFromFile(L"assets/shaders/VertexHelloTriangle.hlsl",
+        nullptr,
+        nullptr,
+        "main",
+        "vs_5_0",
+        compileFlags,
+        0,
+        &myVertexShader_p,
+        &errorBlob_p));
+
+      if (errorBlob_p != nullptr)
+        printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+    }
+    {
+      ID3DBlob* errorBlob_p = nullptr;
+      UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+
+      HR_ASSERT(D3DCompileFromFile(L"assets/shaders/PixelHelloTriangle.hlsl",
+        nullptr,
+        nullptr,
+        "main",
+        "ps_5_0",
+        compileFlags,
+        0,
+        &myPixelShader_p,
+        &errorBlob_p));
+
+      if (errorBlob_p != nullptr)
+        printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+    }
+
+    // Setup pipeline state
+    {
+      D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeDesc = {};
+      memset(&pipeDesc, 0, sizeof(pipeDesc));
+      pipeDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+      pipeDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+      pipeDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+      pipeDesc.NumRenderTargets = 1;
+      pipeDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+      pipeDesc.SampleDesc.Count = 1;
+      pipeDesc.SampleMask = UINT_MAX;
+      pipeDesc.VS.pShaderBytecode = myVertexShader_p->GetBufferPointer();
+      pipeDesc.VS.BytecodeLength = myVertexShader_p->GetBufferSize();
+      pipeDesc.PS.pShaderBytecode = myPixelShader_p->GetBufferPointer();
+      pipeDesc.PS.BytecodeLength = myPixelShader_p->GetBufferSize();
+
+      ID3D12ShaderReflection* shaderReflection_p = nullptr;
+      HR_ASSERT(D3DReflect(myVertexShader_p->GetBufferPointer(),
+        myVertexShader_p->GetBufferSize(),
+        IID_PPV_ARGS(&shaderReflection_p)));
+
+      D3D12_SHADER_DESC shaderDesc = {};
+      shaderReflection_p->GetDesc(&shaderDesc);
+
+      D3D12_INPUT_ELEMENT_DESC inputDesc[1] = {};
+
+      for (uint i = 0; i < shaderDesc.InputParameters; i++)
+      {
+        D3D12_SIGNATURE_PARAMETER_DESC paramDesc = {};
+        shaderReflection_p->GetInputParameterDesc(i, &paramDesc);
+        inputDesc[i].SemanticName = paramDesc.SemanticName;
+        inputDesc[i].SemanticIndex = paramDesc.SemanticIndex;
+        inputDesc[i].InputSlot = 0;
+        inputDesc[i].AlignedByteOffset = 0;
+        inputDesc[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+
+        // determine DXGI format
+        if (paramDesc.Mask == 1)
+        {
+          if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32_UINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32_SINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32_FLOAT;
+        }
+        else if (paramDesc.Mask <= 3)
+        {
+          if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32_UINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32_SINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32_FLOAT;
+        }
+        else if (paramDesc.Mask <= 7)
+        {
+          if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32_UINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32_SINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+        }
+        else if (paramDesc.Mask <= 15)
+        {
+          if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_UINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_SINT;
+          else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+            inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        }
+      }
+
+      pipeDesc.InputLayout.pInputElementDescs = &inputDesc[0];
+      pipeDesc.InputLayout.NumElements = shaderDesc.InputParameters;
+      pipeDesc.pRootSignature = myRootSignature_p;
+
+      HR_ASSERT(myDevice5_p->CreateGraphicsPipelineState(&pipeDesc, IID_PPV_ARGS(&myPipelineState_p)));
+    }
+  }
 }
