@@ -15,12 +15,7 @@ struct Vertex
   DirectX::XMFLOAT2A uv;
 };
 
-static DirectX::XMFLOAT4A gTriangle[]
-{
-  {-0.5f, -0.5f, 0.0f, 1.0f},
-  {0.5f, 0.5f, 0.0f, 1.0f},
-  {-0.5f, 0.5f, 0.0f, 1.0f}
-};
+static Vertex gTriangle[3];
 
 class Renderer
 {

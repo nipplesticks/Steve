@@ -22,6 +22,25 @@ inline void SafeRelease(
 
 Renderer::Renderer(uint x, uint y, HWND aHwnd)
 {
+  DirectX::XMFLOAT4A triPos[] =
+  {
+    {0.0f, 0.8f, 0.0f, 1.0f},
+    {0.8f, -0.8f, 0.0f, 1.0f},
+    {-0.8f, -0.8f, 0.0f, 1.0f}
+  };
+  
+  gTriangle[0].position = triPos[0];
+  gTriangle[0].color = DirectX::XMFLOAT4A(1.0f, 0.0f, 0.0f, 1.0f);
+  gTriangle[0].uv = DirectX::XMFLOAT2A(0.0f, 0.0f);
+
+  gTriangle[1].position = triPos[1];
+  gTriangle[1].color = DirectX::XMFLOAT4A(0.0f, 1.0f, 0.0f, 1.0f);
+  gTriangle[1].uv = DirectX::XMFLOAT2A(0.0f, 0.0f);
+
+  gTriangle[2].position = triPos[2];
+  gTriangle[2].color = DirectX::XMFLOAT4A(0.0f, 0.0f, 1.0f, 1.0f);
+  gTriangle[2].uv = DirectX::XMFLOAT2A(0.0f, 0.0f);
+
   // Init device
   {
     ID3D12Debug* debugController_p = nullptr;
@@ -294,8 +313,8 @@ void Renderer::_SetupVertexBuffer()
 
     myVertexBufferView.BufferLocation =
       myVertexBuffer_p->GetGPUVirtualAddress();
-    myVertexBufferView.SizeInBytes = sizeof(gTriangle);
-    myVertexBufferView.StrideInBytes = sizeof(DirectX::XMFLOAT4A);
+    myVertexBufferView.SizeInBytes = sizeof(Vertex) * 3;
+    myVertexBufferView.StrideInBytes = sizeof(Vertex);
   }
 
   // Create root signature
@@ -420,7 +439,7 @@ void Renderer::_SetupVertexBuffer()
         inputDesc[i].SemanticName = paramDesc.SemanticName;
         inputDesc[i].SemanticIndex = paramDesc.SemanticIndex;
         inputDesc[i].InputSlot = 0;
-        inputDesc[i].AlignedByteOffset = 0;
+        inputDesc[i].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
         inputDesc[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 
         // determine DXGI format

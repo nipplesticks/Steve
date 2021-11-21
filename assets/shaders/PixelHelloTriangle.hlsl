@@ -1,4 +1,11 @@
-float4 main( float4 pos : SV_POSITION ) : SV_TARGET
+struct Vertex
 {
-  return float4(1.0f, 1.0f, 1.0f, 1.0f);
+  float4 pos : SV_POSITION;
+  float4 col : COLOR;
+  float4 uv : TEXCOORD;
+};
+
+float4 main(Vertex vertex) : SV_TARGET
+{
+  return vertex.col;
 }

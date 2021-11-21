@@ -45,7 +45,7 @@ Window::Window(uint x, uint y, const std::string& title) :
     windowClass.hInstance,
     this);
 
-  POINT position = { 0 };
+  POINT position = { 80, 80 };
 
   AdjustWindowRectEx(&rc, style, FALSE, exStyle);
 
