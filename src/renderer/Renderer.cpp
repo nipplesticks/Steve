@@ -128,6 +128,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
       {
         swapChain1_p->Release();
       }
+      myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
     }
 
     SafeRelease(&factory_p);
@@ -185,15 +186,13 @@ void Renderer::BeginFrame()
   myCommandAllocator_p->Reset();
   myCommandList4_p->Reset(myCommandAllocator_p, nullptr);
 
-  uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
-
   _SetResourceTransitionBarrier(myCommandList4_p,
-    myRenderTargets_pp[backBufferIdx],
+    myRenderTargets_pp[myCurrentBackbufferIndex],
     D3D12_RESOURCE_STATE_PRESENT,
     D3D12_RESOURCE_STATE_RENDER_TARGET);
 
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl = myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
-  cpuDescHndl.ptr += backBufferIdx * myRenderTargetDescriptorSize;
+  cpuDescHndl.ptr += myCurrentBackbufferIndex * myRenderTargetDescriptorSize;
 
   myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, NULL);
 }
@@ -212,18 +211,16 @@ void Renderer::DrawTriangle()
 
 void Renderer::Clear(const Vector4f& color)
 {
-  uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl = myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
-  cpuDescHndl.ptr += backBufferIdx * myRenderTargetDescriptorSize;
+  cpuDescHndl.ptr += myCurrentBackbufferIndex * myRenderTargetDescriptorSize;
 
   myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
 }
 
 void Renderer::EndFrame()
 {
-  uint backBufferIdx = mySwapChain4_p->GetCurrentBackBufferIndex();
   _SetResourceTransitionBarrier(myCommandList4_p,
-    myRenderTargets_pp[backBufferIdx],
+    myRenderTargets_pp[myCurrentBackbufferIndex],
     D3D12_RESOURCE_STATE_RENDER_TARGET,
     D3D12_RESOURCE_STATE_PRESENT);
 
@@ -231,6 +228,9 @@ void Renderer::EndFrame()
 
   // Send to queue
   myCommandQueue_p->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&myCommandList4_p));
+
+  // Present
+  HR_ASSERT(mySwapChain4_p->Present(0, 0));
 
   // Hard wait
   myCommandQueue_p->Signal(myFence_p, myFenceValue);
@@ -243,8 +243,7 @@ void Renderer::EndFrame()
 
   myFenceValue++;
 
-  // Present
-  HR_ASSERT(mySwapChain4_p->Present(0, 0));
+  myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
 }
 
 void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
@@ -391,6 +390,18 @@ void Renderer::_SetupVertexBuffer()
       pipeDesc.VS.BytecodeLength = myVertexShader_p->GetBufferSize();
       pipeDesc.PS.pShaderBytecode = myPixelShader_p->GetBufferPointer();
       pipeDesc.PS.BytecodeLength = myPixelShader_p->GetBufferSize();
+      pipeDesc.BlendState.AlphaToCoverageEnable = FALSE;
+      pipeDesc.BlendState.IndependentBlendEnable = FALSE;
+      pipeDesc.BlendState.RenderTarget[0].BlendEnable = FALSE;
+      pipeDesc.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+      pipeDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+      pipeDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
+      pipeDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+      pipeDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+      pipeDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+      pipeDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+      pipeDesc.BlendState.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+      pipeDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
       ID3D12ShaderReflection* shaderReflection_p = nullptr;
       HR_ASSERT(D3DReflect(myVertexShader_p->GetBufferPointer(),
@@ -400,7 +411,7 @@ void Renderer::_SetupVertexBuffer()
       D3D12_SHADER_DESC shaderDesc = {};
       shaderReflection_p->GetDesc(&shaderDesc);
 
-      D3D12_INPUT_ELEMENT_DESC inputDesc[1] = {};
+      D3D12_INPUT_ELEMENT_DESC inputDesc[8] = {};
 
       for (uint i = 0; i < shaderDesc.InputParameters; i++)
       {

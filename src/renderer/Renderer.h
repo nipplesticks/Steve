@@ -48,6 +48,7 @@ private:
   ID3D12CommandQueue* myCommandQueue_p = nullptr;
 
   IDXGISwapChain4* mySwapChain4_p = nullptr;
+  uint myCurrentBackbufferIndex = 0u;
   D3D12_VIEWPORT myViewport = {};
   D3D12_RECT myScissorRect = {};
 
