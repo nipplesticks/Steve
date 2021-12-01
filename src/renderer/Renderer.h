@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "../utility/Typedef.h"
 #include "../utility/Vector4f.h"
+#include "../utility/DMath.h"
 
 struct IDXGISwapChain4;
 
@@ -23,6 +24,8 @@ public:
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
 
+  void SetViewProjection(const DM::Mat4x4& viewProj);
+
   void BeginFrame();
 
   void DrawTriangle();
@@ -34,7 +37,7 @@ public:
 private:
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p,
     D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
-  void _SetupVertexBuffer();
+  void _SetupShaderState();
 
 
 private:
@@ -65,4 +68,6 @@ private:
   ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS] = {};
   uint myRenderTargetDescriptorSize = 0;
   uint64 myFenceValue = 0u;
+
+  ID3D12Resource* myViewProjBuffer_p = nullptr;
 };

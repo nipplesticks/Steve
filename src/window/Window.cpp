@@ -1,70 +1,57 @@
 #include "Window.h"
 #include <assert.h>
 
-Window::Window(uint x, uint y, const std::string& title) :
-  myTitle(title)
+Window::Window(uint x, uint y, const std::string& title)
+    : myTitle(title)
 {
-  const WCHAR* CLASS_NAME = L"aWndClass";
-  WNDCLASSW windowClass = {};
-  windowClass.style = 0;
-  windowClass.lpfnWndProc = &Window::PreWndProc;
-  windowClass.cbClsExtra = 0;
-  windowClass.cbWndExtra = 0;
-  windowClass.hInstance = GetModuleHandleW(NULL);
-  windowClass.hIcon = NULL;
-  windowClass.hCursor = 0;
+  const WCHAR* CLASS_NAME   = L"aWndClass";
+  WNDCLASSW    windowClass  = {};
+  windowClass.style         = 0;
+  windowClass.lpfnWndProc   = &Window::PreWndProc;
+  windowClass.cbClsExtra    = 0;
+  windowClass.cbWndExtra    = 0;
+  windowClass.hInstance     = GetModuleHandleW(NULL);
+  windowClass.hIcon         = NULL;
+  windowClass.hCursor       = 0;
   windowClass.hbrBackground = 0;
-  windowClass.lpszMenuName = NULL;
+  windowClass.lpszMenuName  = NULL;
   windowClass.lpszClassName = CLASS_NAME;
 
   auto val = RegisterClassW(&windowClass);
   assert(val);
 
-  DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+  DWORD style   = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
   DWORD exStyle = WS_EX_OVERLAPPEDWINDOW;
 
-  RECT rc = { 0, 0, x, y };
-  AdjustWindowRectEx(&rc,
-    style,
-    FALSE,
-    exStyle);
+  RECT rc = {0, 0, x, y};
+  AdjustWindowRectEx(&rc, style, FALSE, exStyle);
 
   std::wstring wndTitle(myTitle.begin(), myTitle.end());
 
-  myHwnd = CreateWindowEx(
-    exStyle,
-    CLASS_NAME,
-    wndTitle.data(),
-    style,
-    CW_USEDEFAULT,
-    CW_USEDEFAULT,
-    rc.right - rc.left,
-    rc.bottom - rc.top,
-    nullptr,
-    nullptr,
-    windowClass.hInstance,
-    this);
+  myHwnd = CreateWindowEx(exStyle,
+                          CLASS_NAME,
+                          wndTitle.data(),
+                          style,
+                          CW_USEDEFAULT,
+                          CW_USEDEFAULT,
+                          rc.right - rc.left,
+                          rc.bottom - rc.top,
+                          nullptr,
+                          nullptr,
+                          windowClass.hInstance,
+                          this);
 
-  POINT position = { 80, 80 };
+  POINT position = {80, 80};
 
   AdjustWindowRectEx(&rc, style, FALSE, exStyle);
 
-  MoveWindow(
-    myHwnd,
-    position.x, position.y,
-    rc.right - rc.left,
-    rc.bottom - rc.top,
-    true
-  );
+  MoveWindow(myHwnd, position.x, position.y, rc.right - rc.left, rc.bottom - rc.top, true);
 
   GetClientRect(myHwnd, &rc);
   myIsOpen = true;
 }
 
-Window::~Window()
-{
-
-}
+Window::~Window() { }
 
 bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {
@@ -84,10 +71,7 @@ bool Window::IsOpen() const
   return myIsOpen;
 }
 
-void Window::SetFullscreen(bool isFullscreen)
-{
-
-}
+void Window::SetFullscreen(bool isFullscreen) { }
 
 Vector2u Window::GetSize() const
 {
@@ -97,7 +81,7 @@ Vector2u Window::GetSize() const
 
 void Window::PollEvents()
 {
-  MSG message = { 0 };
+  MSG message = {0};
   while (PeekMessageW(&message, NULL, 0, 0, PM_REMOVE))
   {
     TranslateMessage(&message);

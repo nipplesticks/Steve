@@ -5,7 +5,8 @@ struct Vertex
   float4 uv : TEXCOORD;
 };
 
-float4 main(Vertex vertex) : SV_TARGET
+float4 main(Vertex vertex)
+    : SV_TARGET
 {
   return vertex.col;
 }

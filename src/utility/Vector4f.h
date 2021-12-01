@@ -8,7 +8,6 @@ struct Vector4f
     y = _y;
     z = _z;
     w = _w;
-
   }
   float x, y, z, w;
 };

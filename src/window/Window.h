@@ -1,12 +1,12 @@
 #pragma once
-#include <Windows.h>
 #include "../utility/Vector2u.h"
+#include <Windows.h>
 #include <string>
 
 class Window
 {
 public:
-  Window(uint x, uint y, const std::string & title = "");
+  Window(uint x, uint y, const std::string& title = "");
   ~Window();
 
   bool ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam);
@@ -15,7 +15,7 @@ public:
   void PollEvents();
   HWND GetHwnd() const;
 
-  void SetFullscreen(bool isFullscreen);
+  void     SetFullscreen(bool isFullscreen);
   Vector2u GetSize() const;
 
 public:
@@ -23,9 +23,6 @@ public:
 
 private:
   std::string myTitle;
-  bool myIsOpen;
-  HWND myHwnd;
-
-
-
+  bool        myIsOpen;
+  HWND        myHwnd;
 };
