@@ -1,5 +1,6 @@
 #pragma once
 #include "../utility/Vector2u.h"
+#define NOMINMAX
 #include <Windows.h>
 #include <string>
 
