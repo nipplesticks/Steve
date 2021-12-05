@@ -3,6 +3,7 @@
 #include "window/Window.h"
 #include <iostream>
 #include "renderer/Mesh.h"
+#include "renderer/VertexBuffer.h"
 
 int main()
 {
@@ -23,7 +24,9 @@ int main()
   }
 
   Mesh m;
-  m.LoadMesh("asdick.png");
+  m.LoadMesh("assets/models/Cube.fbx");
+  VertexBuffer vb;
+  vb.Init(m.GetByteSize(), sizeof(Vertex));
 
   std::cout << cam.GetViewProjection().ToString() << std::endl;
 
@@ -44,8 +47,9 @@ int main()
     // Must be first
     ren.BeginFrame();
     ren.Clear(Vector4f(0.0f, 0.0f, 0.0f, 1.0f));
-    ren.SetViewProjection(cam.GetViewProjection());
-    ren.DrawTriangle();
+    vb.Update(m.GetRawVertices(), m.GetByteSize());
+    ren.UpdateViewProjection(cam.GetViewProjection());
+    ren.DrawVertexBuffer(vb);
 
     // Must be last
     ren.EndFrame();

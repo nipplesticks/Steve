@@ -2,21 +2,16 @@
 #define NOMINMAX
 #include <windows.h>
 #include <d3d12.h>
-#include <DirectXMath.h>
+#include "Vertex.h"
 #include "../utility/Typedef.h"
 #include "../utility/Vector4f.h"
 #include "../utility/DMath.h"
 
 struct IDXGISwapChain4;
 
-struct Vertex
-{
-  DirectX::XMFLOAT4A position;
-  DirectX::XMFLOAT4A color;
-  DirectX::XMFLOAT2A uv;
-};
-
 static Vertex gTriangle[3];
+class VertexBuffer;
+
 
 class Renderer
 {
@@ -24,9 +19,11 @@ public:
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
 
-  void SetViewProjection(const DM::Mat4x4& viewProj);
+  void UpdateViewProjection(const DM::Mat4x4& viewProj);
 
   void BeginFrame();
+
+  void DrawVertexBuffer(const VertexBuffer& vertexBuffer);
 
   void DrawTriangle();
 
@@ -34,15 +31,16 @@ public:
 
   void EndFrame();
 
+  static ID3D12Device5* GetDevice();
+
 private:
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p, ID3D12Resource* resource_p,
     D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
   void _SetupShaderState();
 
-
 private:
   static const uint NUM_SWAP_BUFFERS = 2u;
-  ID3D12Device5* myDevice5_p = nullptr;
+  static ID3D12Device5* gDevice5_p;
   ID3D12CommandQueue* myCommandQueue_p = nullptr;
 
   IDXGISwapChain4* mySwapChain4_p = nullptr;

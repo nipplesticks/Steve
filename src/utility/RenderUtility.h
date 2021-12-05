@@ -19,3 +19,8 @@
       throw std::runtime_error(s_str);                                                             \
     }                                                                                              \
   } while (0)
+
+#define AlignAs256(n)                                                                              \
+  {                                                                                                \
+    n + 255 & ~255                                                                                 \
+  }

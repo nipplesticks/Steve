@@ -1,12 +1,16 @@
 #include "Renderer.h"
 
 #include "../utility/RenderUtility.h"
+#include "VertexBuffer.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "DXGI.lib")
 #pragma comment(lib, "d3dcompiler.lib")
+
+ID3D12Device5* Renderer::gDevice5_p = nullptr;
+
 
 template <class Interface>
 inline void SafeRelease(Interface** ppInterfaceToRelease)
@@ -21,21 +25,6 @@ inline void SafeRelease(Interface** ppInterfaceToRelease)
 
 Renderer::Renderer(uint x, uint y, HWND aHwnd)
 {
-  DirectX::XMFLOAT4A triPos[] = {
-      {0.0f, 1.0f, 0.0f, 1.0f}, {1.0f, -1.0f, 0.0f, 1.0f}, {-1.0f, -1.0f, 0.0f, 1.0f}};
-
-  gTriangle[0].position = triPos[0];
-  gTriangle[0].color    = DirectX::XMFLOAT4A(1.0f, 0.0f, 0.0f, 1.0f);
-  gTriangle[0].uv       = DirectX::XMFLOAT2A(0.0f, 0.0f);
-
-  gTriangle[1].position = triPos[1];
-  gTriangle[1].color    = DirectX::XMFLOAT4A(0.0f, 1.0f, 0.0f, 1.0f);
-  gTriangle[1].uv       = DirectX::XMFLOAT2A(0.0f, 0.0f);
-
-  gTriangle[2].position = triPos[2];
-  gTriangle[2].color    = DirectX::XMFLOAT4A(0.0f, 0.0f, 1.0f, 1.0f);
-  gTriangle[2].uv       = DirectX::XMFLOAT2A(0.0f, 0.0f);
-
   // Init device
   {
     ID3D12Debug* debugController_p = nullptr;
@@ -74,7 +63,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
       HRESULT hr = S_OK;
       //Create the actual device.
       if (SUCCEEDED(hr = D3D12CreateDevice(
-                        adapter_p, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&myDevice5_p))))
+                        adapter_p, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&gDevice5_p))))
       {
         int lol = 123;
       }
@@ -85,7 +74,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     {
       //Create warp device if no adapter was found.
       factory_p->EnumWarpAdapter(IID_PPV_ARGS(&adapter_p));
-      D3D12CreateDevice(adapter_p, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&myDevice5_p));
+      D3D12CreateDevice(adapter_p, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&gDevice5_p));
     }
 
     SafeRelease(&factory_p);
@@ -95,15 +84,15 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
   {
     //Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC cqd = {};
-    HRESULT hr = myDevice5_p->CreateCommandQueue(&cqd, IID_PPV_ARGS(&myCommandQueue_p));
+    HRESULT hr = gDevice5_p->CreateCommandQueue(&cqd, IID_PPV_ARGS(&myCommandQueue_p));
 
     //Create command allocator. The command allocator object corresponds
     //to the underlying allocations in which GPU commands are stored.
-    hr = myDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+    hr = gDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                              IID_PPV_ARGS(&myCommandAllocator_p));
 
     //Create command list.
-    hr = myDevice5_p->CreateCommandList(0,
+    hr = gDevice5_p->CreateCommandList(0,
                                         D3D12_COMMAND_LIST_TYPE_DIRECT,
                                         myCommandAllocator_p,
                                         nullptr,
@@ -157,7 +146,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
   }
   // Create Fence And Event Handle
   {
-    myDevice5_p->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence_p));
+    gDevice5_p->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence_p));
     myFenceValue = 1;
     //Create an event handle to use for GPU synchronization.
     myEventHandle = CreateEvent(0, false, false, 0);
@@ -169,18 +158,18 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     dhd.NumDescriptors             = NUM_SWAP_BUFFERS;
     dhd.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
-    HRESULT hr = myDevice5_p->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&myRenderTargetsHeap_p));
+    HRESULT hr = gDevice5_p->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&myRenderTargetsHeap_p));
 
     //Create resources for the render targets.
     myRenderTargetDescriptorSize =
-        myDevice5_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        gDevice5_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     D3D12_CPU_DESCRIPTOR_HANDLE cdh = myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
 
     //One RTV for each frame.
     for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
     {
       hr = mySwapChain4_p->GetBuffer(n, IID_PPV_ARGS(&myRenderTargets_pp[n]));
-      myDevice5_p->CreateRenderTargetView(myRenderTargets_pp[n], nullptr, cdh);
+      gDevice5_p->CreateRenderTargetView(myRenderTargets_pp[n], nullptr, cdh);
       cdh.ptr += myRenderTargetDescriptorSize;
     }
   }
@@ -191,7 +180,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
 
 Renderer::~Renderer() { }
 
-void Renderer::SetViewProjection(const DM::Mat4x4& viewProj)
+void Renderer::UpdateViewProjection(const DM::Mat4x4& viewProj)
 {
   void* adress_p = nullptr;
   HR_ASSERT(myViewProjBuffer_p->Map(0, nullptr, &adress_p));
@@ -214,6 +203,24 @@ void Renderer::BeginFrame()
   cpuDescHndl.ptr += myCurrentBackbufferIndex * myRenderTargetDescriptorSize;
 
   myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, NULL);
+}
+
+void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
+{
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
+
+  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
+                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
+
+  static uint counter = 1;
+  myCommandList4_p->DrawInstanced(vertexBuffer.GetVertexCount(), 1, 0, 0);
 }
 
 void Renderer::DrawTriangle()
@@ -273,6 +280,11 @@ void Renderer::EndFrame()
   myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
 }
 
+ID3D12Device5* Renderer::GetDevice()
+{
+  return gDevice5_p;
+}
+
 void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
                                              ID3D12Resource*            resource_p,
                                              D3D12_RESOURCE_STATES      StateBefore,
@@ -310,7 +322,7 @@ void Renderer::_SetupShaderState()
     desc.SampleDesc.Count    = 1;
     desc.SampleDesc.Quality  = 0;
 
-    HR_ASSERT(myDevice5_p->CreateCommittedResource(&heapProp,
+    HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
                                                    D3D12_HEAP_FLAG_NONE,
                                                    &desc,
                                                    D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -346,7 +358,7 @@ void Renderer::_SetupShaderState()
     desc.SampleDesc.Count    = 1;
     desc.SampleDesc.Quality  = 0;
 
-    HR_ASSERT(myDevice5_p->CreateCommittedResource(&heapProp,
+    HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
                                                    D3D12_HEAP_FLAG_NONE,
                                                    &desc,
                                                    D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -393,7 +405,7 @@ void Renderer::_SetupShaderState()
     if (errorBlob_p != nullptr)
       printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
 
-    HR_ASSERT(myDevice5_p->CreateRootSignature(0,
+    HR_ASSERT(gDevice5_p->CreateRootSignature(0,
                                                signatureBlob_p->GetBufferPointer(),
                                                signatureBlob_p->GetBufferSize(),
                                                IID_PPV_ARGS(&myRootSignature_p)));
@@ -529,7 +541,7 @@ void Renderer::_SetupShaderState()
       pipeDesc.pRootSignature                 = myRootSignature_p;
 
       HR_ASSERT(
-          myDevice5_p->CreateGraphicsPipelineState(&pipeDesc, IID_PPV_ARGS(&myPipelineState_p)));
+          gDevice5_p->CreateGraphicsPipelineState(&pipeDesc, IID_PPV_ARGS(&myPipelineState_p)));
     }
   }
 }
