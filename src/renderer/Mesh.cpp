@@ -31,8 +31,9 @@ DirectX::XMFLOAT2A AssimpToXmFloat2A(const aiVector3D& vec)
 bool Mesh::LoadMesh(const std::string& path)
 {
   Assimp::Importer importer;
-  const aiScene*   scene =
-      importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_FlipWindingOrder);
+  const aiScene*   scene = importer.ReadFile(path.c_str(),
+                                           aiProcess_Triangulate | aiProcess_FlipWindingOrder |
+                                               aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals);
 
   if (!scene || !scene->HasMeshes())
   {
@@ -50,7 +51,7 @@ bool Mesh::LoadMesh(const std::string& path)
     }
   }
   myMesh.resize(numVertices);
-  uint counter = 0u;
+  uint   counter = 0u;
   Vertex v       = {};
   v.color        = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
   for (uint i = 0; i < scene->mNumMeshes; i++)
@@ -59,7 +60,7 @@ bool Mesh::LoadMesh(const std::string& path)
     {
       for (uint k = 0; k < scene->mMeshes[i]->mFaces[j].mNumIndices; k++)
       {
-        uint vertIdx             = scene->mMeshes[i]->mFaces[j].mIndices[k];
+        uint vertIdx    = scene->mMeshes[i]->mFaces[j].mIndices[k];
         myMesh[counter] = v;
         if (scene->mMeshes[i]->mVertices)
         {
