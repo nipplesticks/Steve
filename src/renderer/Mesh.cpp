@@ -32,7 +32,7 @@ bool Mesh::LoadMesh(const std::string& path)
 {
   Assimp::Importer importer;
   const aiScene*   scene =
-      importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+      importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_FlipWindingOrder);
 
   if (!scene || !scene->HasMeshes())
   {

@@ -11,7 +11,6 @@
 
 ID3D12Device5* Renderer::gDevice5_p = nullptr;
 
-
 template <class Interface>
 inline void SafeRelease(Interface** ppInterfaceToRelease)
 {
@@ -62,8 +61,8 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     {
       HRESULT hr = S_OK;
       //Create the actual device.
-      if (SUCCEEDED(hr = D3D12CreateDevice(
-                        adapter_p, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&gDevice5_p))))
+      if (SUCCEEDED(
+              hr = D3D12CreateDevice(adapter_p, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&gDevice5_p))))
       {
         int lol = 123;
       }
@@ -80,7 +79,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     SafeRelease(&factory_p);
   }
 
-  // Create Commandinterfaces And Swap Chain
+  // Create Command interfaces And Swap Chain
   {
     //Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC cqd = {};
@@ -89,14 +88,14 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     //Create command allocator. The command allocator object corresponds
     //to the underlying allocations in which GPU commands are stored.
     hr = gDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                             IID_PPV_ARGS(&myCommandAllocator_p));
+                                            IID_PPV_ARGS(&myCommandAllocator_p));
 
     //Create command list.
     hr = gDevice5_p->CreateCommandList(0,
-                                        D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                        myCommandAllocator_p,
-                                        nullptr,
-                                        IID_PPV_ARGS(&myCommandList4_p));
+                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                       myCommandAllocator_p,
+                                       nullptr,
+                                       IID_PPV_ARGS(&myCommandList4_p));
 
     //Command lists are created in the recording state. Since there is nothing to
     //record right now and the main loop expects it to be closed, we close it.
@@ -140,6 +139,8 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     mySwapChain4_p->GetSourceSize(&width, &height);
     myViewport.Width  = (float)width;
     myViewport.Height = (float)height;
+    myViewport.MinDepth = D3D12_MIN_DEPTH;
+    myViewport.MaxDepth = D3D12_MAX_DEPTH;
 
     myScissorRect.right  = (long)INT_MAX;
     myScissorRect.bottom = (long)INT_MAX;
@@ -173,6 +174,59 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
       cdh.ptr += myRenderTargetDescriptorSize;
     }
   }
+  // Create Depth buffers
+  {
+    D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
+    dhd.NumDescriptors             = NUM_SWAP_BUFFERS;
+    dhd.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    HRESULT hr = gDevice5_p->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&myDepthBufferHeap_p));
+
+    myDepthBufferDescriptorSize =
+        gDevice5_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    D3D12_HEAP_PROPERTIES heapProp = {};
+    heapProp.Type                  = D3D12_HEAP_TYPE_DEFAULT;
+    heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProp.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
+    uint width                     = 0u;
+    uint height                    = 0u;
+
+    mySwapChain4_p->GetSourceSize(&width, &height);
+
+    D3D12_RESOURCE_DESC desc = {};
+    desc.DepthOrArraySize    = 1;
+    desc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    desc.Flags               = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    desc.Format              = DXGI_FORMAT_D32_FLOAT;
+    desc.Width               = width;
+    desc.Height              = height;
+    desc.MipLevels           = 1;
+    desc.SampleDesc.Count    = 1;
+    desc.SampleDesc.Quality  = 0;
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format                        = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.ViewDimension                 = D3D12_DSV_DIMENSION_TEXTURE2D;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cdh = myDepthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+
+    D3D12_CLEAR_VALUE clearVal  = {};
+    clearVal.Format             = DXGI_FORMAT_D32_FLOAT;
+    clearVal.DepthStencil.Depth = 1.0f;
+
+    for (uint i = 0; i < NUM_SWAP_BUFFERS; i++)
+    {
+      HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
+                                                    D3D12_HEAP_FLAG_NONE,
+                                                    &desc,
+                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                    &clearVal,
+                                                    IID_PPV_ARGS(&myDepthBuffers_pp[i])));
+
+      gDevice5_p->CreateDepthStencilView(myDepthBuffers_pp[i], &dsvDesc, cdh);
+      cdh.ptr += myDepthBufferDescriptorSize;
+    }
+  }
 
   //Setup Vertex Buffer
   _SetupShaderState();
@@ -202,7 +256,12 @@ void Renderer::BeginFrame()
       myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHndl.ptr += myCurrentBackbufferIndex * myRenderTargetDescriptorSize;
 
-  myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, NULL);
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
+      myDepthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHnd2.ptr += myCurrentBackbufferIndex * myDepthBufferDescriptorSize;
+
+  myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);
+
 }
 
 void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
@@ -223,30 +282,16 @@ void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
   myCommandList4_p->DrawInstanced(vertexBuffer.GetVertexCount(), 1, 0, 0);
 }
 
-void Renderer::DrawTriangle()
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &myVertexBufferView);
-
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
-
-  myCommandList4_p->DrawInstanced(3, 1, 0, 0);
-}
-
 void Renderer::Clear(const Vector4f& color)
 {
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
       myRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHndl.ptr += myCurrentBackbufferIndex * myRenderTargetDescriptorSize;
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
+      myDepthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHnd2.ptr += myCurrentBackbufferIndex * myDepthBufferDescriptorSize;
 
+  myCommandList4_p->ClearDepthStencilView(cpuDescHnd2, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
   myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
 }
 
@@ -303,42 +348,6 @@ void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
 
 void Renderer::_SetupShaderState()
 {
-  // Init vertex buffer
-  {
-    D3D12_HEAP_PROPERTIES heapProp = {};
-    heapProp.Type                  = D3D12_HEAP_TYPE_UPLOAD;
-    heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heapProp.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC desc = {};
-    desc.DepthOrArraySize    = 1;
-    desc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
-    desc.Format              = DXGI_FORMAT_UNKNOWN;
-    desc.Height              = 1;
-    desc.Width               = sizeof(gTriangle);
-    desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    desc.MipLevels           = 1;
-    desc.SampleDesc.Count    = 1;
-    desc.SampleDesc.Quality  = 0;
-
-    HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
-                                                   D3D12_HEAP_FLAG_NONE,
-                                                   &desc,
-                                                   D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                   nullptr,
-                                                   IID_PPV_ARGS(&myVertexBuffer_p)));
-
-    void* adress_p = nullptr;
-    HR_ASSERT(myVertexBuffer_p->Map(0, nullptr, &adress_p));
-    memcpy(adress_p, &gTriangle[0], sizeof(gTriangle));
-    myVertexBuffer_p->Unmap(0, nullptr);
-
-    myVertexBufferView.BufferLocation = myVertexBuffer_p->GetGPUVirtualAddress();
-    myVertexBufferView.SizeInBytes    = sizeof(Vertex) * 3;
-    myVertexBufferView.StrideInBytes  = sizeof(Vertex);
-  }
-
   // Setup ViewProj buffer
   {
     D3D12_HEAP_PROPERTIES heapProp = {};
@@ -359,19 +368,19 @@ void Renderer::_SetupShaderState()
     desc.SampleDesc.Quality  = 0;
 
     HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
-                                                   D3D12_HEAP_FLAG_NONE,
-                                                   &desc,
-                                                   D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                   nullptr,
-                                                   IID_PPV_ARGS(&myViewProjBuffer_p)));
+                                                  D3D12_HEAP_FLAG_NONE,
+                                                  &desc,
+                                                  D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                  nullptr,
+                                                  IID_PPV_ARGS(&myViewProjBuffer_p)));
   }
 
   // Create root signature
   {
-    D3D12_ROOT_PARAMETER rootParam = {};
-    rootParam.ParameterType        = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParam.ShaderVisibility     = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParam.Descriptor.RegisterSpace = 0;
+    D3D12_ROOT_PARAMETER rootParam      = {};
+    rootParam.ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParam.ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParam.Descriptor.RegisterSpace  = 0;
     rootParam.Descriptor.ShaderRegister = 0;
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
@@ -406,9 +415,9 @@ void Renderer::_SetupShaderState()
       printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
 
     HR_ASSERT(gDevice5_p->CreateRootSignature(0,
-                                               signatureBlob_p->GetBufferPointer(),
-                                               signatureBlob_p->GetBufferSize(),
-                                               IID_PPV_ARGS(&myRootSignature_p)));
+                                              signatureBlob_p->GetBufferPointer(),
+                                              signatureBlob_p->GetBufferSize(),
+                                              IID_PPV_ARGS(&myRootSignature_p)));
   }
 
   // Setup Shaders
@@ -476,6 +485,10 @@ void Renderer::_SetupShaderState()
       pipeDesc.BlendState.RenderTarget[0].BlendOpAlpha   = D3D12_BLEND_OP_ADD;
       pipeDesc.BlendState.RenderTarget[0].LogicOp        = D3D12_LOGIC_OP_NOOP;
       pipeDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+      pipeDesc.DepthStencilState.DepthEnable                    = TRUE;
+      pipeDesc.DepthStencilState.DepthFunc                      = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+      pipeDesc.DSVFormat                                        = DXGI_FORMAT_D32_FLOAT;
+      pipeDesc.DepthStencilState.DepthWriteMask                 = D3D12_DEPTH_WRITE_MASK_ALL;
 
       ID3D12ShaderReflection* shaderReflection_p = nullptr;
       HR_ASSERT(D3DReflect(myVertexShader_p->GetBufferPointer(),
