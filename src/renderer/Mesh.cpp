@@ -43,29 +43,39 @@ bool Mesh::LoadMesh(const std::string& path)
   uint numVertices = 0u;
 
   for (uint i = 0; i < scene->mNumMeshes; i++)
-    numVertices += scene->mMeshes[i]->mNumVertices;
-
+  {
+    for (uint j = 0; j < scene->mMeshes[i]->mNumFaces; j++)
+    {
+      numVertices += scene->mMeshes[i]->mFaces[j].mNumIndices;
+    }
+  }
   myMesh.resize(numVertices);
   uint counter = 0u;
-
-  Vertex v = {};
-  v.color  = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
-
+  Vertex v       = {};
+  v.color        = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
   for (uint i = 0; i < scene->mNumMeshes; i++)
-    for (uint j = 0; j < scene->mMeshes[i]->mNumVertices; j++)
+  {
+    for (uint j = 0; j < scene->mMeshes[i]->mNumFaces; j++)
     {
-      myMesh[counter] = v;
-      if (scene->mMeshes[i]->mVertices)
-        myMesh[counter].position = AssimpToXmFloat4A(scene->mMeshes[i]->mVertices[j]);
-      if (scene->mMeshes[i]->mColors[0])
-        myMesh[counter].color = AssimpToXmFloat4A(scene->mMeshes[i]->mColors[0][j]);
-      if (scene->mMeshes[i]->mNormals)
-        myMesh[counter].normal = AssimpToXmFloat4A(scene->mMeshes[i]->mNormals[j], 0.0f);
-      if (scene->mMeshes[i]->mTextureCoords[0])
-        myMesh[counter].uv = AssimpToXmFloat4A(scene->mMeshes[i]->mTextureCoords[0][j]);
+      for (uint k = 0; k < scene->mMeshes[i]->mFaces[j].mNumIndices; k++)
+      {
+        uint vertIdx             = scene->mMeshes[i]->mFaces[j].mIndices[k];
+        myMesh[counter] = v;
+        if (scene->mMeshes[i]->mVertices)
+        {
+          myMesh[counter].position = AssimpToXmFloat4A(scene->mMeshes[i]->mVertices[vertIdx]);
+        }
+        if (scene->mMeshes[i]->mColors[0])
+          myMesh[counter].color = AssimpToXmFloat4A(scene->mMeshes[i]->mColors[0][vertIdx]);
+        if (scene->mMeshes[i]->mNormals)
+          myMesh[counter].normal = AssimpToXmFloat4A(scene->mMeshes[i]->mNormals[vertIdx], 0.0f);
+        if (scene->mMeshes[i]->mTextureCoords[0])
+          myMesh[counter].uv = AssimpToXmFloat4A(scene->mMeshes[i]->mTextureCoords[0][vertIdx]);
 
-      counter++;
+        counter++;
+      }
     }
+  }
 }
 
 void Mesh::SetMesh(const std::vector<Vertex>& vertices)

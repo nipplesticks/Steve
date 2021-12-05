@@ -17,20 +17,21 @@ int main()
     view.width     = 1280.0f;
     view.nearPlane = 0.01f;
     view.farPlane  = 100.0f;
-    cam.SetPosition(DM::Vec4f(0, 3.0f, 3.0f, 1.0f));
+    cam.SetPosition(DM::Vec4f(0, 0.0f, 5.0f, 1.0f));
     cam.SetLookAt(DM::Vec4f(0, 0.0, 0.0, 1.0f));
     cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
     cam.SetView(view);
   }
 
   Mesh m;
-  m.LoadMesh("assets/models/Cube.fbx");
+  m.LoadMesh("assets/models/untitled.obj");
   VertexBuffer vb;
   vb.Init(m.GetByteSize(), sizeof(Vertex));
+  vb.Update(m.GetRawVertices(), m.GetByteSize());
 
   std::cout << cam.GetViewProjection().ToString() << std::endl;
 
-  float c = 0.01f;
+  float c = -0.01f;
 
   while (wnd.IsOpen())
   {
@@ -47,7 +48,6 @@ int main()
     // Must be first
     ren.BeginFrame();
     ren.Clear(Vector4f(0.0f, 0.0f, 0.0f, 1.0f));
-    vb.Update(m.GetRawVertices(), m.GetByteSize());
     ren.UpdateViewProjection(cam.GetViewProjection());
     ren.DrawVertexBuffer(vb);
 
