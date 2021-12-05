@@ -2,6 +2,8 @@
 #include "renderer/Renderer.h"
 #include "window/Window.h"
 #include <iostream>
+#include "renderer/Mesh.h"
+
 int main()
 {
   Window   wnd(1280, 720, "aTitle");
@@ -19,6 +21,9 @@ int main()
     cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
     cam.SetView(view);
   }
+
+  Mesh m;
+  m.LoadMesh("asdick.png");
 
   std::cout << cam.GetViewProjection().ToString() << std::endl;
 
