@@ -22,6 +22,7 @@ public:
   void             SetPosition(const DM::Vec4f& position);
   void             SetLookAt(const DM::Vec4f& point);
   void             SetUp(const DM::Vec4f& up);
+  void             Update();
 
   const DM::Vec4f& GetPosition() const;
   const DM::Vec4f& GetLookAt() const;

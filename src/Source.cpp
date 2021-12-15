@@ -1,11 +1,11 @@
 #include "renderer/Camera.h"
+#include "renderer/IndexBuffer.h"
+#include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
+#include "renderer/VertexBuffer.h"
+#include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
-#include "renderer/Mesh.h"
-#include "renderer/VertexBuffer.h"
-#include "renderer/IndexBuffer.h"
-#include "utility/Timer.h"
 
 int main()
 {
@@ -55,12 +55,17 @@ int main()
     float dt = t.Stop();
     wnd.PollEvents();
     DM::Vec4f camPos = cam.GetPosition();
-    float x         = camPos.x * cos(speed * dt) + camPos.z * sin(speed * dt);
-    float     z         = camPos.x * -sin(speed * dt) + camPos.z * cos(speed * dt);
-    camPos.x            = x;
-    camPos.z            = z;
-    
+    float     x      = camPos.x * cos(speed * dt) + camPos.z * sin(speed * dt);
+    float     z      = camPos.x * -sin(speed * dt) + camPos.z * cos(speed * dt);
+    camPos.x         = x;
+    camPos.z         = z;
+    /*float y  = camPos.y * cos(speed * dt) + camPos.z * sin(speed * dt);
+    float z  = camPos.y * -sin(speed * dt) + camPos.z * cos(speed * dt);
+    camPos.y = y;
+    camPos.z = z;*/
+
     cam.SetPosition(camPos);
+    cam.Update();
 
     // Must be first
     ren.BeginFrame();

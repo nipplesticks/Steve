@@ -28,6 +28,25 @@ void Camera::SetUp(const DM::Vec4f& up)
   myUp = up;
 }
 
+void Camera::Update()
+{
+  DM::Vec3f dir;
+  {
+    DM::Vec4f tDir = (myLookAt - myPosition);
+    dir            = DM::Vec3f(tDir.x, tDir.y, tDir.z);
+  }
+  float invert = 1.0f;
+  dir          = dir.Normalize();
+  DM::Vec3f up(0.0f, 1.0f, 0.0f);
+  DM::Vec3f right = up.Cross(dir).Normalize();
+  up     = dir.Cross(right).Normalize();
+  if (myUp.Dot(up) < 0)
+    invert = -1.0f;
+  myUp.x = up.x * invert;
+  myUp.y = up.y * invert;
+  myUp.z = up.z * invert;
+}
+
 const DM::Vec4f& Camera::GetPosition() const
 {
   return myPosition;
