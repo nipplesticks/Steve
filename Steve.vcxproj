@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\renderer\Camera.cpp" />
+    <ClCompile Include="src\renderer\IndexBuffer.cpp" />
     <ClCompile Include="src\renderer\Mesh.cpp" />
     <ClCompile Include="src\renderer\Renderer.cpp" />
     <ClCompile Include="src\renderer\VertexBuffer.cpp" />
@@ -160,12 +161,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer\Camera.h" />
+    <ClInclude Include="src\renderer\IndexBuffer.h" />
     <ClInclude Include="src\renderer\Mesh.h" />
     <ClInclude Include="src\renderer\Renderer.h" />
     <ClInclude Include="src\renderer\Vertex.h" />
     <ClInclude Include="src\renderer\VertexBuffer.h" />
     <ClInclude Include="src\utility\DMath.h" />
     <ClInclude Include="src\utility\RenderUtility.h" />
+    <ClInclude Include="src\utility\Timer.h" />
     <ClInclude Include="src\utility\Typedef.h" />
     <ClInclude Include="src\utility\Vector2u.h" />
     <ClInclude Include="src\utility\Vector3f.h" />

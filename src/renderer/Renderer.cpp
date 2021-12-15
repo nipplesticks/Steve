@@ -2,6 +2,7 @@
 
 #include "../utility/RenderUtility.h"
 #include "VertexBuffer.h"
+#include "IndexBuffer.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
 
@@ -278,8 +279,25 @@ void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
   myCommandList4_p->SetGraphicsRootConstantBufferView(0,
                                                       myViewProjBuffer_p->GetGPUVirtualAddress());
 
-  static uint counter = 1;
   myCommandList4_p->DrawInstanced(vertexBuffer.GetVertexCount(), 1, 0, 0);
+}
+
+void Renderer::DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer,
+                                        const IndexBuffer&  indexBuffer)
+{
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
+  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
+
+  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
+                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
+  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
 
 void Renderer::Clear(const Vector4f& color)

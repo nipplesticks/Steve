@@ -10,6 +10,7 @@
 struct IDXGISwapChain4;
 
 class VertexBuffer;
+class IndexBuffer;
 
 class Renderer
 {
@@ -21,7 +22,8 @@ public:
 
   void BeginFrame();
 
-  void DrawVertexBuffer(const VertexBuffer& vertexBuffer);
+  void DrawVertexBuffer(const VertexBuffer& vertexBuffer); // Temp
+  void DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer, const IndexBuffer& indexBuffer); // Temp
 
   void Clear(const Vector4f& color = Vector4f());
 
