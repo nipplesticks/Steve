@@ -119,6 +119,22 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices)
   myMesh.push_back(vertices);
 }
 
+void Mesh::SetMesh(const std::vector<std::vector<Vertex>>& vertices)
+{
+  myMesh = vertices;
+}
+
+void Mesh::SetIndices(const std::vector<uint>& indices)
+{
+  myIndices.clear();
+  myIndices.push_back(indices);
+}
+
+void Mesh::SetIndices(const std::vector<std::vector<uint>>& indices)
+{
+  myIndices = indices;
+}
+
 uint Mesh::GetMeshesCount() const
 {
   return myMesh.size();

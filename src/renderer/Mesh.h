@@ -17,6 +17,8 @@ public:
   bool LoadMesh(const std::string& path);
   void SetMesh(const std::vector<Vertex>& vertices);
   void SetMesh(const std::vector<std::vector<Vertex>>& vertices);
+  void SetIndices(const std::vector<uint>& indices);
+  void SetIndices(const std::vector<std::vector<uint>>& indices);
 
   uint GetMeshesCount() const;
 

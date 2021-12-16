@@ -158,6 +158,7 @@
     <ClCompile Include="src\renderer\VertexBuffer.cpp" />
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
+    <ClCompile Include="src\World\Planet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer\Camera.h" />
@@ -174,6 +175,7 @@
     <ClInclude Include="src\utility\Vector3f.h" />
     <ClInclude Include="src\utility\Vector4f.h" />
     <ClInclude Include="src\window\Window.h" />
+    <ClInclude Include="src\World\Planet.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\PixelHelloTriangle.hlsl">

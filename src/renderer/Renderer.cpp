@@ -481,6 +481,7 @@ void Renderer::_SetupShaderState()
       D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeDesc = {};
       memset(&pipeDesc, 0, sizeof(pipeDesc));
       pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_SOLID;
+      //pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_WIREFRAME;
       pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_BACK;
       pipeDesc.PrimitiveTopologyType                     = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
       pipeDesc.NumRenderTargets                          = 1;

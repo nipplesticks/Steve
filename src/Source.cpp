@@ -5,6 +5,7 @@
 #include "renderer/VertexBuffer.h"
 #include "utility/Timer.h"
 #include "window/Window.h"
+#include "World/Planet.h"
 #include <iostream>
 
 int main()
@@ -19,9 +20,9 @@ int main()
     view.width     = 1280.0f;
     view.nearPlane = 0.01f;
     view.farPlane  = 1000.0f;
-    cam.SetPosition(DM::Vec4f(0, 1.85, 5, 1.0f));
+    cam.SetPosition(DM::Vec4f(0, 0, 2.0f, 1.0f));
     //cam.SetPosition(DM::Vec4f(0, 300.0f, 200.0f, 1.0f));
-    cam.SetLookAt(DM::Vec4f(0, 1.85, 0.0, 1.0f));
+    cam.SetLookAt(DM::Vec4f(0, 0, 0.0, 1.0f));
     cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
     /*
     cam.SetPosition(DM::Vec4f(0, -25.0f, 25.0f, 1.0f));
@@ -31,9 +32,12 @@ int main()
     cam.SetView(view);
   }
 
-  Mesh m;
-  m.LoadMesh("assets/models/DunkaDennis/DunkaDennis.obj");
+  //Mesh m;
+  //m.LoadMesh("assets/models/DunkaDennis/DunkaDennis.obj");
   //m.LoadMesh("assets/models/Spider/Spider_3.fbx");
+  Planet   p;
+  p.Create(1.0f, 300);
+  Mesh                      m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;
   vbs.resize(m.GetMeshesCount());
@@ -47,7 +51,7 @@ int main()
     ibs[i].Update(m.GetRawIndices(i));
   }
 
-  float speed = -1.f;
+  float speed = 0.5f;
   Timer t;
   t.Start();
   while (wnd.IsOpen())
@@ -59,10 +63,10 @@ int main()
     float     z      = camPos.x * -sin(speed * dt) + camPos.z * cos(speed * dt);
     camPos.x         = x;
     camPos.z         = z;
-    /*float y  = camPos.y * cos(speed * dt) + camPos.z * sin(speed * dt);
-    float z  = camPos.y * -sin(speed * dt) + camPos.z * cos(speed * dt);
+    float y  = camPos.y * cos(speed * dt) + camPos.z * sin(speed * dt);
+    //float z  = camPos.y * -sin(speed * dt) + camPos.z * cos(speed * dt);
     camPos.y = y;
-    camPos.z = z;*/
+    //camPos.z = z;*/
 
     cam.SetPosition(camPos);
     cam.Update();
