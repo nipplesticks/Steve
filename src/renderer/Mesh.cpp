@@ -113,26 +113,38 @@ bool Mesh::LoadMesh(const std::string& path)
   return true;
 }
 
-void Mesh::SetMesh(const std::vector<Vertex>& vertices)
+void Mesh::SetMesh(std::vector<Vertex>&& vertices)
 {
   myMesh.clear();
-  myMesh.push_back(vertices);
+  myMesh.push_back(std::move(vertices));
 }
 
-void Mesh::SetMesh(const std::vector<std::vector<Vertex>>& vertices)
+void Mesh::SetMesh(std::vector<std::vector<Vertex>>&& vertices)
 {
   myMesh = vertices;
 }
 
-void Mesh::SetIndices(const std::vector<uint>& indices)
+void Mesh::SetIndices(std::vector<uint>&& indices)
 {
   myIndices.clear();
-  myIndices.push_back(indices);
+  myIndices.push_back(std::move(indices));
 }
 
-void Mesh::SetIndices(const std::vector<std::vector<uint>>& indices)
+void Mesh::SetIndices(std::vector<std::vector<uint>>&& indices)
 {
   myIndices = indices;
+}
+
+void Mesh::SetImages(TextureLoader::Image&& image)
+{
+  myImages.clear();
+  myImages.push_back(std::move(image));
+}
+
+
+void Mesh::SetImages(std::vector<TextureLoader::Image>&& images)
+{
+  myImages = images;
 }
 
 uint Mesh::GetMeshesCount() const
@@ -194,4 +206,21 @@ uint Mesh::GetTotalNumberOfIndices() const
 const std::vector<std::vector<uint>>& Mesh::GetAllIndices() const
 {
   return myIndices;
+}
+
+uint8* Mesh::GetRawImage(uint idx, uint* width, uint* height)
+{
+  *width = myImages[idx].width;
+  *height = myImages[idx].height;
+  return myImages[idx].pixels.data();
+}
+
+const TextureLoader::Image& Mesh::GetImage(uint idx) const
+{
+  return myImages[idx];
+}
+
+const std::vector<TextureLoader::Image>& Mesh::GetAllImages() const
+{
+  return myImages;
 }

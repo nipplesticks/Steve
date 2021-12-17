@@ -11,6 +11,7 @@ struct IDXGISwapChain4;
 
 class VertexBuffer;
 class IndexBuffer;
+class TextureBuffer;
 
 class Renderer
 {
@@ -22,8 +23,15 @@ public:
 
   void BeginFrame();
 
+  void UploadTexture(const TextureBuffer& textureBuffer, void* data_p);
+
   void DrawVertexBuffer(const VertexBuffer& vertexBuffer); // Temp
-  void DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer, const IndexBuffer& indexBuffer); // Temp
+  void DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer,
+                                const IndexBuffer&  indexBuffer); // Temp
+  void DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuffer,
+                                          const IndexBuffer&   indexBuffer,
+                                          const TextureBuffer& textureBuffer); // Temp
+
 
   void Clear(const Vector4f& color = Vector4f());
 
@@ -32,6 +40,7 @@ public:
   static ID3D12Device5* GetDevice();
 
 private:
+  void _HardWait();
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
                                      ID3D12Resource*            resource_p,
                                      D3D12_RESOURCE_STATES      StateBefore,
@@ -54,6 +63,9 @@ private:
   HANDLE                      myEventHandle         = nullptr;
   ID3D12DescriptorHeap*       myRenderTargetsHeap_p = nullptr;
 
+  ID3D12CommandAllocator*     myTextureUploadAllocator_p = nullptr;
+  ID3D12GraphicsCommandList4* myTextureUploadCommandList4_p = nullptr;
+
   ID3D12RootSignature* myRootSignature_p = nullptr;
 
   ID3D12PipelineState* myPipelineState_p = nullptr;
@@ -63,13 +75,13 @@ private:
   ID3DBlob*                myVertexShader_p   = nullptr;
   ID3DBlob*                myPixelShader_p    = nullptr;
 
-  ID3D12Resource1*      myDepthBuffers_pp[NUM_SWAP_BUFFERS]  = {};
-  ID3D12DescriptorHeap* myDepthBufferHeap_p                  = nullptr;
-  uint                  myDepthBufferDescriptorSize          = 0;
+  ID3D12Resource1*      myDepthBuffers_pp[NUM_SWAP_BUFFERS] = {};
+  ID3D12DescriptorHeap* myDepthBufferHeap_p                 = nullptr;
+  uint                  myDepthBufferDescriptorSize         = 0;
 
-  ID3D12Resource1*      myRenderTargets_pp[NUM_SWAP_BUFFERS] = {};
-  uint                  myRenderTargetDescriptorSize         = 0;
-  uint64                myFenceValue                         = 0u;
+  ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS] = {};
+  uint             myRenderTargetDescriptorSize         = 0;
+  uint64           myFenceValue                         = 0u;
 
   ID3D12Resource* myViewProjBuffer_p = nullptr;
 };

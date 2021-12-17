@@ -1,5 +1,5 @@
 #include "Planet.h"
-
+#include "../renderer/TextureLoader.h"
 #define FRONT_IDX 0
 #define RIGHT_IDX 1
 #define TOP_IDX 2
@@ -8,12 +8,15 @@
 #define BOT_IDX 5
 #define NR_OF_SIDES 6
 
+#define SET_CUBE false
+
 Planet::Planet() { }
 
 Planet::~Planet() { }
 
-void Planet::Create(float size, uint div)
+void Planet::Create(float size, uint div, float uvTiles)
 {
+  uvTiles = 1.0f / uvTiles;
   std::vector<std::vector<DM::Vec3f>> points;
   points.resize(NR_OF_SIDES);
 
@@ -129,6 +132,11 @@ void Planet::Create(float size, uint div)
     }
   }
 
+  // Apply some noise
+  {
+
+  }
+
   // Convert to sphere and store in mesh
   {
     std::vector<std::vector<Vertex>> verts(NR_OF_SIDES);
@@ -138,18 +146,94 @@ void Planet::Create(float size, uint div)
       verts[i].resize(count);
       for (uint j = 0; j < count; j++)
       {
-        DM::Vec3f p   = points[i][j];
-        p             = p.Normalize();
-        DM::Vec3f nor = p;
-        p             = p * size;
+        DM::Vec3f p          = points[i][j];
+        p                    = p.Normalize();
+        DM::Vec3f nor        = p;
+        p                    = p * size;
         verts[i][j].position = DirectX::XMFLOAT4A(p.x, p.y, p.z, 1.0f);
-        //verts[i][j].position =
-            //DirectX::XMFLOAT4A(points[i][j].x, points[i][j].y, points[i][j].z, 1.0f);
-        verts[i][j].normal = DirectX::XMFLOAT4A(nor.x, nor.y, nor.z, 0.0f);
-        verts[i][j].color  = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
+        verts[i][j].normal   = DirectX::XMFLOAT4A(nor.x, nor.y, nor.z, 0.0f);
+        verts[i][j].color    = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
+        verts[i][j].uv       = DirectX::XMFLOAT4A(0.0f, 0.0f, 0.0f, 0.0f);
+
+        if (SET_CUBE)
+        {
+          verts[i][j].position =
+              DirectX::XMFLOAT4A(points[i][j].x, points[i][j].y, points[i][j].z, 1.0f);
+          switch (i)
+          {
+          case FRONT_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 0.0f, 1.0f, 0.0f);
+            break;
+          case RIGHT_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(1.0f, 0.0f, 0.0f, 0.0f);
+            break;
+          case LEFT_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(-1.0f, 0.0f, 0.0f, 0.0f);
+            break;
+          case TOP_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 1.0f, 0.0f, 0.0f);
+            break;
+          case BOT_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, -1.0f, 0.0f, 0.0f);
+            break;
+          case BACK_IDX:
+            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 0.0f, -1.0f, 0.0f);
+            break;
+          }
+        }
       }
     }
-    myMesh.SetMesh(verts);
+    uint w = div + 2;
+    for (uint i = 0; i < NR_OF_SIDES; i++)
+    {
+      for (uint y = 0; y < w; y++)
+      {
+        float length = 0;
+        for (uint x = 0; x < w - 1; x++)
+        {
+          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
+          DirectX::XMFLOAT4A xmP2 = verts[i][x + 1 + y * w].position;
+          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
+          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
+          length += (p2 - p1).Length();
+        }
+        length  = length * uvTiles;
+        float l = 0.0f;
+        for (uint x = 1; x < w; x++)
+        {
+          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
+          DirectX::XMFLOAT4A xmP2 = verts[i][x - 1 + y * w].position;
+          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
+          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
+          l += (p2 - p1).Length();
+          verts[i][x + y * w].uv.x = l / length;
+        }
+      }
+      for (uint x = 0; x < w; x++)
+      {
+        float length = 0;
+        for (uint y = 0; y < w - 1; y++)
+        {
+          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
+          DirectX::XMFLOAT4A xmP2 = verts[i][x + 1 + y * w].position;
+          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
+          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
+          length += (p2 - p1).Length();
+        }
+        length  = length * uvTiles;
+        float l = 0.0f;
+        for (uint y = 1; y < w; y++)
+        {
+          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
+          DirectX::XMFLOAT4A xmP2 = verts[i][x - 1 + y * w].position;
+          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
+          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
+          l += (p2 - p1).Length();
+          verts[i][x + y * w].uv.y = l / length;
+        }
+      }
+    }
+    myMesh.SetMesh(std::move(verts));
   }
 
   // Create indices
@@ -173,8 +257,11 @@ void Planet::Create(float size, uint div)
         indices[i].push_back(j + w + 1);
       }
     }
-    myMesh.SetIndices(indices);
+    myMesh.SetIndices(std::move(indices));
   }
+  uint   height = 0, width = 0;
+  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
+  myMesh.SetImages(std::move(shrek));
 }
 
 const Mesh& Planet::GetMesh() const

@@ -1,8 +1,10 @@
 #include "Renderer.h"
 
 #include "../utility/RenderUtility.h"
-#include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "TextureBuffer.h"
+#include "VertexBuffer.h"
+#include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
 
@@ -84,23 +86,33 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
   {
     //Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC cqd = {};
-    HRESULT hr = gDevice5_p->CreateCommandQueue(&cqd, IID_PPV_ARGS(&myCommandQueue_p));
+    HR_ASSERT(gDevice5_p->CreateCommandQueue(&cqd, IID_PPV_ARGS(&myCommandQueue_p)));
 
     //Create command allocator. The command allocator object corresponds
     //to the underlying allocations in which GPU commands are stored.
-    hr = gDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                            IID_PPV_ARGS(&myCommandAllocator_p));
+    HR_ASSERT(gDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                 IID_PPV_ARGS(&myCommandAllocator_p)));
+
+    HR_ASSERT(gDevice5_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                 IID_PPV_ARGS(&myTextureUploadAllocator_p)));
 
     //Create command list.
-    hr = gDevice5_p->CreateCommandList(0,
-                                       D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                       myCommandAllocator_p,
-                                       nullptr,
-                                       IID_PPV_ARGS(&myCommandList4_p));
+    HR_ASSERT(gDevice5_p->CreateCommandList(0,
+                                            D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                            myCommandAllocator_p,
+                                            nullptr,
+                                            IID_PPV_ARGS(&myCommandList4_p)));
+    //Create command list.
+    HR_ASSERT(gDevice5_p->CreateCommandList(0,
+                                            D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                            myTextureUploadAllocator_p,
+                                            nullptr,
+                                            IID_PPV_ARGS(&myTextureUploadCommandList4_p)));
 
     //Command lists are created in the recording state. Since there is nothing to
     //record right now and the main loop expects it to be closed, we close it.
-    hr = myCommandList4_p->Close();
+    HR_ASSERT(myCommandList4_p->Close());
+    HR_ASSERT(myTextureUploadCommandList4_p->Close());
 
     IDXGIFactory5* factory_p = nullptr;
     CreateDXGIFactory(IID_PPV_ARGS(&factory_p));
@@ -138,8 +150,8 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     uint width  = 0u;
     uint height = 0u;
     mySwapChain4_p->GetSourceSize(&width, &height);
-    myViewport.Width  = (float)width;
-    myViewport.Height = (float)height;
+    myViewport.Width    = (float)width;
+    myViewport.Height   = (float)height;
     myViewport.MinDepth = D3D12_MIN_DEPTH;
     myViewport.MaxDepth = D3D12_MAX_DEPTH;
 
@@ -262,7 +274,69 @@ void Renderer::BeginFrame()
   cpuDescHnd2.ptr += myCurrentBackbufferIndex * myDepthBufferDescriptorSize;
 
   myCommandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);
+}
 
+void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
+{
+  ID3D12Resource* tempResource_p = nullptr;
+
+  D3D12_HEAP_PROPERTIES heapProp = {};
+  heapProp.Type                  = D3D12_HEAP_TYPE_UPLOAD;
+  heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+  heapProp.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
+
+  D3D12_RESOURCE_DESC texDesc  = textureBuffer.GetResource()->GetDesc();
+  UINT64              byteSize = 0;
+  gDevice5_p->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &byteSize);
+
+  D3D12_RESOURCE_DESC desc = {};
+  desc.DepthOrArraySize    = 1;
+  desc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
+  desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
+  desc.Format              = DXGI_FORMAT_UNKNOWN;
+  desc.Height              = 1;
+  desc.Width               = byteSize;
+  desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  desc.MipLevels           = 1;
+  desc.SampleDesc.Count    = 1;
+  desc.SampleDesc.Quality  = 0;
+
+  HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
+                                                D3D12_HEAP_FLAG_NONE,
+                                                &desc,
+                                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                nullptr,
+                                                IID_PPV_ARGS(&tempResource_p)));
+
+  D3D12_SUBRESOURCE_DATA srdDesc = {};
+  srdDesc.pData                  = data_p;
+  srdDesc.RowPitch               = textureBuffer.GetWidth() * 4;
+  srdDesc.SlicePitch             = srdDesc.RowPitch * textureBuffer.GetHeight();
+
+  myTextureUploadAllocator_p->Reset();
+  myTextureUploadCommandList4_p->Reset(myTextureUploadAllocator_p, nullptr);
+
+  UpdateSubresources(myTextureUploadCommandList4_p,
+                     textureBuffer.GetResource(),
+                     tempResource_p,
+                     0,
+                     0,
+                     1,
+                     &srdDesc);
+
+  D3D12_RESOURCE_BARRIER barrier = {};
+  barrier.Transition.pResource   = textureBuffer.GetResource();
+  barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+  barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+  barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+
+  myTextureUploadCommandList4_p->ResourceBarrier(1, &barrier);
+  myTextureUploadCommandList4_p->Close();
+  myCommandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myTextureUploadCommandList4_p));
+
+  _HardWait();
 }
 
 void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
@@ -300,6 +374,31 @@ void Renderer::DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer,
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
 
+void Renderer::DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuffer,
+                                                  const IndexBuffer&   indexBuffer,
+                                                  const TextureBuffer& textureBuffer)
+{
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
+  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
+
+  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
+                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
+
+  ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
+
+  myCommandList4_p->SetDescriptorHeaps(1, arr);
+  myCommandList4_p->SetGraphicsRootDescriptorTable(1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
+}
+
 void Renderer::Clear(const Vector4f& color)
 {
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
@@ -329,7 +428,18 @@ void Renderer::EndFrame()
   // Present
   HR_ASSERT(mySwapChain4_p->Present(0, 0));
 
-  // Hard wait
+  _HardWait();
+
+  myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
+}
+
+ID3D12Device5* Renderer::GetDevice()
+{
+  return gDevice5_p;
+}
+
+void Renderer::_HardWait()
+{ // Hard wait
   myCommandQueue_p->Signal(myFence_p, myFenceValue);
 
   if (myFenceValue > myFence_p->GetCompletedValue())
@@ -339,13 +449,6 @@ void Renderer::EndFrame()
   }
 
   myFenceValue++;
-
-  myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
-}
-
-ID3D12Device5* Renderer::GetDevice()
-{
-  return gDevice5_p;
 }
 
 void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
@@ -395,17 +498,26 @@ void Renderer::_SetupShaderState()
 
   // Create root signature
   {
-    D3D12_ROOT_PARAMETER rootParam      = {};
-    rootParam.ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParam.ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParam.Descriptor.RegisterSpace  = 0;
-    rootParam.Descriptor.ShaderRegister = 0;
+    D3D12_ROOT_PARAMETER rootParam[2]      = {};
+    rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParam[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParam[0].Descriptor.RegisterSpace  = 0;
+    rootParam[0].Descriptor.ShaderRegister = 0;
+
+    D3D12_DESCRIPTOR_RANGE rangeDesc = {};
+    rangeDesc.RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    rangeDesc.NumDescriptors         = 1;
+
+    rootParam[1].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.pDescriptorRanges = &rangeDesc;
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
     rootSigDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    rootSigDesc.Desc_1_0.NumParameters = 1;
-    rootSigDesc.Desc_1_0.pParameters   = &rootParam;
+    rootSigDesc.Desc_1_0.NumParameters = 2;
+    rootSigDesc.Desc_1_0.pParameters   = &rootParam[0];
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
     samplerDesc.Filter                    = D3D12_FILTER_ANISOTROPIC;
@@ -480,7 +592,7 @@ void Renderer::_SetupShaderState()
     {
       D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeDesc = {};
       memset(&pipeDesc, 0, sizeof(pipeDesc));
-      pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_SOLID;
+      pipeDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
       //pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_WIREFRAME;
       pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_BACK;
       pipeDesc.PrimitiveTopologyType                     = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;

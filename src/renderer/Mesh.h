@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utility/Typedef.h"
+#include "TextureLoader.h"
 #include "Vertex.h"
 #include <string>
 #include <vector>
@@ -15,10 +16,12 @@ public:
   uint GetByteSizeOfVertices(uint idx) const;
 
   bool LoadMesh(const std::string& path);
-  void SetMesh(const std::vector<Vertex>& vertices);
-  void SetMesh(const std::vector<std::vector<Vertex>>& vertices);
-  void SetIndices(const std::vector<uint>& indices);
-  void SetIndices(const std::vector<std::vector<uint>>& indices);
+  void SetMesh(std::vector<Vertex>&& vertices);
+  void SetMesh(std::vector<std::vector<Vertex>>&& vertices);
+  void SetIndices(std::vector<uint>&& indices);
+  void SetIndices(std::vector<std::vector<uint>>&& indices);
+  void SetImages(TextureLoader::Image&& image);
+  void SetImages(std::vector<TextureLoader::Image>&& images);
 
   uint GetMeshesCount() const;
 
@@ -34,7 +37,12 @@ public:
   uint                                  GetTotalNumberOfIndices() const;
   const std::vector<std::vector<uint>>& GetAllIndices() const;
 
+  uint8*                                   GetRawImage(uint idx, uint* width, uint* height);
+  const TextureLoader::Image&              GetImage(uint idx) const;
+  const std::vector<TextureLoader::Image>& GetAllImages() const;
+
 private:
-  std::vector<std::vector<Vertex>> myMesh;
-  std::vector<std::vector<uint>>   myIndices;
+  std::vector<std::vector<Vertex>>  myMesh;
+  std::vector<std::vector<uint>>    myIndices;
+  std::vector<TextureLoader::Image> myImages;
 };
