@@ -1781,9 +1781,12 @@ namespace DM
       return DirectX::XMVectorGetX(DirectX::XMVector3Dot(Load(), DirectX::XMLoadFloat4(&_xmFlt)));
     }
 
-    float Length() const
+    float Length(bool skipW = false) const
     {
-      return DirectX::XMVectorGetX(DirectX::XMVector4Length(Load()));
+      if (!skipW)
+        return DirectX::XMVectorGetX(DirectX::XMVector4Length(Load()));
+      else
+        return DirectX::XMVectorGetX(DirectX::XMVector3Length(Load()));
     }
 
     float LengthSq() const

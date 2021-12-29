@@ -151,6 +151,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\events\Event.cpp" />
+    <ClCompile Include="src\events\EventHandler.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
     <ClCompile Include="src\renderer\IndexBuffer.cpp" />
     <ClCompile Include="src\renderer\Mesh.cpp" />
@@ -164,6 +166,8 @@
     <ClCompile Include="src\World\Planet2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\events\Event.h" />
+    <ClInclude Include="src\events\EventHandler.h" />
     <ClInclude Include="src\renderer\Camera.h" />
     <ClInclude Include="src\renderer\d3dx12.h" />
     <ClInclude Include="src\renderer\IndexBuffer.h" />

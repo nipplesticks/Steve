@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "../events/Event.h"
 #include <assert.h>
 
 Window::Window(uint x, uint y, const std::string& title)
@@ -58,9 +59,36 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   switch (aMessage)
   {
   case WM_DESTROY:
+  {
     PostQuitMessage(0);
     myIsOpen = false;
     break;
+  }
+  case WM_MOUSEMOVE:
+  {
+    uint x = LOWORD(aLParam);
+    uint y = HIWORD(aLParam);
+
+    DM::Vec2i        mp(x, y);
+    EventMouseMoved* ev_p = new EventMouseMoved(Event::Type::MouseMoved);
+    ev_p->MousePosition   = mp;
+    ev_p->MouseDelta      = mp - myLastMousePosition;
+    ev_p->Signal();
+    myLastMousePosition = mp;
+
+    ev_p->MButtonPressed = aWParam & MK_MBUTTON;
+    ev_p->LButtonPressed = aWParam & MK_LBUTTON;
+    ev_p->RButtonPressed = aWParam & MK_RBUTTON;
+
+    return true;
+  }
+  case WM_MOUSEWHEEL:
+  {
+    EventMouseWheel* ev_p  = new EventMouseWheel(Event::Type::MouseWheel);
+    ev_p->Delta = GET_WHEEL_DELTA_WPARAM(aWParam);
+    ev_p->Signal();
+    return true;
+  }
   }
 
   return false;

@@ -1,12 +1,13 @@
 #include "World/Planet.h"
 #include "World/Planet2.h"
+#include "events/EventHandler.h"
 #include "renderer/Camera.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
+#include "renderer/TextureBuffer.h"
 #include "renderer/TextureLoader.h"
 #include "renderer/VertexBuffer.h"
-#include "renderer/TextureBuffer.h"
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
@@ -40,7 +41,7 @@ int main()
   //m.LoadMesh("assets/models/Spider/Spider_3.fbx");
   Planet2 p;
   p.Create(1.0f, 3, 1.0f);
-  Mesh m = p.GetMesh();
+  Mesh                      m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;
   TextureBuffer             texBuff;
@@ -59,25 +60,52 @@ int main()
   texBuff.Init(w, h);
   texBuff.Update(&ren, rawImg);
 
-  float speed = -0.5f;
+  float speed     = 0.08f;
+  float zoomSpeed = 0.1f;
   Timer t;
   t.Start();
   while (wnd.IsOpen())
   {
     float dt = t.Stop();
     wnd.PollEvents();
-    DM::Vec4f camPos = cam.GetPosition();
-    float     x      = camPos.x * cos(speed * dt) + camPos.z * sin(speed * dt);
-    float     z      = camPos.x * -sin(speed * dt) + camPos.z * cos(speed * dt);
-    camPos.x         = x;
-    camPos.z         = z;
-    float y          = camPos.y * cos(speed * dt) + camPos.z * sin(speed * dt);
-    //float z  = camPos.y * -sin(speed * dt) + camPos.z * cos(speed * dt);
-    camPos.y = y;
-    //camPos.z = z;*/
 
-    cam.SetPosition(camPos);
-    cam.Update();
+    {
+      std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
+      EventHandler::ClearEvents(Event::Type::MouseMoved);
+      if (!events.empty())
+      {
+        EventMouseMoved* mouseEvent_p = (EventMouseMoved*)events.back();
+        float     dx  = ((float)mouseEvent_p->MouseDelta.x) * speed * dt;
+        float     dy  = ((float)mouseEvent_p->MouseDelta.y) * speed * dt;
+
+        if (mouseEvent_p->LButtonPressed)
+        {
+          cam.Rotate(DM::Vec3f(-dy, -dx));
+        }
+        for (uint i = 0; i < events.size(); i++)
+        {
+          delete events[i];
+        }
+      }
+    }
+    {
+      std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
+      EventHandler::ClearEvents(Event::Type::MouseWheel);
+      if (!events.empty())
+      {
+
+        for (uint i = 0; i < events.size(); i++)
+        {
+          EventMouseWheel* mouseEvent_p = (EventMouseWheel*)events[i];
+          if (mouseEvent_p->Delta)
+          {
+            float z = (float)mouseEvent_p->Delta * zoomSpeed * dt;
+            cam.Zoom(z);
+          }
+          delete events[i];
+        }
+      }
+    }
 
     // Must be first
     ren.BeginFrame();

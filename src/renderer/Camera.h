@@ -22,7 +22,9 @@ public:
   void             SetPosition(const DM::Vec4f& position);
   void             SetLookAt(const DM::Vec4f& point);
   void             SetUp(const DM::Vec4f& up);
-  void             Update();
+  void             Rotate(const DM::Vec3f& pitchJawRoll);
+  void             FlipUp();
+  void             Zoom(float factor);
 
   const DM::Vec4f& GetPosition() const;
   const DM::Vec4f& GetLookAt() const;
@@ -36,4 +38,8 @@ private:
   DM::Vec4f  myPosition;
   DM::Vec4f  myLookAt;
   DM::Vec4f  myUp;
+  DM::Vec3f  myPitchJawRoll;
+  DM::Vec4f  myRotatedPosition;
+  DM::Vec4f  myRotatedUp;
+  bool       myFlipUp = false;
 };

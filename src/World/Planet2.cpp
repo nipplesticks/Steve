@@ -188,7 +188,6 @@ void OptimiseMesh(std::vector<uint>& indices, std::vector<DM::Vec3f>& vertices)
       removed++;
       continue;
     }
-    //newVertices.push_back(vertices[i]);
     newVertices[counter++] = vertices[i];
 
     for (uint j = i + 1; j < vertices.size(); j++)
@@ -204,7 +203,6 @@ void OptimiseMesh(std::vector<uint>& indices, std::vector<DM::Vec3f>& vertices)
         {
           if (indices[k] == j || indices[k] == i)
           {
-            //indices[k] = newVertices.size() - 1;
             indices[k] = counter - 1;
           }
         }
@@ -359,6 +357,10 @@ void fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vert
 
 void Planet2::Create(float size, uint div, float uvTiles)
 {
+  if (fabs(uvTiles) < FLT_EPSILON)
+  {
+    uvTiles = 1.0f;
+  }
   std::vector<DM::Vec3f> points;
   std::vector<uint>      indices;
   CreateIcosahedron(indices, points);
@@ -395,6 +397,11 @@ void Planet2::Create(float size, uint div, float uvTiles)
   std::vector<uint> wrapped = detectWrappedUVCoordinates(indices, verts);
   fixWrappedUV(wrapped, indices, verts);
   fixSharedPoleVertices(indices, verts);
+  for (auto& v : verts)
+  {
+    v.uv.x *= -uvTiles;
+    v.uv.y *= uvTiles;
+  }
 
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));

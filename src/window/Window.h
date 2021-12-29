@@ -3,6 +3,7 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <string>
+#include "../utility/DMath.h"
 
 class Window
 {
@@ -26,4 +27,5 @@ private:
   std::string myTitle;
   bool        myIsOpen;
   HWND        myHwnd;
+  DM::Vec2i   myLastMousePosition;
 };
