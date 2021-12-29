@@ -314,30 +314,28 @@ void fixWrappedUV(std::vector<uint>&   wrapped,
 
 void fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vertices)
 {
-  uint northIdx = UINT_MAX;
-  uint southIdx = UINT_MAX;
+  uint northIdx  = UINT_MAX;
+  uint southIdx  = UINT_MAX;
   uint vertexIdx = vertices.size() - 1;
   for (uint i = 0; i < vertices.size(); i++)
   {
     if (northIdx != UINT_MAX && southIdx != UINT_MAX)
       break;
 
-    if (fabs(fabs(vertices[i].position.y) - 1.0f) < FLT_EPSILON)
-    {
-      if (vertices[i].position.y < 0.0f)
-        southIdx = i;
-      else
-        northIdx = i;
-    }
+    if (vertices[i].position.y == 1.0f)
+      northIdx = i;
+    if (vertices[i].position.y == -1.0f)
+      southIdx = i;
   }
 
-  for (uint i = 0; i < indices.size(); i += 3)
+  for (uint i = 0; i < indices.size(); i++)
   {
     if (indices[i] == northIdx)
     {
-      Vertex A = vertices[indices[i]];
-      Vertex B = vertices[indices[i + 1]];
-      Vertex C = vertices[indices[i + 2]];
+      uint startIdx = i - (i % 3);
+      Vertex A        = vertices[indices[startIdx]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
       Vertex newNorth = vertices[northIdx];
       newNorth.uv.x   = (B.uv.x + C.uv.x) * 0.5f;
       vertexIdx++;
@@ -346,9 +344,10 @@ void fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vert
     }
     else if (indices[i] == southIdx)
     {
-      Vertex A        = vertices[indices[i]];
-      Vertex B        = vertices[indices[i + 1]];
-      Vertex C        = vertices[indices[i + 2]];
+      uint   startIdx = i - (i % 3);
+      Vertex A        = vertices[indices[startIdx]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
       Vertex newSouth = vertices[southIdx];
       newSouth.uv.x   = (B.uv.x + C.uv.x) * 0.5f;
       vertexIdx++;
@@ -403,7 +402,7 @@ void Planet2::Create(float size, uint div, float uvTiles)
   uint height = 0, width = 0;
   //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
   //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
-  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/testimage.jpg");
+  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
   myMesh.SetImages(std::move(shrek));
 }
 
