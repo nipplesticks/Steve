@@ -394,7 +394,8 @@ void Renderer::DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuf
   ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
+  myCommandList4_p->SetGraphicsRootDescriptorTable(
+      1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
@@ -508,10 +509,10 @@ void Renderer::_SetupShaderState()
     rangeDesc.RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     rangeDesc.NumDescriptors         = 1;
 
-    rootParam[1].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParam[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[1].DescriptorTable.pDescriptorRanges = &rangeDesc;
+    rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc;
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
@@ -592,8 +593,9 @@ void Renderer::_SetupShaderState()
     {
       D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeDesc = {};
       memset(&pipeDesc, 0, sizeof(pipeDesc));
-      pipeDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+      //pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_NONE;
       //pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_WIREFRAME;
+      pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_SOLID;
       pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_BACK;
       pipeDesc.PrimitiveTopologyType                     = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
       pipeDesc.NumRenderTargets                          = 1;

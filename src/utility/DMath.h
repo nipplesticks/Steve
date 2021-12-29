@@ -1153,6 +1153,28 @@ namespace DM
       return val;
     }
 
+    DirectX::XMFLOAT4A AsXmFloat4APoint() const
+    {
+      DirectX::XMFLOAT4A xmFloat = {};
+
+      xmFloat.x = x;
+      xmFloat.y = y;
+      xmFloat.z = z;
+      xmFloat.w = 1.0f;
+      return xmFloat;
+    }
+
+    DirectX::XMFLOAT4A AsXmFloat4AVector() const
+    {
+      DirectX::XMFLOAT4A xmFloat = {};
+
+      xmFloat.x = x;
+      xmFloat.y = y;
+      xmFloat.z = z;
+      xmFloat.w = 0.0f;
+      return xmFloat;
+    }
+
     const DirectX::XMFLOAT3& AsXmFloat3() const
     {
       return m_vec;

@@ -16,7 +16,7 @@ Planet::~Planet() { }
 
 void Planet::Create(float size, uint div, float uvTiles)
 {
-  uvTiles = 1.0f / uvTiles;
+  //uvTiles = 1.0f / uvTiles;
   std::vector<std::vector<DM::Vec3f>> points;
   points.resize(NR_OF_SIDES);
 
@@ -34,14 +34,12 @@ void Planet::Create(float size, uint div, float uvTiles)
       }
       start.y -= offset;
     }
-    /*float w = div + 2;
+    float w = div + 2;
     for (uint y = 0; y <= div + 1; y++)
     {
       for (uint x = 0; x <= div + 1; x++)
       {
-        if ((x == 0 && y == 0) ||
-            (x == div + 1 && y == div + 1) ||
-            (x == 0 && y == div + 1) ||
+        if ((x == 0 && y == 0) || (x == div + 1 && y == div + 1) || (x == 0 && y == div + 1) ||
             (x == div + 1 && y == 0))
           continue;
 
@@ -53,13 +51,13 @@ void Planet::Create(float size, uint div, float uvTiles)
         if (l < 0.001f)
           continue;
 
-        point = point + dir * l * l * l * l * l * l; 
+        point = point + dir * l * l * l * l * l * l;
         if (x != 0 && x != div + 1)
           points[FRONT_IDX][idx].x = point.x;
         if (y != 0 && y != div + 1)
           points[FRONT_IDX][idx].y = point.y;
       }
-    }*/
+    }
   }
   // Right
   {
@@ -153,7 +151,12 @@ void Planet::Create(float size, uint div, float uvTiles)
         verts[i][j].position = DirectX::XMFLOAT4A(p.x, p.y, p.z, 1.0f);
         verts[i][j].normal   = DirectX::XMFLOAT4A(nor.x, nor.y, nor.z, 0.0f);
         verts[i][j].color    = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
-        verts[i][j].uv       = DirectX::XMFLOAT4A(0.0f, 0.0f, 0.0f, 0.0f);
+        uint width           = div + 2;
+        uint idxX            = j % width;
+        uint idxY            = j / width;
+        verts[i][j].uv.x     = ((float)(idxX)*uvTiles) / (float)(div + 2);
+        verts[i][j].uv.y     = ((float)(idxY)*uvTiles) / (float)(div + 2);
+
 
         if (SET_CUBE)
         {
@@ -184,12 +187,12 @@ void Planet::Create(float size, uint div, float uvTiles)
       }
     }
     uint w = div + 2;
-    for (uint i = 0; i < NR_OF_SIDES; i++)
+    /*for (uint i = 0; i < NR_OF_SIDES; i++)
     {
       for (uint y = 0; y < w; y++)
       {
         float length = 0;
-        for (uint x = 0; x < w - 1; x++)
+        for (uint x = 0; x < (w - 1); x++)
         {
           DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
           DirectX::XMFLOAT4A xmP2 = verts[i][x + 1 + y * w].position;
@@ -232,7 +235,29 @@ void Planet::Create(float size, uint div, float uvTiles)
           verts[i][x + y * w].uv.y = l / length;
         }
       }
-    }
+    }*/
+    /*auto      xmCorner = verts[FRONT_IDX][0].position;
+    auto      xmMid    = verts[FRONT_IDX][(w / 2) + (w / 2) * w].position;
+    DM::Vec3f corner(xmCorner.x, xmCorner.y, xmCorner.z);
+    DM::Vec3f mid(xmMid.x, xmMid.y, xmMid.z);
+    float     radius = (mid - corner).Length();
+    for (uint i = 0; i < NR_OF_SIDES; i++)
+    {
+      for (uint y = 0; y < w; y++)
+      {
+        for (uint x = 0; x < w; x++)
+        {
+          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
+          DirectX::XMFLOAT4A xmP2 = verts[i][(w / 2) + (w / 2) * w].position;
+          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
+          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
+          float              length = (p2 - p1).Length();
+          verts[i][x + y * w].uv.x /= radius / (length * length);
+          verts[i][x + y * w].uv.y /= radius / (length * length);
+        }
+      }
+    }*/
+
     myMesh.SetMesh(std::move(verts));
   }
 
@@ -259,8 +284,9 @@ void Planet::Create(float size, uint div, float uvTiles)
     }
     myMesh.SetIndices(std::move(indices));
   }
-  uint   height = 0, width = 0;
-  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
+  uint height = 0, width = 0;
+  //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
+  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
   myMesh.SetImages(std::move(shrek));
 }
 

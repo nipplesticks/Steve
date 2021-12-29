@@ -1,4 +1,5 @@
 #include "World/Planet.h"
+#include "World/Planet2.h"
 #include "renderer/Camera.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
@@ -37,8 +38,8 @@ int main()
   //Mesh m;
   //m.LoadMesh("assets/models/DunkaDennis/DunkaDennis.obj");
   //m.LoadMesh("assets/models/Spider/Spider_3.fbx");
-  Planet p;
-  p.Create(1.0f, 100, 32.0f);
+  Planet2 p;
+  p.Create(1.0f, 3, 1.0f);
   Mesh m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;
@@ -58,7 +59,7 @@ int main()
   texBuff.Init(w, h);
   texBuff.Update(&ren, rawImg);
 
-  float speed = 0.5f;
+  float speed = -0.5f;
   Timer t;
   t.Start();
   while (wnd.IsOpen())
