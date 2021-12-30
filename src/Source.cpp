@@ -1,7 +1,8 @@
 #include "World/Planet.h"
 #include "World/Planet2.h"
 #include "events/EventHandler.h"
-#include "renderer/Camera.h"
+//#include "renderer/Camera.h"
+#include "renderer/Camera2.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
@@ -14,20 +15,30 @@
 
 int main()
 {
+  DM::Vec3f tempLol(1.0, 0.0f, 0.0f);
+  tempLol.Store(DirectX::XMVector3Rotate(tempLol.Load(),
+    DirectX::XMQuaternionRotationAxis(DM::Vec3f(0.0f, 0.0f, -1.0f).Load(),
+                                                  DirectX::XMConvertToRadians(23.5f)))
+  );
+  tempLol = tempLol.Normalize();
+  std::cout << tempLol.ToString() << std::endl;
+
+
+  Camera2  cam;
   Window   wnd(1280, 720, "aTitle");
   Renderer ren(1280, 720, wnd.GetHwnd());
-  Camera   cam;
+  //Camera   cam;
   {
-    Camera::View view;
+    Camera2::View view;
     view.fov       = 45.0f;
     view.height    = 720.0f;
     view.width     = 1280.0f;
     view.nearPlane = 0.01f;
     view.farPlane  = 1000.0f;
-    cam.SetPosition(DM::Vec4f(0, 0, 2.0f, 1.0f));
+    cam.SetPosition(0, 0, 2.0f);
     //cam.SetPosition(DM::Vec4f(0, 300.0f, 200.0f, 1.0f));
-    cam.SetLookAt(DM::Vec4f(0, 0, 0.0, 1.0f));
-    cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
+    cam.SetLookAt(0, 0, 0);
+    //cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
     /*
     cam.SetPosition(DM::Vec4f(0, -25.0f, 25.0f, 1.0f));
     cam.SetLookAt(DM::Vec4f(0, 25.0, 0.0, 1.0f));
@@ -60,8 +71,9 @@ int main()
   texBuff.Init(w, h);
   texBuff.Update(&ren, rawImg);
 
-  float speed     = 0.08f;
+  float speed     = 0.1f;
   float zoomSpeed = 0.1f;
+  float rollSpeed = 0.5f;
   Timer t;
   t.Start();
   while (wnd.IsOpen())
@@ -75,12 +87,16 @@ int main()
       if (!events.empty())
       {
         EventMouseMoved* mouseEvent_p = (EventMouseMoved*)events.back();
-        float     dx  = ((float)mouseEvent_p->MouseDelta.x) * speed * dt;
-        float     dy  = ((float)mouseEvent_p->MouseDelta.y) * speed * dt;
+        float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed * dt;
+        float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed * dt;
 
+        if (mouseEvent_p->MButtonPressed)
+        {
+          cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
+        }
         if (mouseEvent_p->LButtonPressed)
         {
-          cam.Rotate(DM::Vec3f(-dy, -dx));
+          cam.Rotate(-dx, -dy);
         }
         for (uint i = 0; i < events.size(); i++)
         {

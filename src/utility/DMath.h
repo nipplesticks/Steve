@@ -1139,6 +1139,11 @@ namespace DM
       return DirectX::XMLoadFloat3(&m_vec);
     }
 
+    DirectX::XMVECTOR LoadAsVec4(float w) const
+    {
+      return DirectX::XMVectorSet(x, y, z, w);
+    }
+
     void Store(const DirectX::XMVECTOR& vector)
     {
       DirectX::XMStoreFloat3(&m_vec, vector);

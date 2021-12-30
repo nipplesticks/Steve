@@ -54,6 +54,9 @@
     <ClCompile Include="src\events\EventHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\Camera2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
@@ -120,6 +123,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\events\EventHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\Camera2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

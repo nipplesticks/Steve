@@ -388,7 +388,7 @@ void Planet2::Create(float size, uint div, float uvTiles)
   for (uint i = 0; i < points.size(); i++)
   {
     verts[i]          = v;
-    verts[i].position = points[i].Normalize().AsXmFloat4APoint();
+    verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
     //verts[i].position = points[i].AsXmFloat4APoint();
     verts[i].normal = points[i].Normalize().AsXmFloat4AVector();
     verts[i].uv.x   = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
@@ -401,6 +401,9 @@ void Planet2::Create(float size, uint div, float uvTiles)
   {
     v.uv.x *= -uvTiles;
     v.uv.y *= uvTiles;
+    v.position.x *= size;
+    v.position.y *= size;
+    v.position.z *= size;
   }
 
   myMesh.SetMesh(std::move(verts));
