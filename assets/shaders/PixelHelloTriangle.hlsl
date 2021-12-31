@@ -19,8 +19,9 @@ float4 main(Vertex vertex)
   float3 ambient  = float3(0.05f, 0.05f, 0.05f);
 
   float3 finalColor = max(dot(normalize(vertex.nor.xyz), -lightDir), ambient) * color;
-
-  return min(float4(finalColor, 1.0f), 1.0f);
+  
+    return float4(1, 1, 1, 1);
+  //return min(float4(finalColor, 1.0f), 1.0f);
   //return float4(color, 1.0f);
   //return float4(pos.x, pos.y, pos.z, 1.0f);
   //return float4(vertex.uv.x, vertex.uv.y, 1.0f, 1.0f);

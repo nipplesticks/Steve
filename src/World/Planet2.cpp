@@ -397,19 +397,22 @@ void Planet2::Create(float size, uint div, float uvTiles)
   std::vector<uint> wrapped = detectWrappedUVCoordinates(indices, verts);
   fixWrappedUV(wrapped, indices, verts);
   fixSharedPoleVertices(indices, verts);
+
   for (auto& v : verts)
   {
     v.uv.x *= -uvTiles;
     v.uv.y *= uvTiles;
-    v.position.x *= size;
-    v.position.y *= size;
-    v.position.z *= size;
+
+    float height = 1.0f;
+
+    v.position.x *= size * height;
+    v.position.y *= size * height;
+    v.position.z *= size * height;
   }
 
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
 
-  uint height = 0, width = 0;
   //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
   //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
   TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");

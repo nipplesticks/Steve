@@ -1,5 +1,6 @@
 #include "World/Planet.h"
 #include "World/Planet2.h"
+#include "World/Planet3.h"
 #include "events/EventHandler.h"
 //#include "renderer/Camera.h"
 #include "renderer/Camera2.h"
@@ -15,43 +16,22 @@
 
 int main()
 {
-  DM::Vec3f tempLol(1.0, 0.0f, 0.0f);
-  tempLol.Store(DirectX::XMVector3Rotate(tempLol.Load(),
-    DirectX::XMQuaternionRotationAxis(DM::Vec3f(0.0f, 0.0f, -1.0f).Load(),
-                                                  DirectX::XMConvertToRadians(23.5f)))
-  );
-  tempLol = tempLol.Normalize();
-  std::cout << tempLol.ToString() << std::endl;
+  Window        wnd(1280, 720, "aTitle");
+  Renderer      ren(1280, 720, wnd.GetHwnd());
+  Camera2::View view;
+  view.fov       = 45.0f;
+  view.height    = 720.0f;
+  view.width     = 1280.0f;
+  view.nearPlane = 0.01f;
+  view.farPlane  = 1000.0f;
+  Camera2 cam;
+  cam.SetMaxZoom(1.0f + view.nearPlane);
+  cam.SetPosition(0, 0, 2.0f);
+  cam.SetLookAt(0, 0, 0);
+  cam.SetView(view);
 
-
-  Camera2  cam;
-  Window   wnd(1280, 720, "aTitle");
-  Renderer ren(1280, 720, wnd.GetHwnd());
-  //Camera   cam;
-  {
-    Camera2::View view;
-    view.fov       = 45.0f;
-    view.height    = 720.0f;
-    view.width     = 1280.0f;
-    view.nearPlane = 0.01f;
-    view.farPlane  = 1000.0f;
-    cam.SetPosition(0, 0, 2.0f);
-    //cam.SetPosition(DM::Vec4f(0, 300.0f, 200.0f, 1.0f));
-    cam.SetLookAt(0, 0, 0);
-    //cam.SetUp(DM::Vec4f(0.0f, 1.0f, 0.0f, 0.0f));
-    /*
-    cam.SetPosition(DM::Vec4f(0, -25.0f, 25.0f, 1.0f));
-    cam.SetLookAt(DM::Vec4f(0, 25.0, 0.0, 1.0f));
-    cam.SetUp(DM::Vec4f(0.0f, 0.0f, 1.0f, 0.0f));
-    */
-    cam.SetView(view);
-  }
-
-  //Mesh m;
-  //m.LoadMesh("assets/models/DunkaDennis/DunkaDennis.obj");
-  //m.LoadMesh("assets/models/Spider/Spider_3.fbx");
-  Planet2 p;
-  p.Create(1.0f, 3, 1.0f);
+  Planet3 p;
+  p.Create(1.0f, 1, 1.0f);
   Mesh                      m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;
