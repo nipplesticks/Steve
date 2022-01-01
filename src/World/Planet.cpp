@@ -1,296 +1,444 @@
 #include "Planet.h"
 #include "../renderer/TextureLoader.h"
-#define FRONT_IDX 0
-#define RIGHT_IDX 1
-#define TOP_IDX 2
-#define BACK_IDX 3
-#define LEFT_IDX 4
-#define BOT_IDX 5
-#define NR_OF_SIDES 6
-
-#define SET_CUBE false
-
+#include "../utility/Timer.h"
+#include <iostream>
+#include <map>
+//https://mft-dev.dk/uv-mapping-sphere/
 Planet::Planet() { }
 
 Planet::~Planet() { }
 
+//Bitmap CreateTexture(int width, int height)
+//{
+//  Bitmap       image        = new Bitmap(width, height);
+//  double       widthFactor  = 1.0 / width;
+//  double       heightFactor = 1.0 / height;
+//  Color        baseColor    = Color.FromArgb(255, 127, 35, 7);
+//  SimplexNoise generator    = new SimplexNoise(seed : -5000);
+//  for (int x = 0; x < width; ++x)
+//  {
+//    for (int y = 0; y < height; ++y)
+//    {
+//      double dX = x / (double)width;
+//      double dY = y / (double)height;
+//      /* noise range is clamped -1 to 1 */
+//      double noise =
+//          generator.PerlinNoise(dX, dY, octaves : 3, persistence : 3.0f / 4.0f, lacunarity : 3f);
+//      int   blueHue  = (int)(baseColor.B * noise) + baseColor.B;
+//      int   redHue   = (int)(baseColor.R * noise) + baseColor.R;
+//      int   greenHue = (int)(baseColor.G * noise) + baseColor.G;
+//      Color col      = Color.FromArgb(baseColor.A, redHue, greenHue, blueHue);
+//      image.SetPixel(x, y, col);
+//    }
+//  }
+//  return image;
+//}
+
+void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
+{
+  vec.push_back(a);
+  vec.push_back(b);
+  vec.push_back(c);
+}
+
 void Planet::Create(float size, uint div, float uvTiles)
 {
-  //uvTiles = 1.0f / uvTiles;
-  std::vector<std::vector<DM::Vec3f>> points;
-  points.resize(NR_OF_SIDES);
+  if (fabs(uvTiles) < FLT_EPSILON)
+  {
+    uvTiles = 1.0f;
+  }
+  std::vector<DM::Vec3f> points;
+  std::vector<uint>      indices;
+  _createIcosahedron(indices, points);
+  Timer t;
+  t.Start();
 
-  // Front
   {
-    float     offset = 1.0f / (float)(div + 1);
-    DM::Vec3f start(-0.5f, 0.5f, 0.5f);
-    for (uint y = 0; y <= div + 1; y++)
+    std::vector<Triangle> tri(indices.size() / 3u);
+    uint                  triCounter = 0;
+    for (uint i = 0; i < indices.size(); i += 3)
     {
-      start.x = -0.5f;
-      for (uint x = 0; x <= div + 1; x++)
-      {
-        points[FRONT_IDX].push_back(start);
-        start.x += offset;
-      }
-      start.y -= offset;
+      tri[triCounter].A   = indices[i];
+      tri[triCounter].B   = indices[i + 1];
+      tri[triCounter++].C = indices[i + 2];
     }
-    float w = div + 2;
-    for (uint y = 0; y <= div + 1; y++)
+    indices.clear();
+    for (uint i = 0; i < div; i++)
     {
-      for (uint x = 0; x <= div + 1; x++)
-      {
-        if ((x == 0 && y == 0) || (x == div + 1 && y == div + 1) || (x == 0 && y == div + 1) ||
-            (x == div + 1 && y == 0))
-          continue;
-
-        uint      idx   = x + y * (div + 2);
-        DM::Vec2f point = points[FRONT_IDX][idx].AsXmFloat2();
-        DM::Vec2f center(0.0f, 0.0f);
-        DM::Vec2f dir = center - point;
-        float     l   = dir.Length();
-        if (l < 0.001f)
-          continue;
-
-        point = point + dir * l * l * l * l * l * l;
-        if (x != 0 && x != div + 1)
-          points[FRONT_IDX][idx].x = point.x;
-        if (y != 0 && y != div + 1)
-          points[FRONT_IDX][idx].y = point.y;
-      }
+      _subdivideIcosahedron(tri, points);
     }
-  }
-  // Right
-  {
-    DM::Mat3x3      rotMatrix;
-    constexpr float rad = DirectX::XMConvertToRadians(90.0f);
-    rotMatrix.Store(DirectX::XMMatrixRotationAxis(DM::Vec3f(0.0f, 1.0f, 0.0f).Load(), rad));
-    points[RIGHT_IDX].resize(points[FRONT_IDX].size());
-    uint c = 0;
-    for (auto& p : points[FRONT_IDX])
+    indices.resize(tri.size() * 3u);
+    uint indCounter = 0;
+    for (uint i = 0; i < tri.size(); i++)
     {
-      DM::Vec3f point;
-      point.Store(DirectX::XMVector3TransformCoord(p.Load(), rotMatrix.Load()));
-      points[RIGHT_IDX][c++] = point;
-    }
-  }
-  // Left
-  {
-    DM::Mat3x3      rotMatrix;
-    constexpr float rad = DirectX::XMConvertToRadians(90.0f);
-    rotMatrix.Store(DirectX::XMMatrixRotationAxis(DM::Vec3f(0.0f, -1.0f, 0.0f).Load(), rad));
-    points[LEFT_IDX].resize(points[FRONT_IDX].size());
-    uint c = 0;
-    for (auto& p : points[FRONT_IDX])
-    {
-      DM::Vec3f point;
-      point.Store(DirectX::XMVector3TransformCoord(p.Load(), rotMatrix.Load()));
-      points[LEFT_IDX][c++] = point;
-    }
-  }
-  // Top
-  {
-    DM::Mat3x3      rotMatrix;
-    constexpr float rad = DirectX::XMConvertToRadians(90.0f);
-    rotMatrix.Store(DirectX::XMMatrixRotationAxis(DM::Vec3f(-1.0f, 0.0f, 0.0f).Load(), rad));
-    points[TOP_IDX].resize(points[FRONT_IDX].size());
-    uint c = 0;
-    for (auto& p : points[FRONT_IDX])
-    {
-      DM::Vec3f point;
-      point.Store(DirectX::XMVector3TransformCoord(p.Load(), rotMatrix.Load()));
-      points[TOP_IDX][c++] = point;
-    }
-  }
-  // BOT
-  {
-    DM::Mat3x3      rotMatrix;
-    constexpr float rad = DirectX::XMConvertToRadians(90.0f);
-    rotMatrix.Store(DirectX::XMMatrixRotationAxis(DM::Vec3f(1.0f, 0.0f, 0.0f).Load(), rad));
-    points[BOT_IDX].resize(points[FRONT_IDX].size());
-    uint c = 0;
-    for (auto& p : points[FRONT_IDX])
-    {
-      DM::Vec3f point;
-      point.Store(DirectX::XMVector3TransformCoord(p.Load(), rotMatrix.Load()));
-      points[BOT_IDX][c++] = point;
-    }
-  }
-  // BACK
-  {
-    DM::Mat3x3      rotMatrix;
-    constexpr float rad = DirectX::XMConvertToRadians(180.0f);
-    rotMatrix.Store(DirectX::XMMatrixRotationAxis(DM::Vec3f(0.0f, 1.0f, 0.0f).Load(), rad));
-    points[BACK_IDX].resize(points[FRONT_IDX].size());
-    uint c = 0;
-    for (auto& p : points[FRONT_IDX])
-    {
-      DM::Vec3f point;
-      point.Store(DirectX::XMVector3TransformCoord(p.Load(), rotMatrix.Load()));
-      points[BACK_IDX][c++] = point;
+      indices[indCounter++] = tri[i].A;
+      indices[indCounter++] = tri[i].B;
+      indices[indCounter++] = tri[i].C;
     }
   }
 
-  // Apply some noise
-  {
+  double divTime = t.Stop();
+  std::cout << "Subdivition time: " << divTime << " seconds\n";
 
+  std::vector<Vertex> verts(points.size());
+  Vertex              v = {};
+  v.color               = DirectX::XMFLOAT4A(1, 1, 1, 1);
+  float PI              = DirectX::XM_PI;
+  for (uint i = 0; i < points.size(); i++)
+  {
+    verts[i]          = v;
+    verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
+    //verts[i].position = points[i].AsXmFloat4APoint();
+    //verts[i].normal = points[i].Normalize().AsXmFloat4AVector();
+    verts[i].uv.x = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
+    verts[i].uv.y = 0.5f - (std::asin(verts[i].position.y) / PI);
+  }
+  std::vector<uint> wrapped = _detectWrappedUVCoords(indices, verts);
+  _fixWrappedUVCoords(wrapped, indices, verts);
+  _fixSharedPoleVertices(indices, verts);
+
+  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/testNoise.jpg");
+
+  for (auto& v : verts)
+  {
+    v.uv.x *= -uvTiles;
+    v.uv.y *= uvTiles;
+
+    int uvIdxX = shrek.width * v.uv.x;
+    int uvIdxY = shrek.height * v.uv.y;
+    int   steps = 10;
+    float h     = _sampleHeight(&shrek, uvIdxX, uvIdxY, steps);
+
+    float scale = 0.05f;
+    h *= scale;
+
+    float height = 1.0f + h;
+
+    v.position.x *= size * height;
+    v.position.y *= size * height;
+    v.position.z *= size * height;
   }
 
-  // Convert to sphere and store in mesh
+  for (uint i = 0; i < indices.size(); i += 3)
   {
-    std::vector<std::vector<Vertex>> verts(NR_OF_SIDES);
-    for (uint i = 0; i < NR_OF_SIDES; i++)
+    DM::Vec3f v1     = verts[indices[i]].position;
+    DM::Vec3f v2     = verts[indices[i + 1]].position;
+    DM::Vec3f v3     = verts[indices[i + 2]].position;
+    DM::Vec3f d1     = (v2 - v1).Normalize();
+    DM::Vec3f d2     = (v3 - v1).Normalize();
+    DM::Vec3f normal = d2.Cross(d1).Normalize();
+    for (uint j = 0; j < 3; j++)
     {
-      uint count = points[i].size();
-      verts[i].resize(count);
-      for (uint j = 0; j < count; j++)
-      {
-        DM::Vec3f p          = points[i][j];
-        p                    = p.Normalize();
-        DM::Vec3f nor        = p;
-        p                    = p * size;
-        verts[i][j].position = DirectX::XMFLOAT4A(p.x, p.y, p.z, 1.0f);
-        verts[i][j].normal   = DirectX::XMFLOAT4A(nor.x, nor.y, nor.z, 0.0f);
-        verts[i][j].color    = DirectX::XMFLOAT4A(1.0f, 1.0f, 1.0f, 1.0f);
-        uint width           = div + 2;
-        uint idxX            = j % width;
-        uint idxY            = j / width;
-        verts[i][j].uv.x     = ((float)(idxX)*uvTiles) / (float)(div + 2);
-        verts[i][j].uv.y     = ((float)(idxY)*uvTiles) / (float)(div + 2);
-
-
-        if (SET_CUBE)
-        {
-          verts[i][j].position =
-              DirectX::XMFLOAT4A(points[i][j].x, points[i][j].y, points[i][j].z, 1.0f);
-          switch (i)
-          {
-          case FRONT_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 0.0f, 1.0f, 0.0f);
-            break;
-          case RIGHT_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(1.0f, 0.0f, 0.0f, 0.0f);
-            break;
-          case LEFT_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(-1.0f, 0.0f, 0.0f, 0.0f);
-            break;
-          case TOP_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 1.0f, 0.0f, 0.0f);
-            break;
-          case BOT_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, -1.0f, 0.0f, 0.0f);
-            break;
-          case BACK_IDX:
-            verts[i][j].normal = DirectX::XMFLOAT4A(0.0f, 0.0f, -1.0f, 0.0f);
-            break;
-          }
-        }
-      }
+      DM::Vec3f n                  = verts[indices[j]].normal;
+      n                            = ((n + normal) * 0.5f).Normalize();
+      verts[indices[i + j]].normal = n.AsXmFloat4AVector();
     }
-    uint w = div + 2;
-    /*for (uint i = 0; i < NR_OF_SIDES; i++)
-    {
-      for (uint y = 0; y < w; y++)
-      {
-        float length = 0;
-        for (uint x = 0; x < (w - 1); x++)
-        {
-          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
-          DirectX::XMFLOAT4A xmP2 = verts[i][x + 1 + y * w].position;
-          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
-          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
-          length += (p2 - p1).Length();
-        }
-        length  = length * uvTiles;
-        float l = 0.0f;
-        for (uint x = 1; x < w; x++)
-        {
-          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
-          DirectX::XMFLOAT4A xmP2 = verts[i][x - 1 + y * w].position;
-          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
-          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
-          l += (p2 - p1).Length();
-          verts[i][x + y * w].uv.x = l / length;
-        }
-      }
-      for (uint x = 0; x < w; x++)
-      {
-        float length = 0;
-        for (uint y = 0; y < w - 1; y++)
-        {
-          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
-          DirectX::XMFLOAT4A xmP2 = verts[i][x + 1 + y * w].position;
-          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
-          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
-          length += (p2 - p1).Length();
-        }
-        length  = length * uvTiles;
-        float l = 0.0f;
-        for (uint y = 1; y < w; y++)
-        {
-          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
-          DirectX::XMFLOAT4A xmP2 = verts[i][x - 1 + y * w].position;
-          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
-          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
-          l += (p2 - p1).Length();
-          verts[i][x + y * w].uv.y = l / length;
-        }
-      }
-    }*/
-    /*auto      xmCorner = verts[FRONT_IDX][0].position;
-    auto      xmMid    = verts[FRONT_IDX][(w / 2) + (w / 2) * w].position;
-    DM::Vec3f corner(xmCorner.x, xmCorner.y, xmCorner.z);
-    DM::Vec3f mid(xmMid.x, xmMid.y, xmMid.z);
-    float     radius = (mid - corner).Length();
-    for (uint i = 0; i < NR_OF_SIDES; i++)
-    {
-      for (uint y = 0; y < w; y++)
-      {
-        for (uint x = 0; x < w; x++)
-        {
-          DirectX::XMFLOAT4A xmP1 = verts[i][x + y * w].position;
-          DirectX::XMFLOAT4A xmP2 = verts[i][(w / 2) + (w / 2) * w].position;
-          DM::Vec3f          p1(xmP1.x, xmP1.y, xmP1.z);
-          DM::Vec3f          p2(xmP2.x, xmP2.y, xmP2.z);
-          float              length = (p2 - p1).Length();
-          verts[i][x + y * w].uv.x /= radius / (length * length);
-          verts[i][x + y * w].uv.y /= radius / (length * length);
-        }
-      }
-    }*/
-
-    myMesh.SetMesh(std::move(verts));
   }
 
-  // Create indices
-  {
-    std::vector<std::vector<uint>> indices(NR_OF_SIDES);
-    uint                           w = div + 2;
-    for (uint i = 0; i < NR_OF_SIDES; i++)
-    {
-      for (uint j = 0; j < points[i].size() - w; j++)
-      {
-        if ((j + 1) % w == 0)
-          continue;
-        //First triangle
-        indices[i].push_back(j);
-        indices[i].push_back(j + w + 1);
-        indices[i].push_back(j + w);
+  std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
+  std::cout << "nrOfTris: \t" << indices.size() / 3 << std::endl;
+  std::cout << "nrOfIdx: \t" << indices.size() << std::endl;
+  myMesh.SetMesh(std::move(verts));
+  myMesh.SetIndices(std::move(indices));
 
-        //Second Triangle
-        indices[i].push_back(j);
-        indices[i].push_back(j + 1);
-        indices[i].push_back(j + w + 1);
-      }
-    }
-    myMesh.SetIndices(std::move(indices));
-  }
-  uint height = 0, width = 0;
   //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
-  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
-  myMesh.SetImages(std::move(shrek));
+  //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
+  TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
+  myMesh.SetImages(std::move(shrek2));
 }
 
 const Mesh& Planet::GetMesh() const
 {
   return myMesh;
+}
+
+void Planet::_createIcosahedron(std::vector<uint>& indices, std::vector<DM::Vec3f>& vertices)
+{
+  float phi = (1.0f + sqrt(5.0f)) * 0.5f; // Golder Ratio
+  float a   = 1.0f;
+  float b   = 1.0f / phi;
+  vertices.resize(12);
+  indices.clear();
+
+  uint idx        = 0;
+  vertices[idx++] = DM::Vec3f(0, b, -a);
+  vertices[idx++] = DM::Vec3f(b, a, 0);
+  vertices[idx++] = DM::Vec3f(-b, a, 0);
+  vertices[idx++] = DM::Vec3f(0, b, a);
+  vertices[idx++] = DM::Vec3f(0, -b, a);
+  vertices[idx++] = DM::Vec3f(-a, 0, b);
+  vertices[idx++] = DM::Vec3f(0, -b, -a);
+  vertices[idx++] = DM::Vec3f(a, 0, -b);
+  vertices[idx++] = DM::Vec3f(a, 0, b);
+  vertices[idx++] = DM::Vec3f(-a, 0, -b);
+  vertices[idx++] = DM::Vec3f(b, -a, 0);
+  vertices[idx++] = DM::Vec3f(-b, -a, 0);
+
+  pushIndices(1, 2, 0, indices);
+  pushIndices(2, 1, 3, indices);
+  pushIndices(4, 5, 3, indices);
+  pushIndices(8, 4, 3, indices);
+  pushIndices(6, 7, 0, indices);
+  pushIndices(9, 6, 0, indices);
+  pushIndices(10, 11, 4, indices);
+  pushIndices(11, 10, 6, indices);
+  pushIndices(5, 9, 2, indices);
+  pushIndices(9, 5, 11, indices);
+  pushIndices(7, 8, 1, indices);
+  pushIndices(8, 7, 10, indices);
+  pushIndices(5, 2, 3, indices);
+  pushIndices(1, 8, 3, indices);
+  pushIndices(2, 9, 0, indices);
+  pushIndices(7, 1, 0, indices);
+  pushIndices(9, 11, 6, indices);
+  pushIndices(10, 7, 6, indices);
+  pushIndices(11, 5, 4, indices);
+  pushIndices(8, 10, 4, indices);
+}
+
+void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
+                                   std::vector<DM::Vec3f>& vertices)
+{
+  uint numTri    = triangles.size();
+  uint lastTri   = numTri;
+  uint numTriNew = numTri;
+  triangles.resize(numTri + numTri * 3u);
+
+  std::map<std::string, uint> vertIdxMap;
+
+  for (uint triIdx = 0; triIdx < numTri; triIdx++)
+  {
+    DM::Vec3f a = vertices[triangles[triIdx].A];
+    DM::Vec3f b = vertices[triangles[triIdx].B];
+    DM::Vec3f c = vertices[triangles[triIdx].C];
+
+    DM::Vec3f ab = a + (b - a) * 0.5f;
+    DM::Vec3f bc = b + (c - b) * 0.5f;
+    DM::Vec3f ca = c + (a - c) * 0.5f;
+
+    uint abIdx = 0;
+    uint bcIdx = 0;
+    uint caIdx = 0;
+
+    if (vertIdxMap.find(ab.ToString()) == vertIdxMap.end())
+    {
+      vertices.push_back(ab);
+      abIdx                     = vertices.size() - 1;
+      vertIdxMap[ab.ToString()] = abIdx;
+    }
+    else
+    {
+      abIdx = vertIdxMap[ab.ToString()];
+    }
+    if (vertIdxMap.find(bc.ToString()) == vertIdxMap.end())
+    {
+      vertices.push_back(bc);
+      bcIdx                     = vertices.size() - 1;
+      vertIdxMap[bc.ToString()] = bcIdx;
+    }
+    else
+    {
+      bcIdx = vertIdxMap[bc.ToString()];
+    }
+    if (vertIdxMap.find(ca.ToString()) == vertIdxMap.end())
+    {
+      vertices.push_back(ca);
+      caIdx                     = vertices.size() - 1;
+      vertIdxMap[ca.ToString()] = caIdx;
+    }
+    else
+    {
+      caIdx = vertIdxMap[ca.ToString()];
+    }
+
+    Triangle temp = triangles[triIdx];
+
+    triangles[triIdx]    = Triangle(temp.A, abIdx, caIdx);
+    triangles[lastTri++] = Triangle(temp.B, bcIdx, abIdx);
+    numTriNew++;
+    triangles[lastTri++] = Triangle(temp.C, caIdx, bcIdx);
+    numTriNew++;
+    triangles[lastTri++] = Triangle(caIdx, abIdx, bcIdx);
+    numTriNew++;
+  }
+}
+
+std::vector<uint> Planet::_detectWrappedUVCoords(std::vector<uint>&   indices,
+                                                 std::vector<Vertex>& vertices)
+{
+  std::vector<uint> _ind;
+  uint              nrOfIndices = indices.size();
+
+  for (uint i = 0; i < nrOfIndices; i += 3)
+  {
+    uint a = indices[i];
+    uint b = indices[i + 1];
+    uint c = indices[i + 2];
+
+    DM::Vec3f texA(vertices[a].uv.x, vertices[a].uv.y, 0.0f);
+    DM::Vec3f texB(vertices[b].uv.x, vertices[b].uv.y, 0.0f);
+    DM::Vec3f texC(vertices[c].uv.x, vertices[c].uv.y, 0.0f);
+    DM::Vec3f texNormal = (texC - texA).Cross(texB - texA);
+    if (texNormal.z < 0)
+      _ind.push_back(i);
+  }
+
+  return _ind;
+}
+
+void Planet::_fixWrappedUVCoords(std::vector<uint>&   wrapped,
+                                 std::vector<uint>&   indices,
+                                 std::vector<Vertex>& vertices)
+{
+  uint                 verticeIndex = vertices.size() - 1;
+  std::map<uint, uint> visited;
+
+  for (auto& i : wrapped)
+  {
+    uint   a = indices[i];
+    uint   b = indices[i + 1];
+    uint   c = indices[i + 2];
+    Vertex A = vertices[a];
+    Vertex B = vertices[b];
+    Vertex C = vertices[c];
+
+    if (A.uv.x < 0.25f)
+    {
+      uint tempA = a;
+      if (visited.find(a) == visited.end())
+      {
+        A.uv.x += 1.0f;
+        vertices.push_back(A);
+        verticeIndex++;
+        visited.insert(std::make_pair(a, verticeIndex));
+        tempA = verticeIndex;
+      }
+      else
+      {
+        tempA = visited[a];
+      }
+      a = tempA;
+    }
+    if (B.uv.x < 0.25f)
+    {
+      uint tempB = b;
+      if (visited.find(b) == visited.end())
+      {
+        B.uv.x += 1.0f;
+        vertices.push_back(B);
+        verticeIndex++;
+        visited.insert(std::make_pair(b, verticeIndex));
+        tempB = verticeIndex;
+      }
+      else
+      {
+        tempB = visited[b];
+      }
+      b = tempB;
+    }
+    if (C.uv.x < 0.25f)
+    {
+      uint tempC = c;
+      if (visited.find(c) == visited.end())
+      {
+        C.uv.x += 1.0f;
+        vertices.push_back(C);
+        verticeIndex++;
+        visited.insert(std::make_pair(c, verticeIndex));
+        tempC = verticeIndex;
+      }
+      else
+      {
+        tempC = visited[c];
+      }
+      c = tempC;
+    }
+    indices[i]     = a;
+    indices[i + 1] = b;
+    indices[i + 2] = c;
+  }
+}
+
+void Planet::_fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vertices)
+{
+  uint northIdx  = UINT_MAX;
+  uint southIdx  = UINT_MAX;
+  uint vertexIdx = vertices.size() - 1;
+  for (uint i = 0; i < vertices.size(); i++)
+  {
+    if (northIdx != UINT_MAX && southIdx != UINT_MAX)
+      break;
+
+    if (vertices[i].position.y == 1.0f)
+      northIdx = i;
+    if (vertices[i].position.y == -1.0f)
+      southIdx = i;
+  }
+
+  for (uint i = 0; i < indices.size(); i++)
+  {
+    if (indices[i] == northIdx)
+    {
+      uint   startIdx = i - (i % 3);
+      Vertex A        = vertices[indices[startIdx]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
+      Vertex newNorth = vertices[northIdx];
+      newNorth.uv.x   = (B.uv.x + C.uv.x) * 0.5f;
+      vertexIdx++;
+      vertices.push_back(newNorth);
+      indices[i] = vertexIdx;
+    }
+    else if (indices[i] == southIdx)
+    {
+      uint   startIdx = i - (i % 3);
+      Vertex A        = vertices[indices[startIdx]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
+      Vertex newSouth = vertices[southIdx];
+      newSouth.uv.x   = (B.uv.x + C.uv.x) * 0.5f;
+      vertexIdx++;
+      vertices.push_back(newSouth);
+      indices[i] = vertexIdx;
+    }
+  }
+}
+
+int correctIdx(uint max, int i)
+{
+  return i % max;
+}
+
+float Planet::_sampleHeight(TextureLoader::Image* img, int x, int y, int steps)
+{
+  uint w = img->width;
+  uint h = img->height;
+  x                = correctIdx(w, x);
+  y                = correctIdx(h, y);
+  DM::Vec2i dir[8] = {DM::Vec2i(-1, -1),
+                      DM::Vec2i(0, -1),
+                      DM::Vec2i(1, -1),
+                      DM::Vec2i(-1, 0),
+                      DM::Vec2i(1, 0),
+                      DM::Vec2i(-1, 1),
+                      DM::Vec2i(0, 1),
+                      DM::Vec2i(1, 1)};
+
+  float height = ((float)img->pixels[((uint)x * 4u) + (uint)y * w]) / 255.0f;
+
+  for (uint i = 0; i < 8; i++)
+  {
+    DM::Vec2i currIdx(x, y);
+    DM::Vec2i currDir = dir[i];
+    for (uint j = 0; j < steps; j++)
+    {
+      DM::Vec2i idx = currIdx + currDir;
+      idx.x         = correctIdx(w, idx.x);
+      idx.y         = correctIdx(h, idx.y);
+      float lh = ((float)img->pixels[((uint)idx.x * 4u) + (uint)idx.y * w]) / 255.0f;
+      height += lh;
+    }
+  }
+
+  return height / (8.0f * (float)steps);
 }

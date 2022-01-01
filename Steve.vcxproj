@@ -164,8 +164,6 @@
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
     <ClCompile Include="src\World\Planet.cpp" />
-    <ClCompile Include="src\World\Planet2.cpp" />
-    <ClCompile Include="src\World\PLanet3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\events\Event.h" />
@@ -190,8 +188,6 @@
     <ClInclude Include="src\utility\Vector4f.h" />
     <ClInclude Include="src\window\Window.h" />
     <ClInclude Include="src\World\Planet.h" />
-    <ClInclude Include="src\World\Planet2.h" />
-    <ClInclude Include="src\World\Planet3.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\PixelHelloTriangle.hlsl">

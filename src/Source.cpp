@@ -1,6 +1,4 @@
 #include "World/Planet.h"
-#include "World/Planet2.h"
-#include "World/Planet3.h"
 #include "events/EventHandler.h"
 //#include "renderer/Camera.h"
 #include "renderer/Camera2.h"
@@ -30,8 +28,9 @@ int main()
   cam.SetLookAt(0, 0, 0);
   cam.SetView(view);
 
-  Planet3 p;
-  p.Create(1.0f, 1, 1.0f);
+  Planet p;
+  //p.Create(1.0f, 5, false, 1.0f);
+  p.Create(1.0f, 6, 1.0f);
   Mesh                      m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;

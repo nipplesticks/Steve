@@ -800,6 +800,19 @@ namespace DM
       m_vec = _xmFlt;
     }
 
+    Vec3f(const DirectX::XMFLOAT4A& _xmFlt)
+    {
+      m_vec.x = _xmFlt.x;
+      m_vec.y = _xmFlt.y;
+      m_vec.z = _xmFlt.z;
+    }
+    Vec3f(const DirectX::XMFLOAT4& _xmFlt)
+    {
+      m_vec.x = _xmFlt.x;
+      m_vec.y = _xmFlt.y;
+      m_vec.z = _xmFlt.z;
+    }
+
     Vec3f(const Vec3f& _vec3)
     {
       m_vec = _vec3.m_vec;
@@ -818,7 +831,21 @@ namespace DM
 
       return *this;
     }
-
+    
+    Vec3f& operator=(const DirectX::XMFLOAT4A& _xmFlt)
+    {
+      m_vec.x = _xmFlt.x;
+      m_vec.y = _xmFlt.y;
+      m_vec.z = _xmFlt.z;
+      return *this;
+    }
+    Vec3f& operator=(const DirectX::XMFLOAT4& _xmFlt)
+    {
+      m_vec.x = _xmFlt.x;
+      m_vec.y = _xmFlt.y;
+      m_vec.z = _xmFlt.z;
+      return *this;
+    }
     Vec3f& operator=(const DirectX::XMFLOAT3& _xmFlt)
     {
       m_vec = _xmFlt;
