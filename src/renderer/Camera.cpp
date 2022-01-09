@@ -81,9 +81,9 @@ void Camera::Zoom(float factor)
   DM::Vec3f newPos = pos + dir * factor;
 
   float d = newPos.Normalize().Dot(pos.Normalize());
-  if (d < 0.0f || newPos.Length() < 1.0f)
+  if (d < 0.0f || newPos.Length() < .1f)
   {
-    newPos = pos.Normalize() * 1.0f;
+    newPos = pos.Normalize() * .1f;
   }
   myPosition = newPos.AsXmFloat4();
   myPosition.w = 1.0f;

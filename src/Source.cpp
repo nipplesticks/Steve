@@ -23,14 +23,13 @@ int main()
   view.nearPlane = 0.01f;
   view.farPlane  = 1000.0f;
   Camera2 cam;
-  cam.SetMaxZoom(1.0f + view.nearPlane);
+  cam.SetMaxZoom(0.5f + view.nearPlane);
   cam.SetPosition(0, 0, 2.0f);
   cam.SetLookAt(0, 0, 0);
   cam.SetView(view);
 
   Planet p;
-  //p.Create(1.0f, 5, false, 1.0f);
-  p.Create(1.0f, 6, 1.0f);
+  p.Create(1.0f, 8, 1.0f);
   Mesh                      m = p.GetMesh();
   std::vector<VertexBuffer> vbs;
   std::vector<IndexBuffer>  ibs;
@@ -104,7 +103,7 @@ int main()
 
     // Must be first
     ren.BeginFrame();
-    ren.Clear(Vector4f(0.0f, 0.0f, 0.0f, 1.0f));
+    ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
     ren.UpdateViewProjection(cam.GetViewProjection());
     //ren.DrawVertexBuffer(vb);
     /*for (uint i = 0; i < m.GetMeshesCount(); i++)

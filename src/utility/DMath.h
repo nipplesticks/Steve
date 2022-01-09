@@ -1,6 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
+#include <cstddef>
 #include <string>
+
 namespace DM
 {
   struct Mat3x3
@@ -1115,7 +1117,7 @@ namespace DM
 
       Vec3f rest = (*this - _Vec3f).Abs();
 
-      return rest.x < EPSILON && rest.y < EPSILON;
+      return rest.x < EPSILON && rest.y < EPSILON && rest.z < EPSILON;
     }
 
     bool operator==(const DirectX::XMFLOAT3& _xmFlt) const
@@ -1134,6 +1136,11 @@ namespace DM
       Vec3f rest = (*this - _xmVec).Abs();
 
       return rest.x < EPSILON && rest.y < EPSILON;
+    }
+
+    bool operator<(const Vec3f& _Vec3f) const
+    {
+      return memcmp((void*)this, (void*)&_Vec3f, sizeof(Vec3f)) > 0;
     }
 
 #pragma endregion
@@ -1322,8 +1329,12 @@ namespace DM
 
     std::string ToString() const
     {
-      std::string str = "X: " + std::to_string(x) + ", " + "Y: " + std::to_string(y) + ", " +
-                        "Z: " + std::to_string(z);
+      char str[128];
+      size_t printCount = sprintf_s(&str[0], 128, "[%f, %f, %f]", x, y, z);
+      str[printCount]   = '\0';
+      /*std::string str = "X: " + std::to_string(x) + ", " + "Y: " + std::to_string(y) + ", " +
+                        "Z: " + std::to_string(z);*/
+
       return str;
     }
 #pragma endregion
@@ -3229,3 +3240,17 @@ namespace DM
   };
 
 } // namespace DM
+
+namespace std
+{
+  template <>
+  struct hash<DM::Vec3f>
+  {
+    size_t operator()(const DM::Vec3f& p) const
+    {
+      size_t lol =
+          std::hash<float>()(p.x) ^ std::hash<float>()(p.y) ^ std::hash<float>()(p.z);
+      return lol;
+    }
+  };
+} // namespace std

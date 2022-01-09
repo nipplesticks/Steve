@@ -2,7 +2,9 @@
 #include "../renderer/TextureLoader.h"
 #include "../utility/Timer.h"
 #include <iostream>
+#include <unordered_map>
 #include <map>
+
 //https://mft-dev.dk/uv-mapping-sphere/
 Planet::Planet() { }
 
@@ -81,68 +83,36 @@ void Planet::Create(float size, uint div, float uvTiles)
   std::cout << "Subdivition time: " << divTime << " seconds\n";
 
   std::vector<Vertex> verts(points.size());
-  Vertex              v = {};
-  v.color               = DirectX::XMFLOAT4A(1, 1, 1, 1);
-  float PI              = DirectX::XM_PI;
+  Vertex              defaultVert = {};
+  defaultVert.color               = DirectX::XMFLOAT4A(1, 1, 1, 1);
+  float PI                        = DirectX::XM_PI;
   for (uint i = 0; i < points.size(); i++)
   {
-    verts[i]          = v;
+    verts[i]          = defaultVert;
     verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
     //verts[i].position = points[i].AsXmFloat4APoint();
-    //verts[i].normal = points[i].Normalize().AsXmFloat4AVector();
-    verts[i].uv.x = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
-    verts[i].uv.y = 0.5f - (std::asin(verts[i].position.y) / PI);
+    verts[i].normal = points[i].Normalize().AsXmFloat4AVector();
+    verts[i].uv.x   = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
+    verts[i].uv.y   = 0.5f - (std::asin(verts[i].position.y) / PI);
   }
+
   std::vector<uint> wrapped = _detectWrappedUVCoords(indices, verts);
   _fixWrappedUVCoords(wrapped, indices, verts);
   _fixSharedPoleVertices(indices, verts);
-
-  TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/testNoise.jpg");
 
   for (auto& v : verts)
   {
     v.uv.x *= -uvTiles;
     v.uv.y *= uvTiles;
-
-    int uvIdxX = shrek.width * v.uv.x;
-    int uvIdxY = shrek.height * v.uv.y;
-    int   steps = 10;
-    float h     = _sampleHeight(&shrek, uvIdxX, uvIdxY, steps);
-
-    float scale = 0.05f;
-    h *= scale;
-
-    float height = 1.0f + h;
-
-    v.position.x *= size * height;
-    v.position.y *= size * height;
-    v.position.z *= size * height;
-  }
-
-  for (uint i = 0; i < indices.size(); i += 3)
-  {
-    DM::Vec3f v1     = verts[indices[i]].position;
-    DM::Vec3f v2     = verts[indices[i + 1]].position;
-    DM::Vec3f v3     = verts[indices[i + 2]].position;
-    DM::Vec3f d1     = (v2 - v1).Normalize();
-    DM::Vec3f d2     = (v3 - v1).Normalize();
-    DM::Vec3f normal = d2.Cross(d1).Normalize();
-    for (uint j = 0; j < 3; j++)
-    {
-      DM::Vec3f n                  = verts[indices[j]].normal;
-      n                            = ((n + normal) * 0.5f).Normalize();
-      verts[indices[i + j]].normal = n.AsXmFloat4AVector();
-    }
   }
 
   std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
   std::cout << "nrOfTris: \t" << indices.size() / 3 << std::endl;
   std::cout << "nrOfIdx: \t" << indices.size() << std::endl;
+
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
 
-  //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Shrek.PNG");
-  //TextureLoader::Image shrek = TextureLoader::LoadImageData("assets/textures/Tile.png");
   TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
   myMesh.SetImages(std::move(shrek2));
 }
@@ -204,7 +174,9 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
   uint numTriNew = numTri;
   triangles.resize(numTri + numTri * 3u);
 
-  std::map<std::string, uint> vertIdxMap;
+  //std::unordered_map<DM::Vec3f, uint> vertIdxMap;
+  //std::map<DM::Vec3f, uint> vertIdxMap;
+  std::unordered_map<DM::Vec3f, uint> vertIdxMap;
 
   for (uint triIdx = 0; triIdx < numTri; triIdx++)
   {
@@ -220,35 +192,35 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     uint bcIdx = 0;
     uint caIdx = 0;
 
-    if (vertIdxMap.find(ab.ToString()) == vertIdxMap.end())
+    if (vertIdxMap.find(ab) == vertIdxMap.end())
     {
       vertices.push_back(ab);
       abIdx                     = vertices.size() - 1;
-      vertIdxMap[ab.ToString()] = abIdx;
+      vertIdxMap[ab] = abIdx;
     }
     else
     {
-      abIdx = vertIdxMap[ab.ToString()];
+      abIdx = vertIdxMap[ab];
     }
-    if (vertIdxMap.find(bc.ToString()) == vertIdxMap.end())
+    if (vertIdxMap.find(bc) == vertIdxMap.end())
     {
       vertices.push_back(bc);
       bcIdx                     = vertices.size() - 1;
-      vertIdxMap[bc.ToString()] = bcIdx;
+      vertIdxMap[bc] = bcIdx;
     }
     else
     {
-      bcIdx = vertIdxMap[bc.ToString()];
+      bcIdx = vertIdxMap[bc];
     }
-    if (vertIdxMap.find(ca.ToString()) == vertIdxMap.end())
+    if (vertIdxMap.find(ca) == vertIdxMap.end())
     {
       vertices.push_back(ca);
       caIdx                     = vertices.size() - 1;
-      vertIdxMap[ca.ToString()] = caIdx;
+      vertIdxMap[ca] = caIdx;
     }
     else
     {
-      caIdx = vertIdxMap[ca.ToString()];
+      caIdx = vertIdxMap[ca];
     }
 
     Triangle temp = triangles[triIdx];
@@ -291,7 +263,7 @@ void Planet::_fixWrappedUVCoords(std::vector<uint>&   wrapped,
                                  std::vector<Vertex>& vertices)
 {
   uint                 verticeIndex = vertices.size() - 1;
-  std::map<uint, uint> visited;
+  std::unordered_map<uint, uint> visited;
 
   for (auto& i : wrapped)
   {
@@ -411,8 +383,8 @@ int correctIdx(uint max, int i)
 
 float Planet::_sampleHeight(TextureLoader::Image* img, int x, int y, int steps)
 {
-  uint w = img->width;
-  uint h = img->height;
+  uint w           = img->width;
+  uint h           = img->height;
   x                = correctIdx(w, x);
   y                = correctIdx(h, y);
   DM::Vec2i dir[8] = {DM::Vec2i(-1, -1),
@@ -435,7 +407,7 @@ float Planet::_sampleHeight(TextureLoader::Image* img, int x, int y, int steps)
       DM::Vec2i idx = currIdx + currDir;
       idx.x         = correctIdx(w, idx.x);
       idx.y         = correctIdx(h, idx.y);
-      float lh = ((float)img->pixels[((uint)idx.x * 4u) + (uint)idx.y * w]) / 255.0f;
+      float lh      = ((float)img->pixels[((uint)idx.x * 4u) + (uint)idx.y * w]) / 255.0f;
       height += lh;
     }
   }

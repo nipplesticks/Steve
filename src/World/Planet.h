@@ -2,8 +2,7 @@
 #include "../renderer/Mesh.h"
 #include "../utility/DMath.h"
 
-
-class TextureLoader::Image;
+struct TextureLoader::Image;
 
 class Planet
 {
