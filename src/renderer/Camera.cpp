@@ -1,7 +1,10 @@
 #include "Camera.h"
-#include <DirectXMath.h>
-
-Camera::Camera() { }
+#include "../utility/Typedef.h"
+Camera::Camera()
+{
+  myPosition.z = 2;
+  _calcAxis();
+}
 
 Camera::~Camera() { }
 
@@ -13,102 +16,137 @@ void Camera::SetView(const View& view)
                                                              view.farPlane));
 }
 
-void Camera::SetPosition(const DM::Vec4f& position)
+void Camera::SetPosition(float x, float y, float z)
 {
-  myPosition        = position;
-  myRotatedPosition = position;
-  myPitchJawRoll    = DM::Vec3f();
+  SetPosition(DM::Vec3f(x, y, z));
 }
 
-void Camera::SetLookAt(const DM::Vec4f& point)
+void Camera::SetPosition(const DM::Vec3f& position)
 {
-  myLookAt = point;
+  myPosition = position;
+  _calcAxis();
 }
 
-void Camera::SetUp(const DM::Vec4f& up)
+void Camera::SetLookAt(float x, float y, float z)
 {
-  myUp        = up;
-  myRotatedUp = up;
+  SetLookAt(DM::Vec3f(x, y, z));
 }
 
-void Camera::Rotate(const DM::Vec3f& pitchJawRoll)
+void Camera::SetLookAt(const DM::Vec3f& lookAt)
 {
-  DM::Vec3f temp = pitchJawRoll;
-  if (myRotatedUp.y < 0)
-    temp.y *= -1;
-  if (myFlipUp)
-    temp.x *= -1;
-
-  temp = temp * myPosition.Length(true);
-
-  myPitchJawRoll         = myPitchJawRoll + temp;
-  DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationRollPitchYaw(
-      myPitchJawRoll.x, myPitchJawRoll.y, myPitchJawRoll.z);
-
-  DM::Vec3f pos(myPosition.x, myPosition.y, myPosition.z);
-  DM::Vec3f rotPos = pos.Normalize();
-  rotPos.Store(DirectX::XMVector3Rotate(rotPos.Load(), quat));
-  rotPos              = rotPos * pos.Length();
-  myRotatedPosition.x = rotPos.x;
-  myRotatedPosition.y = rotPos.y;
-  myRotatedPosition.z = rotPos.z;
-  myRotatedPosition.w = 1.0f;
-
-  DM::Vec3f up(myUp.x, myUp.y, myUp.z);
-  up.Store(DirectX::XMVector3Rotate(up.Load(), quat));
-  up            = up.Normalize();
-  myRotatedUp.x = up.x;
-  myRotatedUp.y = up.y;
-  myRotatedUp.z = up.z;
-  myRotatedUp.w = 0.0f;
+  myLookAt = lookAt;
+  _calcAxis();
 }
 
-void Camera::FlipUp()
+void Camera::Rotate(float dx, float dy)
 {
-  myUp   = myUp * -1.0f;
-  myUp   = myUp.Normalize();
-  myUp.w = 0.0f;
-  myFlipUp = !myFlipUp;
-  Rotate(DM::Vec3f());
+  float l = myPosition.Length();
+  if (l <= FLT_EPSILON)
+    return;
+
+  float speed = l * 0.5f;
+
+  dx *= speed * speed;
+  dy *= speed * speed;
+
+  _rotateAxis(dx, dy);
+
+  myPosition = myPosition.Normalize();
+  DM::Vec4f dxRot;
+  dxRot.Store(DirectX::XMQuaternionRotationAxis(myTranslatedUp.Load(), dx));
+
+  DM::Vec4f dyRot;
+  dyRot.Store(DirectX::XMQuaternionRotationAxis(myTranslatedRight.Load(), dy));
+
+  myPosition.Store(DirectX::XMVector3Rotate(myPosition.Load(), dxRot.Load()));
+  myPosition = myPosition.Normalize();
+  myPosition.Store(DirectX::XMVector3Rotate(myPosition.Load(), dyRot.Load()));
+  myPosition = myPosition.Normalize();
+
+  myPosition = myPosition * l;
 }
 
 void Camera::Zoom(float factor)
 {
-  DM::Vec3f pos(myPosition.x, myPosition.y, myPosition.z);
-
-  DM::Vec3f dir = (pos * -1).Normalize();
-
-  DM::Vec3f newPos = pos + dir * factor;
-
-  float d = newPos.Normalize().Dot(pos.Normalize());
-  if (d < 0.0f || newPos.Length() < .1f)
+  DM::Vec3f dir = (myLookAt - myPosition);
+  float     l   = dir.Length();
+  dir           = dir.Normalize();
+  DM::Vec3f tempPos = myPosition + dir * factor;
+  if (myPosition.Dot(tempPos) < 0.0f || tempPos.Length() < myMaxZoom)
   {
-    newPos = pos.Normalize() * .1f;
+    myPosition = myPosition.Normalize() * myMaxZoom;
   }
-  myPosition = newPos.AsXmFloat4();
-  myPosition.w = 1.0f;
-  Rotate(DM::Vec3f());
+  else
+  {
+    myPosition = tempPos;
+  }
 }
 
-const DM::Vec4f& Camera::GetPosition() const
+void Camera::Roll(float d)
 {
-  return myRotatedPosition;
+  DirectX::XMVECTOR rot = DirectX::XMQuaternionRotationAxis((myPosition - myLookAt).Normalize().Load(), d);
+
+  myTranslatedUp.Store(DirectX::XMVector3Rotate(myTranslatedUp.Load(), rot));
+  myTranslatedUp = myTranslatedUp.Normalize();
+
+  myTranslatedRight.Store(DirectX::XMVector3Rotate(myTranslatedRight.Load(), rot));
+  myTranslatedRight = myTranslatedRight.Normalize();
 }
 
-const DM::Vec4f& Camera::GetLookAt() const
+void Camera::SetMaxZoom(float z)
+{
+  myMaxZoom = z;
+}
+
+const DM::Vec3f& Camera::GetPosition() const
+{
+  return myPosition;
+}
+
+const DM::Vec3f& Camera::GetLookAt() const
 {
   return myLookAt;
 }
 
-const DM::Vec4f& Camera::GetUp() const
+const DM::Vec3f& Camera::GetUp() const
 {
-  return myRotatedUp;
+  return myTranslatedUp;
+}
+
+const DM::Vec3f& Camera::GetRight() const
+{
+  return myTranslatedRight;
 }
 
 DM::Mat4x4 Camera::GetViewProjection()
 {
   myViewMatrix.Store(
-      DirectX::XMMatrixLookAtRH(myRotatedPosition.Load(), myLookAt.Load(), myRotatedUp.Load()));
+      DirectX::XMMatrixLookAtRH(myPosition.Load(), myLookAt.Load(), myTranslatedUp.Load()));
 
   return myViewMatrix * myProjectionMatrix;
+}
+
+void Camera::_calcAxis()
+{
+  DM::Vec3f up;
+  DM::Vec3f right;
+  DM::Vec3f forward = (myLookAt - myPosition).Normalize();
+  up                = DM::Vec3f(0, 1, 0);
+  right             = forward.Cross(up).Normalize();
+  up                = right.Cross(forward).Normalize();
+
+  myTranslatedRight = right;
+  myTranslatedUp    = up;
+}
+
+void Camera::_rotateAxis(float dx, float dy)
+{
+  DirectX::XMVECTOR dxRot = DirectX::XMQuaternionRotationAxis(myTranslatedUp.Load(), dx);
+  DirectX::XMVECTOR dyRot = DirectX::XMQuaternionRotationAxis(myTranslatedRight.Load(), dy);
+
+  myTranslatedUp.Store(DirectX::XMVector3Rotate(myTranslatedUp.Load(), dyRot));
+  myTranslatedUp = myTranslatedUp.Normalize();
+
+  myTranslatedRight.Store(DirectX::XMVector3Rotate(myTranslatedRight.Load(), dxRot));
+  myTranslatedRight = myTranslatedRight.Normalize();
 }

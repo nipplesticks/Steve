@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "../utility/RenderUtility.h"
+#include "ConstantBuffer.h"
 #include "IndexBuffer.h"
 #include "TextureBuffer.h"
 #include "VertexBuffer.h"
@@ -12,7 +13,8 @@
 #pragma comment(lib, "DXGI.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-ID3D12Device5* Renderer::gDevice5_p = nullptr;
+ID3D12Device5*        Renderer::gDevice5_p    = nullptr;
+ID3D12DescriptorHeap* Renderer::gUploadHeap_p = nullptr;
 
 template <class Interface>
 inline void SafeRelease(Interface** ppInterfaceToRelease)
@@ -400,6 +402,36 @@ void Renderer::DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuf
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
 
+void Renderer::DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
+    const VertexBuffer&   vertexBuffer,
+    const IndexBuffer&    indexBuffer,
+    const TextureBuffer&  textureBuffer,
+    const ConstantBuffer& constantBuffer)
+{
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
+  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
+
+  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
+                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
+  myCommandList4_p->SetGraphicsRootConstantBufferView(2,
+                                                      constantBuffer.GetResource()->GetGPUVirtualAddress());
+
+  ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
+
+  myCommandList4_p->SetDescriptorHeaps(1, arr);
+  myCommandList4_p->SetGraphicsRootDescriptorTable(
+      1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
+}
+
 void Renderer::Clear(const Vector4f& color)
 {
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
@@ -437,6 +469,11 @@ void Renderer::EndFrame()
 ID3D12Device5* Renderer::GetDevice()
 {
   return gDevice5_p;
+}
+
+ID3D12DescriptorHeap* Renderer::GetUploadHeap()
+{
+  return gUploadHeap_p;
 }
 
 void Renderer::_HardWait()
@@ -499,7 +536,7 @@ void Renderer::_SetupShaderState()
 
   // Create root signature
   {
-    D3D12_ROOT_PARAMETER rootParam[2]      = {};
+    D3D12_ROOT_PARAMETER rootParam[3]      = {};
     rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParam[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParam[0].Descriptor.RegisterSpace  = 0;
@@ -514,10 +551,15 @@ void Renderer::_SetupShaderState()
     rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc;
 
+    rootParam[2].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParam[2].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParam[2].Descriptor.RegisterSpace  = 0;
+    rootParam[2].Descriptor.ShaderRegister = 1;
+
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
     rootSigDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    rootSigDesc.Desc_1_0.NumParameters = 2;
+    rootSigDesc.Desc_1_0.NumParameters = 3;
     rootSigDesc.Desc_1_0.pParameters   = &rootParam[0];
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};

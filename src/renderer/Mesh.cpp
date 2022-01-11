@@ -33,12 +33,12 @@ DirectX::XMFLOAT2A AssimpToXmFloat2A(const aiVector3D& vec)
   return DirectX::XMFLOAT2A(vec.x, vec.y);
 }
 
-bool Mesh::LoadMesh(const std::string& path)
+bool Mesh::LoadMesh(const std::string& path, bool flipWindingOrder)
 {
   Assimp::Importer importer;
   const aiScene*   scene = importer.ReadFile(
       path.c_str(),
-      aiProcess_Triangulate | aiProcess_FlipWindingOrder | aiProcess_GenSmoothNormals |
+      aiProcess_Triangulate | (aiProcess_FlipWindingOrder * flipWindingOrder) | aiProcess_GenSmoothNormals |
           aiProcess_ForceGenNormals | aiProcess_PreTransformVertices| aiProcess_SortByPType |
           aiProcess_RemoveRedundantMaterials | aiProcess_GenUVCoords | aiProcess_OptimizeMeshes);
 

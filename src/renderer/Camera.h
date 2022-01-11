@@ -18,28 +18,37 @@ public:
   Camera();
   ~Camera();
 
-  void             SetView(const View& view);
-  void             SetPosition(const DM::Vec4f& position);
-  void             SetLookAt(const DM::Vec4f& point);
-  void             SetUp(const DM::Vec4f& up);
-  void             Rotate(const DM::Vec3f& pitchJawRoll);
-  void             FlipUp();
-  void             Zoom(float factor);
+  void SetView(const View& view);
+  void SetPosition(float x, float y, float z);
+  void SetPosition(const DM::Vec3f& position);
+  void SetLookAt(float x, float y, float z);
+  void SetLookAt(const DM::Vec3f& lookAt);
+  void Rotate(float dx, float dy);
+  void Zoom(float factor);
+  void Roll(float d);
+  void SetMaxZoom(float z);
 
-  const DM::Vec4f& GetPosition() const;
-  const DM::Vec4f& GetLookAt() const;
-  const DM::Vec4f& GetUp() const;
+  const DM::Vec3f& GetPosition() const;
+  const DM::Vec3f& GetLookAt() const;
+  const DM::Vec3f& GetUp() const;
+  const DM::Vec3f& GetRight() const;
 
   DM::Mat4x4 GetViewProjection();
 
 private:
+  void _calcAxis();
+  void _rotateAxis(float dx, float dy);
+
+private:
   DM::Mat4x4 myViewMatrix;
   DM::Mat4x4 myProjectionMatrix;
-  DM::Vec4f  myPosition;
-  DM::Vec4f  myLookAt;
-  DM::Vec4f  myUp;
-  DM::Vec3f  myPitchJawRoll;
-  DM::Vec4f  myRotatedPosition;
-  DM::Vec4f  myRotatedUp;
-  bool       myFlipUp = false;
+
+  DM::Vec3f myPosition;
+
+  DM::Vec3f myLookAt;
+
+  DM::Vec3f myTranslatedUp;
+  DM::Vec3f myTranslatedRight;
+  float     myMaxZoom = 1.0f;
+
 };

@@ -3,6 +3,11 @@ cbuffer cbv0 : register(b0)
   float4x4 viewProj;
 };
 
+cbuffer cbv1 : register(b1)
+{
+  float4x4 worldMat;
+}
+
 struct Vertex
 {
   float4 pos : SV_POSITION;
@@ -13,6 +18,8 @@ struct Vertex
 
 Vertex main(Vertex vertex)
 {
+  vertex.pos = mul(vertex.pos, transpose(worldMat));
+  vertex.nor = normalize(mul(vertex.nor, transpose(worldMat)));
   vertex.pos = mul(vertex.pos, transpose(viewProj));
 
   return vertex;

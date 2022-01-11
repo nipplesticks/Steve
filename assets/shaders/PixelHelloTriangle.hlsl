@@ -13,8 +13,8 @@ float4 main(Vertex vertex)
     : SV_TARGET
 {
   // X: 0.917060, Y: -0.398749, Z: 0.000000
-  //float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
-  float3 lightDir = normalize(float3(0, 0, -1.000000));
+  float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
+  //float3 lightDir = normalize(float3(0, 0, -1.000000));
   float3 color = aTexture.Sample(aSampler, vertex.uv.xy).rgb * vertex.col.rgb;
     //color = vertex.col.rgb;
   float4 pos      = vertex.pos;

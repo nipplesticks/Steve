@@ -1,7 +1,7 @@
 #include "World/Planet.h"
 #include "events/EventHandler.h"
-//#include "renderer/Camera.h"
-#include "renderer/Camera2.h"
+#include "renderer/Camera.h"
+#include "renderer/ConstantBuffer.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
@@ -9,20 +9,21 @@
 #include "renderer/TextureLoader.h"
 #include "renderer/VertexBuffer.h"
 #include "utility/Timer.h"
+#include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
 
 int main()
 {
-  Window        wnd(1280, 720, "aTitle");
-  Renderer      ren(1280, 720, wnd.GetHwnd());
-  Camera2::View view;
+  Window       wnd(1280, 720, "aTitle");
+  Renderer     ren(1280, 720, wnd.GetHwnd());
+  Camera::View view;
   view.fov       = 45.0f;
   view.height    = 720.0f;
   view.width     = 1280.0f;
   view.nearPlane = 0.01f;
   view.farPlane  = 1000.0f;
-  Camera2 cam;
+  Camera cam;
   cam.SetMaxZoom(0.5f + view.nearPlane);
   cam.SetPosition(0, 0, 2.0f);
   cam.SetLookAt(0, 0, 0);
@@ -36,6 +37,28 @@ int main()
   TextureBuffer             texBuff;
   vbs.resize(m.GetMeshesCount());
   ibs.resize(m.GetMeshesCount());
+
+  Mesh skyBox;
+  skyBox.LoadMesh("assets/models/cube/Cube.obj", false);
+  TextureLoader::Image img = TextureLoader::LoadImageData("assets/models/cube/Skybox.png");
+  TextureBuffer        skyboxTextureBuff;
+  skyboxTextureBuff.Init(img.width, img.height);
+  skyboxTextureBuff.Update(&ren, img.pixels.data());
+  DM::Mat4x4 skyBoxTranslation;
+  skyBoxTranslation.Store(DirectX::XMMatrixScaling(100, 100, 100));
+  std::vector<VertexBuffer> skyBoxVertexBuffer(skyBox.GetMeshesCount());
+  std::vector<IndexBuffer>  skyBoxIndexBuffer(skyBox.GetMeshesCount());
+  ConstantBuffer            skyBoxConstantBuffer;
+  skyBoxConstantBuffer.Init(sizeof(DM::Mat4x4));
+  skyBoxConstantBuffer.Update(&skyBoxTranslation, sizeof(DM::Mat4x4));
+
+  for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+  {
+    skyBoxVertexBuffer[i].Init(skyBox.GetByteSizeOfVertices(i), sizeof(Vertex));
+    skyBoxVertexBuffer[i].Update(skyBox.GetRawVertices(i), skyBox.GetByteSizeOfVertices(i));
+    skyBoxIndexBuffer[i].Init(skyBox.GetNumberOfIndices(i));
+    skyBoxIndexBuffer[i].Update(skyBox.GetRawIndices(i));
+  }
 
   for (uint i = 0; i < m.GetMeshesCount(); i++)
   {
@@ -54,11 +77,18 @@ int main()
   float rollSpeed = 0.5f;
   Timer t;
   t.Start();
+
+  ConstantBuffer cb;
+  cb.Init(sizeof(DM::Mat4x4));
+  DM::Mat4x4 worldMat;
+  worldMat.Store(DirectX::XMMatrixIdentity());
+  cb.Update(&worldMat, sizeof(worldMat));
+  float rotation      = 0.0f;
+  float rotationSpeed = 0.1f;
   while (wnd.IsOpen())
   {
     float dt = t.Stop();
     wnd.PollEvents();
-
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
       EventHandler::ClearEvents(Event::Type::MouseMoved);
@@ -101,6 +131,12 @@ int main()
       }
     }
 
+    rotation += rotationSpeed * dt * DirectX::XM_PI;
+
+    worldMat.Store(DirectX::XMMatrixRotationY(rotation));
+
+    cb.Update(&worldMat, sizeof(worldMat));
+
     // Must be first
     ren.BeginFrame();
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
@@ -108,8 +144,16 @@ int main()
     //ren.DrawVertexBuffer(vb);
     /*for (uint i = 0; i < m.GetMeshesCount(); i++)
       ren.DrawVertexAndIndexBuffer(vbs[i], ibs[i]);*/
+    /*for (uint i = 0; i < m.GetMeshesCount(); i++)
+      ren.DrawVertexAndIndexAndTextureBuffer(vbs[i], ibs[i], texBuff);*/
+
+    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+      ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
+          skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyboxTextureBuff, skyBoxConstantBuffer);
+
     for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawVertexAndIndexAndTextureBuffer(vbs[i], ibs[i], texBuff);
+      ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
+          vbs[i], ibs[i], texBuff, cb);
 
     // Must be last
     ren.EndFrame();

@@ -12,6 +12,7 @@ struct IDXGISwapChain4;
 class VertexBuffer;
 class IndexBuffer;
 class TextureBuffer;
+class ConstantBuffer;
 
 class Renderer
 {
@@ -31,13 +32,18 @@ public:
   void DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuffer,
                                           const IndexBuffer&   indexBuffer,
                                           const TextureBuffer& textureBuffer); // Temp
-
+  void
+  DrawVertexAndIndexAndTextureBufferAndConstantBuffer(const VertexBuffer&   vertexBuffer,
+                                                      const IndexBuffer&    indexBuffer,
+                                                      const TextureBuffer&  textureBuffer,
+                                                      const ConstantBuffer& constantBuffer); // Temp
 
   void Clear(const Vector4f& color = Vector4f());
 
   void EndFrame();
 
   static ID3D12Device5* GetDevice();
+  static ID3D12DescriptorHeap* GetUploadHeap();
 
 private:
   void _HardWait();
@@ -50,6 +56,8 @@ private:
 private:
   static const uint     NUM_SWAP_BUFFERS = 2u;
   static ID3D12Device5* gDevice5_p;
+  static ID3D12DescriptorHeap*       gUploadHeap_p;
+
   ID3D12CommandQueue*   myCommandQueue_p = nullptr;
 
   IDXGISwapChain4* mySwapChain4_p           = nullptr;
@@ -63,7 +71,7 @@ private:
   HANDLE                      myEventHandle         = nullptr;
   ID3D12DescriptorHeap*       myRenderTargetsHeap_p = nullptr;
 
-  ID3D12CommandAllocator*     myTextureUploadAllocator_p = nullptr;
+  ID3D12CommandAllocator*     myTextureUploadAllocator_p    = nullptr;
   ID3D12GraphicsCommandList4* myTextureUploadCommandList4_p = nullptr;
 
   ID3D12RootSignature* myRootSignature_p = nullptr;

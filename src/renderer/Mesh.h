@@ -15,7 +15,7 @@ public:
   uint GetTotalByteSizeOfVertices() const;
   uint GetByteSizeOfVertices(uint idx) const;
 
-  bool LoadMesh(const std::string& path);
+  bool LoadMesh(const std::string& path, bool flipWindingOrder = false);
   void SetMesh(std::vector<Vertex>&& vertices);
   void SetMesh(std::vector<std::vector<Vertex>>&& vertices);
   void SetIndices(std::vector<uint>&& indices);
