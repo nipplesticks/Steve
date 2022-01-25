@@ -13,6 +13,7 @@
 #include "window/Window.h"
 #include <iostream>
 #include "renderer/GraphicsPipelineState.h"
+#include "renderer/ConstantBufferDescriptorHeap.h"
 
 int main()
 {
@@ -24,6 +25,10 @@ int main()
   lol.GenerateInputElementDesc();
   lol.GenerateRootSignature();
   lol.CreatePipelineState();
+
+  ConstantBufferDescriptorHeap planetCBVHD;
+  ConstantBufferDescriptorHeap ViewProjCBVHD;
+
   Camera::View view;
   view.fov       = 45.0f;
   view.height    = 720.0f;
@@ -90,6 +95,7 @@ int main()
   DM::Mat4x4 worldMat;
   worldMat.Store(DirectX::XMMatrixIdentity());
   cb.Update(&worldMat, sizeof(worldMat));
+  planetCBVHD.Create({&cb}, &texBuff);
   float rotation      = 0.0f;
   float rotationSpeed = 0.01f;
   while (wnd.IsOpen())
@@ -144,6 +150,8 @@ int main()
 
     cb.Update(&worldMat, sizeof(worldMat));
 
+    
+
     // Must be first
     ren.BeginFrame();
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
@@ -154,13 +162,19 @@ int main()
     /*for (uint i = 0; i < m.GetMeshesCount(); i++)
       ren.DrawVertexAndIndexAndTextureBuffer(vbs[i], ibs[i], texBuff);*/
 
-    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+    /*for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
       ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
-          skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyboxTextureBuff, skyBoxConstantBuffer);
+          skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyboxTextureBuff, skyBoxConstantBuffer);*/
 
-    for (uint i = 0; i < m.GetMeshesCount(); i++)
+    /*for (uint i = 0; i < m.GetMeshesCount(); i++)
+    {
       ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
           vbs[i], ibs[i], texBuff, cb);
+    }*/
+    for (uint i = 0; i < m.GetMeshesCount(); i++)
+    {
+      ren.DrawShitLoad(vbs[i], ibs[i], texBuff, planetCBVHD);
+    }
 
     // Must be last
     ren.EndFrame();

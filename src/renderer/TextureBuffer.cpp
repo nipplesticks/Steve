@@ -32,7 +32,7 @@ void TextureBuffer::Init(uint width, uint height, uint channels)
                                                nullptr,
                                                IID_PPV_ARGS(&myTextureBuffer_p)));
 
-  D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+  /*D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
   heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.NumDescriptors             = 1;
@@ -46,7 +46,7 @@ void TextureBuffer::Init(uint width, uint height, uint channels)
   rsvDesc.Texture2D.MipLevels             = desc.MipLevels;
 
   gDevice_p->CreateShaderResourceView(
-      myTextureBuffer_p, &rsvDesc, myHeap_p->GetCPUDescriptorHandleForHeapStart());
+      myTextureBuffer_p, &rsvDesc, myHeap_p->GetCPUDescriptorHandleForHeapStart());*/
 }
 
 void TextureBuffer::Update(Renderer* renderer_p, void* data_p)

@@ -13,8 +13,9 @@
 #pragma comment(lib, "DXGI.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-ID3D12Device5*        Renderer::gDevice5_p    = nullptr;
-ID3D12DescriptorHeap* Renderer::gUploadHeap_p = nullptr;
+ID3D12Device5*        Renderer::gDevice5_p               = nullptr;
+ID3D12DescriptorHeap* Renderer::gUploadHeap_p            = nullptr;
+uint                  Renderer::gSrvUavCbvDescriptorSize = 0u;
 
 template <class Interface>
 inline void SafeRelease(Interface** ppInterfaceToRelease)
@@ -175,6 +176,9 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
     dhd.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
     HRESULT hr = gDevice5_p->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&myRenderTargetsHeap_p));
+
+    gSrvUavCbvDescriptorSize =
+        gDevice5_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     //Create resources for the render targets.
     myRenderTargetDescriptorSize =
@@ -420,14 +424,43 @@ void Renderer::DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
 
   myCommandList4_p->SetGraphicsRootConstantBufferView(0,
                                                       myViewProjBuffer_p->GetGPUVirtualAddress());
-  myCommandList4_p->SetGraphicsRootConstantBufferView(2,
-                                                      constantBuffer.GetResource()->GetGPUVirtualAddress());
+  myCommandList4_p->SetGraphicsRootConstantBufferView(
+      2, constantBuffer.GetResource()->GetGPUVirtualAddress());
 
   ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
   myCommandList4_p->SetGraphicsRootDescriptorTable(
       1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
+}
+
+void Renderer::DrawShitLoad(const VertexBuffer&                 vertexBuffer,
+                            const IndexBuffer&                  indexBuffer,
+                            const TextureBuffer&                textureBuffer,
+                            const ConstantBufferDescriptorHeap& cbdh)
+{
+
+  myCommandList4_p->SetPipelineState(myPipelineState_p);
+  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
+
+  myCommandList4_p->RSSetViewports(1, &myViewport);
+  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
+
+  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
+  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
+
+  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
+                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
+  ID3D12DescriptorHeap* arr[1]  = {cbdh.GetDescriptorHeap()};
+
+  myCommandList4_p->SetDescriptorHeaps(1, arr);
+  myCommandList4_p->SetGraphicsRootDescriptorTable(
+      1, cbdh.GetTextureHeapLocationStart());
+  myCommandList4_p->SetGraphicsRootDescriptorTable(
+      2, cbdh.GetConstantBufferHeapLocationStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
@@ -474,6 +507,11 @@ ID3D12Device5* Renderer::GetDevice()
 ID3D12DescriptorHeap* Renderer::GetUploadHeap()
 {
   return gUploadHeap_p;
+}
+
+uint Renderer::GetSrvUavCbvDescriptorSize()
+{
+  return gSrvUavCbvDescriptorSize;
 }
 
 void Renderer::_HardWait()
@@ -551,10 +589,16 @@ void Renderer::_SetupShaderState()
     rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
     rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc;
 
-    rootParam[2].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParam[2].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParam[2].Descriptor.RegisterSpace  = 0;
-    rootParam[2].Descriptor.ShaderRegister = 1;
+    D3D12_DESCRIPTOR_RANGE rangeDesc2 = {};
+    rangeDesc2.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    rangeDesc2.NumDescriptors          = 1;
+    rangeDesc2.RegisterSpace          = 0;
+    rangeDesc2.BaseShaderRegister      = 1;
+
+    rootParam[2].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[2].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[2].DescriptorTable.pDescriptorRanges   = &rangeDesc2;
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;

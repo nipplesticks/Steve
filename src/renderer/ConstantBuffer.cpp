@@ -42,6 +42,11 @@ void ConstantBuffer::Update(void* data_p, uint dataByteSize)
   myConstantBuffer_p->Unmap(0, nullptr);
 }
 
+uint ConstantBuffer::GetByteSize() const
+{
+  return myByteSize;
+}
+
 ID3D12Resource* ConstantBuffer::GetResource() const
 {
   return myConstantBuffer_p;

@@ -6,6 +6,7 @@
 #include "Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
+#include "ConstantBufferDescriptorHeap.h"
 
 struct IDXGISwapChain4;
 
@@ -38,12 +39,18 @@ public:
                                                       const TextureBuffer&  textureBuffer,
                                                       const ConstantBuffer& constantBuffer); // Temp
 
+  void DrawShitLoad(const VertexBuffer&   vertexBuffer,
+                    const IndexBuffer&    indexBuffer,
+                    const TextureBuffer&  textureBuffer,
+                    const ConstantBufferDescriptorHeap& cbdh);
+
   void Clear(const Vector4f& color = Vector4f());
 
   void EndFrame();
 
-  static ID3D12Device5* GetDevice();
+  static ID3D12Device5*        GetDevice();
   static ID3D12DescriptorHeap* GetUploadHeap();
+  static uint                  GetSrvUavCbvDescriptorSize();
 
 private:
   void _HardWait();
@@ -54,11 +61,12 @@ private:
   void _SetupShaderState();
 
 private:
-  static const uint     NUM_SWAP_BUFFERS = 2u;
-  static ID3D12Device5* gDevice5_p;
-  static ID3D12DescriptorHeap*       gUploadHeap_p;
+  static const uint            NUM_SWAP_BUFFERS = 2u;
+  static ID3D12Device5*        gDevice5_p;
+  static ID3D12DescriptorHeap* gUploadHeap_p;
+  static uint                  gSrvUavCbvDescriptorSize;
 
-  ID3D12CommandQueue*   myCommandQueue_p = nullptr;
+  ID3D12CommandQueue* myCommandQueue_p = nullptr;
 
   IDXGISwapChain4* mySwapChain4_p           = nullptr;
   uint             myCurrentBackbufferIndex = 0u;
@@ -85,11 +93,13 @@ private:
 
   ID3D12Resource1*      myDepthBuffers_pp[NUM_SWAP_BUFFERS] = {};
   ID3D12DescriptorHeap* myDepthBufferHeap_p                 = nullptr;
-  uint                  myDepthBufferDescriptorSize         = 0;
+  uint                  myDepthBufferDescriptorSize         = 0u;
 
   ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS] = {};
-  uint             myRenderTargetDescriptorSize         = 0;
+  uint             myRenderTargetDescriptorSize         = 0u;
   uint64           myFenceValue                         = 0u;
+
+  uint mySrvUavCbvDescriptorSize = 0u;
 
   ID3D12Resource* myViewProjBuffer_p = nullptr;
 };

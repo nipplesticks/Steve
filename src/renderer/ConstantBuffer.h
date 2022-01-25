@@ -11,6 +11,7 @@ public:
 
   void Init(uint dataByteSize);
   void Update(void* data_p, uint dataByteSize);
+  uint GetByteSize() const;
 
   ID3D12Resource* GetResource() const;
 

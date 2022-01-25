@@ -17,7 +17,7 @@ public:
   HRESULT SetPixelShader(const std::string& pixelShader);
   void    GenerateInputElementDesc();
   void    SetRootSignature(ID3D12RootSignature* rootSignature_p);
-  HRESULT    GenerateRootSignature();
+  HRESULT GenerateRootSignature();
   void    SetInputElementDesc(const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs);
 
   HRESULT CreatePipelineState();
@@ -27,7 +27,6 @@ public:
 
 private:
   void _defaultValues();
-
 
   ID3DBlob*                             myVertexShader_p  = nullptr;
   ID3DBlob*                             myPixelShader_p   = nullptr;
