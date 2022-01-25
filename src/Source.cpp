@@ -12,11 +12,18 @@
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
+#include "renderer/GraphicsPipelineState.h"
 
 int main()
 {
   Window       wnd(1280, 720, "aTitle");
   Renderer     ren(1280, 720, wnd.GetHwnd());
+  GraphicsPipelineState lol;
+  lol.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
+  lol.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
+  lol.GenerateInputElementDesc();
+  lol.GenerateRootSignature();
+  lol.CreatePipelineState();
   Camera::View view;
   view.fov       = 45.0f;
   view.height    = 720.0f;
@@ -24,7 +31,7 @@ int main()
   view.nearPlane = 0.01f;
   view.farPlane  = 1000.0f;
   Camera cam;
-  cam.SetMaxZoom(0.5f + view.nearPlane);
+  cam.SetMaxZoom(1.f + view.nearPlane);
   cam.SetPosition(0, 0, 2.0f);
   cam.SetLookAt(0, 0, 0);
   cam.SetView(view);
@@ -84,7 +91,7 @@ int main()
   worldMat.Store(DirectX::XMMatrixIdentity());
   cb.Update(&worldMat, sizeof(worldMat));
   float rotation      = 0.0f;
-  float rotationSpeed = 0.1f;
+  float rotationSpeed = 0.01f;
   while (wnd.IsOpen())
   {
     float dt = t.Stop();
