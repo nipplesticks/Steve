@@ -141,5 +141,7 @@
   <ItemGroup>
     <FxCompile Include="assets\shaders\VertexHelloTriangle.hlsl" />
     <FxCompile Include="assets\shaders\PixelHelloTriangle.hlsl" />
+    <FxCompile Include="assets\shaders\VertexSkybox.hlsl" />
+    <FxCompile Include="assets\shaders\PixelSkybox.hlsl" />
   </ItemGroup>
 </Project>

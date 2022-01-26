@@ -19,12 +19,20 @@ int main()
 {
   Window                wnd(1280, 720, "aTitle");
   Renderer              ren(1280, 720, wnd.GetHwnd());
-  GraphicsPipelineState lol;
-  lol.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
-  lol.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
-  lol.GenerateInputElementDesc();
-  lol.GenerateRootSignature();
-  lol.CreatePipelineState();
+
+  GraphicsPipelineState planetPipelineState;
+  planetPipelineState.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
+  planetPipelineState.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
+  planetPipelineState.GenerateInputElementDesc();
+  planetPipelineState.GenerateRootSignature();
+  planetPipelineState.CreatePipelineState();
+
+  GraphicsPipelineState skyboxPipelineState;
+  skyboxPipelineState.SetVertexShader("assets/shaders/VertexSkybox.hlsl");
+  skyboxPipelineState.SetPixelShader("assets/shaders/PixelSkybox.hlsl");
+  skyboxPipelineState.GenerateInputElementDesc();
+  skyboxPipelineState.GenerateRootSignature();
+  skyboxPipelineState.CreatePipelineState();
 
   ResourceDescriptorHeap planetRh;
   ResourceDescriptorHeap skyBoxRh;
@@ -51,8 +59,8 @@ int main()
   ibs.resize(m.GetMeshesCount());
 
   Mesh skyBox;
-  skyBox.LoadMesh("assets/models/cube/Cube.obj", false);
-  TextureLoader::Image img = TextureLoader::LoadImageData("assets/models/cube/Skybox.png");
+  skyBox.LoadMesh("assets/models/Skybox/skybox.obj", false);
+  TextureLoader::Image img = TextureLoader::LoadImageData("assets/models/Skybox/skybox.jpg");
   TextureBuffer        skyboxTextureBuff;
   skyboxTextureBuff.Init(img.width, img.height);
   skyboxTextureBuff.Update(&ren, img.pixels.data());
@@ -60,9 +68,6 @@ int main()
   skyBoxTranslation.Store(DirectX::XMMatrixScaling(100, 100, 100));
   std::vector<VertexBuffer> skyBoxVertexBuffer(skyBox.GetMeshesCount());
   std::vector<IndexBuffer>  skyBoxIndexBuffer(skyBox.GetMeshesCount());
-  ConstantBuffer            skyBoxConstantBuffer;
-  skyBoxConstantBuffer.Init(sizeof(DM::Mat4x4));
-  skyBoxConstantBuffer.Update(&skyBoxTranslation, sizeof(DM::Mat4x4));
 
   for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
   {
@@ -90,6 +95,12 @@ int main()
   Timer t;
   t.Start();
 
+  ConstantBuffer viewProjCbSkybox;
+  viewProjCbSkybox.Init(sizeof(DM::Mat4x4));
+  DM::Mat4x4 viewProjSkybox;
+  viewProjSkybox.Store(DirectX::XMMatrixIdentity());
+  viewProjCbSkybox.Update(&viewProjSkybox, sizeof(viewProjSkybox));
+
   ConstantBuffer viewProjCb;
   viewProjCb.Init(sizeof(DM::Mat4x4));
   DM::Mat4x4     viewProj;
@@ -99,10 +110,10 @@ int main()
   ConstantBuffer worldCb;
   worldCb.Init(sizeof(DM::Mat4x4));
   DM::Mat4x4 worldMat;
-  worldCb.Update(&worldMat, sizeof(worldMat));
   worldMat.Store(DirectX::XMMatrixIdentity());
+  worldCb.Update(&worldMat, sizeof(worldMat));
 
-  skyBoxRh.Create({&viewProjCb, &skyBoxConstantBuffer}, {&skyboxTextureBuff});
+  skyBoxRh.Create({&viewProjCbSkybox}, {&skyboxTextureBuff});
   planetRh.Create({&viewProjCb, &worldCb}, {&texBuff});
 
   float rotation      = 0.0f;
@@ -168,17 +179,20 @@ int main()
     ren.BeginFrame();
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
 
-    /*for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-      ren.DrawShitLoad(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh);
-
     for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawShitLoad(vbs[i], ibs[i], planetRh);*/
+      ren.Draw(vbs[i], ibs[i], planetRh, planetPipelineState);
+
+    Camera c = cam;
+    DM::Vec3f cPos = cam.GetPosition();
+    DM::Vec3f focus = cam.GetLookAt();
+    DM::Vec3f dir   = (focus - cPos).Normalize();
+    c.SetPosition(DM::Vec3f(), false);
+    c.SetLookAt(dir, false);
+    viewProjSkybox = c.GetViewProjection();
+    viewProjCbSkybox.Update(&viewProjSkybox, sizeof(viewProjSkybox));
 
     for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-      ren.Draw(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh, lol);
-
-    for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.Draw(vbs[i], ibs[i], planetRh, lol);
+      ren.Draw(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh, skyboxPipelineState);
 
     // Must be last
     ren.EndFrame();

@@ -55,7 +55,7 @@ HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
                                     nullptr,
                                     nullptr,
                                     "main",
-                                    "vs_5_1",
+                                    "vs_5_0",
                                     compileFlags,
                                     0,
                                     &myVertexShader_p,
@@ -87,14 +87,15 @@ HRESULT GraphicsPipelineState::SetGeometryShader(const std::string& geometryShad
 
 HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
 {
+  std::wstring shaderLocation(pixelShader.begin(), pixelShader.end());
   ID3DBlob* errorBlob_p  = nullptr;
   UINT      compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
   HRESULT   hr           = 0;
-  HR_ASSERT(hr = D3DCompileFromFile(L"assets/shaders/PixelHelloTriangle.hlsl",
+  HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
                                     nullptr,
                                     "main",
-                                    "ps_5_1",
+                                    "ps_5_0",
                                     compileFlags,
                                     0,
                                     &myPixelShader_p,

@@ -16,26 +16,28 @@ void Camera::SetView(const View& view)
                                                              view.farPlane));
 }
 
-void Camera::SetPosition(float x, float y, float z)
+void Camera::SetPosition(float x, float y, float z, bool calcAxis)
 {
-  SetPosition(DM::Vec3f(x, y, z));
+  SetPosition(DM::Vec3f(x, y, z), calcAxis);
 }
 
-void Camera::SetPosition(const DM::Vec3f& position)
+void Camera::SetPosition(const DM::Vec3f& position, bool calcAxis)
 {
   myPosition = position;
-  _calcAxis();
+  if (calcAxis)
+    _calcAxis();
 }
 
-void Camera::SetLookAt(float x, float y, float z)
+void Camera::SetLookAt(float x, float y, float z, bool calcAxis)
 {
-  SetLookAt(DM::Vec3f(x, y, z));
+  SetLookAt(DM::Vec3f(x, y, z), calcAxis);
 }
 
-void Camera::SetLookAt(const DM::Vec3f& lookAt)
+void Camera::SetLookAt(const DM::Vec3f& lookAt, bool calcAxis)
 {
   myLookAt = lookAt;
-  _calcAxis();
+  if (calcAxis)
+    _calcAxis();
 }
 
 void Camera::Rotate(float dx, float dy)

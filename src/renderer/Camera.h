@@ -19,10 +19,10 @@ public:
   ~Camera();
 
   void SetView(const View& view);
-  void SetPosition(float x, float y, float z);
-  void SetPosition(const DM::Vec3f& position);
-  void SetLookAt(float x, float y, float z);
-  void SetLookAt(const DM::Vec3f& lookAt);
+  void SetPosition(float x, float y, float z, bool calcAxis = true);
+  void SetPosition(const DM::Vec3f& position, bool calcAxis = true);
+  void SetLookAt(float x, float y, float z, bool calcAxis = true);
+  void SetLookAt(const DM::Vec3f& lookAt, bool calcAxis = true);
   void Rotate(float dx, float dy);
   void Zoom(float factor);
   void Roll(float d);
