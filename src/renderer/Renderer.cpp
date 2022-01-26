@@ -8,6 +8,7 @@
 #include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
+#include "ResourceDescriptorHeap.h"
 #include "GraphicsPipelineState.h"
 
 
@@ -248,9 +249,6 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
       cdh.ptr += myDepthBufferDescriptorSize;
     }
   }
-
-  //Setup Vertex Buffer
-  _SetupShaderState();
 }
 
 Renderer::~Renderer() { }
@@ -337,29 +335,6 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
       1, reinterpret_cast<ID3D12CommandList**>(&myTextureUploadCommandList4_p));
 
   _HardWait();
-}
-
-void Renderer::DrawShitLoad(const VertexBuffer&           vertexBuffer,
-                            const IndexBuffer&            indexBuffer,
-                            const ResourceDescriptorHeap& rh)
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
-  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
-
-  ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
-
-  myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetTextureHeapLocationStart());
-  myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetConstantBufferHeapLocationStart());
-
-  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
 
 void Renderer::Draw(const VertexBuffer&           vertexBuffer,
@@ -462,212 +437,4 @@ void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
   barrierDesc.Transition.StateAfter  = StateAfter;
 
   commandList_p->ResourceBarrier(1, &barrierDesc);
-}
-
-void Renderer::_SetupShaderState()
-{
-  //// Create root signature
-  //{
-  //  D3D12_ROOT_PARAMETER rootParam[2] = {};
-  //  /*rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
-  //  rootParam[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
-  //  rootParam[0].Descriptor.RegisterSpace  = 0;
-  //  rootParam[0].Descriptor.ShaderRegister = 0;*/
-
-  //  D3D12_DESCRIPTOR_RANGE rangeDesc = {};
-  //  rangeDesc.RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  //  rangeDesc.NumDescriptors         = 1;
-
-  //  rootParam[0].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-  //  rootParam[0].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
-  //  rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
-  //  rootParam[0].DescriptorTable.pDescriptorRanges   = &rangeDesc;
-
-  //  D3D12_DESCRIPTOR_RANGE rangeDesc2[1] = {};
-  //  rangeDesc2[0].RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-  //  rangeDesc2[0].NumDescriptors         = 2;
-  //  rangeDesc2[0].RegisterSpace          = 0;
-  //  rangeDesc2[0].BaseShaderRegister     = 0;
-
-  //  rootParam[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-  //  rootParam[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_VERTEX;
-  //  rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-  //  rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc2[0];
-
-  //  D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
-  //  rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
-  //  rootSigDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-  //  rootSigDesc.Desc_1_0.NumParameters = 2;
-  //  rootSigDesc.Desc_1_0.pParameters   = &rootParam[0];
-
-  //  D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
-  //  samplerDesc.Filter                    = D3D12_FILTER_ANISOTROPIC;
-  //  samplerDesc.AddressU                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-  //  samplerDesc.AddressV                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-  //  samplerDesc.AddressW                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-  //  samplerDesc.MaxAnisotropy             = 16;
-  //  samplerDesc.RegisterSpace             = 0;
-  //  samplerDesc.MinLOD                    = -D3D12_FLOAT32_MAX;
-  //  samplerDesc.MaxLOD                    = D3D12_FLOAT32_MAX;
-  //  samplerDesc.MipLODBias                = 0;
-  //  samplerDesc.ShaderRegister            = 0;
-  //  samplerDesc.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
-
-  //  rootSigDesc.Desc_1_0.pStaticSamplers   = &samplerDesc;
-  //  rootSigDesc.Desc_1_0.NumStaticSamplers = 1;
-
-  //  ID3DBlob* errorBlob_p     = nullptr;
-  //  ID3DBlob* signatureBlob_p = nullptr;
-
-  //  HR_ASSERT(D3D12SerializeRootSignature(
-  //      &rootSigDesc.Desc_1_0, rootSigDesc.Version, &signatureBlob_p, &errorBlob_p));
-
-  //  if (errorBlob_p != nullptr)
-  //    printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
-
-  //  HR_ASSERT(gDevice5_p->CreateRootSignature(0,
-  //                                            signatureBlob_p->GetBufferPointer(),
-  //                                            signatureBlob_p->GetBufferSize(),
-  //                                            IID_PPV_ARGS(&myRootSignature_p)));
-  //}
-
-  //// Setup Shaders
-  //{
-  //  // Compile shaders
-  //  {
-  //    ID3DBlob* errorBlob_p  = nullptr;
-  //    UINT      compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-
-  //    HR_ASSERT(D3DCompileFromFile(L"assets/shaders/VertexHelloTriangle.hlsl",
-  //                                 nullptr,
-  //                                 nullptr,
-  //                                 "main",
-  //                                 "vs_5_1",
-  //                                 compileFlags,
-  //                                 0,
-  //                                 &myVertexShader_p,
-  //                                 &errorBlob_p));
-
-  //    if (errorBlob_p != nullptr)
-  //      printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
-  //  }
-  //  {
-  //    ID3DBlob* errorBlob_p  = nullptr;
-  //    UINT      compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-
-  //    HR_ASSERT(D3DCompileFromFile(L"assets/shaders/PixelHelloTriangle.hlsl",
-  //                                 nullptr,
-  //                                 nullptr,
-  //                                 "main",
-  //                                 "ps_5_1",
-  //                                 compileFlags,
-  //                                 0,
-  //                                 &myPixelShader_p,
-  //                                 &errorBlob_p));
-
-  //    if (errorBlob_p != nullptr)
-  //      printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
-  //  }
-
-    //// Setup pipeline state
-    //{
-    //  D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeDesc = {};
-    //  memset(&pipeDesc, 0, sizeof(pipeDesc));
-    //  //pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_NONE;
-    //  //pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_WIREFRAME;
-    //  pipeDesc.RasterizerState.FillMode                  = D3D12_FILL_MODE_SOLID;
-    //  pipeDesc.RasterizerState.CullMode                  = D3D12_CULL_MODE_BACK;
-    //  pipeDesc.PrimitiveTopologyType                     = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    //  pipeDesc.NumRenderTargets                          = 1;
-    //  pipeDesc.RTVFormats[0]                             = DXGI_FORMAT_R8G8B8A8_UNORM;
-    //  pipeDesc.SampleDesc.Count                          = 1;
-    //  pipeDesc.SampleMask                                = UINT_MAX;
-    //  pipeDesc.VS.pShaderBytecode                        = myVertexShader_p->GetBufferPointer();
-    //  pipeDesc.VS.BytecodeLength                         = myVertexShader_p->GetBufferSize();
-    //  pipeDesc.PS.pShaderBytecode                        = myPixelShader_p->GetBufferPointer();
-    //  pipeDesc.PS.BytecodeLength                         = myPixelShader_p->GetBufferSize();
-    //  pipeDesc.BlendState.AlphaToCoverageEnable          = FALSE;
-    //  pipeDesc.BlendState.IndependentBlendEnable         = FALSE;
-    //  pipeDesc.BlendState.RenderTarget[0].BlendEnable    = FALSE;
-    //  pipeDesc.BlendState.RenderTarget[0].LogicOpEnable  = FALSE;
-    //  pipeDesc.BlendState.RenderTarget[0].SrcBlend       = D3D12_BLEND_ONE;
-    //  pipeDesc.BlendState.RenderTarget[0].DestBlend      = D3D12_BLEND_ZERO;
-    //  pipeDesc.BlendState.RenderTarget[0].BlendOp        = D3D12_BLEND_OP_ADD;
-    //  pipeDesc.BlendState.RenderTarget[0].SrcBlendAlpha  = D3D12_BLEND_ONE;
-    //  pipeDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-    //  pipeDesc.BlendState.RenderTarget[0].BlendOpAlpha   = D3D12_BLEND_OP_ADD;
-    //  pipeDesc.BlendState.RenderTarget[0].LogicOp        = D3D12_LOGIC_OP_NOOP;
-    //  pipeDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-    //  pipeDesc.DepthStencilState.DepthEnable                    = TRUE;
-    //  pipeDesc.DepthStencilState.DepthFunc                      = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-    //  pipeDesc.DSVFormat                                        = DXGI_FORMAT_D32_FLOAT;
-    //  pipeDesc.DepthStencilState.DepthWriteMask                 = D3D12_DEPTH_WRITE_MASK_ALL;
-
-    //  ID3D12ShaderReflection* shaderReflection_p = nullptr;
-    //  HR_ASSERT(D3DReflect(myVertexShader_p->GetBufferPointer(),
-    //                       myVertexShader_p->GetBufferSize(),
-    //                       IID_PPV_ARGS(&shaderReflection_p)));
-
-    //  D3D12_SHADER_DESC shaderDesc = {};
-    //  shaderReflection_p->GetDesc(&shaderDesc);
-
-    //  D3D12_INPUT_ELEMENT_DESC inputDesc[8] = {};
-
-    //  for (uint i = 0; i < shaderDesc.InputParameters; i++)
-    //  {
-    //    D3D12_SIGNATURE_PARAMETER_DESC paramDesc = {};
-    //    shaderReflection_p->GetInputParameterDesc(i, &paramDesc);
-    //    inputDesc[i].SemanticName      = paramDesc.SemanticName;
-    //    inputDesc[i].SemanticIndex     = paramDesc.SemanticIndex;
-    //    inputDesc[i].InputSlot         = 0;
-    //    inputDesc[i].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    //    inputDesc[i].InputSlotClass    = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-
-    //    // determine DXGI format
-    //    if (paramDesc.Mask == 1)
-    //    {
-    //      if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32_UINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32_SINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32_FLOAT;
-    //    }
-    //    else if (paramDesc.Mask <= 3)
-    //    {
-    //      if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32_UINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32_SINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32_FLOAT;
-    //    }
-    //    else if (paramDesc.Mask <= 7)
-    //    {
-    //      if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32_UINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32_SINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    //    }
-    //    else if (paramDesc.Mask <= 15)
-    //    {
-    //      if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_UINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_SINT;
-    //      else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
-    //        inputDesc[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    //    }
-    //  }
-
-    //  pipeDesc.InputLayout.pInputElementDescs = &inputDesc[0];
-    //  pipeDesc.InputLayout.NumElements        = shaderDesc.InputParameters;
-    //  pipeDesc.pRootSignature                 = myRootSignature_p;
-
-    //  HR_ASSERT(
-    //      gDevice5_p->CreateGraphicsPipelineState(&pipeDesc, IID_PPV_ARGS(&myPipelineState_p)));
-    //}
-  //}
 }

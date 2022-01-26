@@ -3,7 +3,6 @@
 #include "../utility/DMath.h"
 #include "../utility/Typedef.h"
 #include "../utility/Vector4f.h"
-#include "ResourceDescriptorHeap.h"
 #include "Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
@@ -15,6 +14,7 @@ class IndexBuffer;
 class TextureBuffer;
 class ConstantBuffer;
 class GraphicsPipelineState;
+class ResourceDescriptorHeap;
 
 class Renderer
 {
@@ -25,10 +25,6 @@ public:
   void BeginFrame();
 
   void UploadTexture(const TextureBuffer& textureBuffer, void* data_p);
-
-  void DrawShitLoad(const VertexBuffer&                 vertexBuffer,
-                    const IndexBuffer&                  indexBuffer,
-                    const ResourceDescriptorHeap& rh);
 
   void Draw(const VertexBuffer&           vertexBuffer,
             const IndexBuffer&            indexBuffer,
@@ -50,7 +46,6 @@ private:
                                      ID3D12Resource*            resource_p,
                                      D3D12_RESOURCE_STATES      StateBefore,
                                      D3D12_RESOURCE_STATES      StateAfter);
-  void _SetupShaderState();
 
 private:
   static const uint            NUM_SWAP_BUFFERS = 2u;
@@ -73,15 +68,6 @@ private:
 
   ID3D12CommandAllocator*     myTextureUploadAllocator_p    = nullptr;
   ID3D12GraphicsCommandList4* myTextureUploadCommandList4_p = nullptr;
-
-  ID3D12RootSignature* myRootSignature_p = nullptr;
-
-  ID3D12PipelineState* myPipelineState_p = nullptr;
-
-  ID3D12Resource*          myVertexBuffer_p   = nullptr;
-  D3D12_VERTEX_BUFFER_VIEW myVertexBufferView = {};
-  ID3DBlob*                myVertexShader_p   = nullptr;
-  ID3DBlob*                myPixelShader_p    = nullptr;
 
   ID3D12Resource1*      myDepthBuffers_pp[NUM_SWAP_BUFFERS] = {};
   ID3D12DescriptorHeap* myDepthBufferHeap_p                 = nullptr;
