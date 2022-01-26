@@ -3,7 +3,7 @@
 #include "../utility/DMath.h"
 #include "../utility/Typedef.h"
 #include "../utility/Vector4f.h"
-#include "ConstantBufferDescriptorHeap.h"
+#include "ResourceDescriptorHeap.h"
 #include "Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
@@ -27,7 +27,7 @@ public:
 
   void DrawShitLoad(const VertexBuffer&                 vertexBuffer,
                     const IndexBuffer&                  indexBuffer,
-                    const ConstantBufferDescriptorHeap& cbdh);
+                    const ResourceDescriptorHeap& cbdh);
 
   void Clear(const Vector4f& color = Vector4f());
 

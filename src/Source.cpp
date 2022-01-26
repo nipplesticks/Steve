@@ -2,11 +2,11 @@
 #include "events/EventHandler.h"
 #include "renderer/Camera.h"
 #include "renderer/ConstantBuffer.h"
-#include "renderer/ConstantBufferDescriptorHeap.h"
 #include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
+#include "renderer/ResourceDescriptorHeap.h"
 #include "renderer/TextureBuffer.h"
 #include "renderer/TextureLoader.h"
 #include "renderer/VertexBuffer.h"
@@ -26,8 +26,8 @@ int main()
   lol.GenerateRootSignature();
   lol.CreatePipelineState();
 
-  ConstantBufferDescriptorHeap planetCBVHD;
-  ConstantBufferDescriptorHeap skyBoxCBVHD;
+  ResourceDescriptorHeap planetRh;
+  ResourceDescriptorHeap skyBoxRh;
 
   Camera::View view;
   view.fov       = 45.0f;
@@ -101,8 +101,8 @@ int main()
 
   worldMat.Store(DirectX::XMMatrixIdentity());
   worldCb.Update(&worldMat, sizeof(worldMat));
-  skyBoxCBVHD.Create({&viewProjCb, & skyBoxConstantBuffer}, &skyboxTextureBuff);
-  planetCBVHD.Create({&viewProjCb, &worldCb}, &texBuff);
+  skyBoxRh.Create({&viewProjCb, &skyBoxConstantBuffer}, {&skyboxTextureBuff});
+  planetRh.Create({&viewProjCb, &worldCb}, {&texBuff});
 
   float rotation      = 0.0f;
   float rotationSpeed = 0.01f;
@@ -168,10 +168,10 @@ int main()
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
 
     for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-      ren.DrawShitLoad(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxCBVHD);
+      ren.DrawShitLoad(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh);
 
     for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawShitLoad(vbs[i], ibs[i], planetCBVHD);
+      ren.DrawShitLoad(vbs[i], ibs[i], planetRh);
 
     // Must be last
     ren.EndFrame();

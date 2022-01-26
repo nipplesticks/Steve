@@ -337,9 +337,9 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
   _HardWait();
 }
 
-void Renderer::DrawShitLoad(const VertexBuffer&                 vertexBuffer,
-                            const IndexBuffer&                  indexBuffer,
-                            const ConstantBufferDescriptorHeap& cbdh)
+void Renderer::DrawShitLoad(const VertexBuffer&           vertexBuffer,
+                            const IndexBuffer&            indexBuffer,
+                            const ResourceDescriptorHeap& rh)
 {
 
   myCommandList4_p->SetPipelineState(myPipelineState_p);
@@ -352,13 +352,11 @@ void Renderer::DrawShitLoad(const VertexBuffer&                 vertexBuffer,
   myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
   myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
 
-  ID3D12DescriptorHeap* arr[1]  = {cbdh.GetDescriptorHeap()};
+  ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(
-      0, cbdh.GetTextureHeapLocationStart());
-  myCommandList4_p->SetGraphicsRootDescriptorTable(
-      1, cbdh.GetConstantBufferHeapLocationStart());
+  myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetTextureHeapLocationStart());
+  myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetConstantBufferHeapLocationStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
@@ -445,7 +443,7 @@ void Renderer::_SetupShaderState()
 {
   // Create root signature
   {
-    D3D12_ROOT_PARAMETER rootParam[2]      = {};
+    D3D12_ROOT_PARAMETER rootParam[2] = {};
     /*rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParam[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParam[0].Descriptor.RegisterSpace  = 0;
@@ -461,10 +459,10 @@ void Renderer::_SetupShaderState()
     rootParam[0].DescriptorTable.pDescriptorRanges   = &rangeDesc;
 
     D3D12_DESCRIPTOR_RANGE rangeDesc2[1] = {};
-    rangeDesc2[0].RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    rangeDesc2[0].NumDescriptors          = 2;
+    rangeDesc2[0].RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    rangeDesc2[0].NumDescriptors         = 2;
     rangeDesc2[0].RegisterSpace          = 0;
-    rangeDesc2[0].BaseShaderRegister      = 0;
+    rangeDesc2[0].BaseShaderRegister     = 0;
 
     rootParam[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_VERTEX;

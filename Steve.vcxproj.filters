@@ -57,7 +57,7 @@
     <ClCompile Include="src\renderer\GraphicsPipelineState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\ConstantBufferDescriptorHeap.cpp">
+    <ClCompile Include="src\renderer\ResourceDescriptorHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,7 +134,7 @@
     <ClInclude Include="src\renderer\GraphicsPipelineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\ConstantBufferDescriptorHeap.h">
+    <ClInclude Include="src\renderer\ResourceDescriptorHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
