@@ -3,7 +3,7 @@
 #include "ConstantBuffer.h"
 #include <vector>
 
-class ID3D12DescriptorHeap;
+struct ID3D12DescriptorHeap;
 class TextureBuffer;
 
 class ConstantBufferDescriptorHeap

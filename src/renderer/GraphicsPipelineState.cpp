@@ -220,7 +220,6 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
 
         D3D12_SHADER_INPUT_BIND_DESC desc {};
         shaderReflection_p->GetResourceBindingDesc(i, &desc);
-        D3D12_ROOT_PARAMETER_TYPE type;
         if (desc.Type == D3D_SIT_SAMPLER)
           continue;
 

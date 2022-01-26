@@ -2,6 +2,8 @@
 #include "events/EventHandler.h"
 #include "renderer/Camera.h"
 #include "renderer/ConstantBuffer.h"
+#include "renderer/ConstantBufferDescriptorHeap.h"
+#include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
 #include "renderer/Renderer.h"
@@ -12,13 +14,11 @@
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
-#include "renderer/GraphicsPipelineState.h"
-#include "renderer/ConstantBufferDescriptorHeap.h"
 
 int main()
 {
-  Window       wnd(1280, 720, "aTitle");
-  Renderer     ren(1280, 720, wnd.GetHwnd());
+  Window                wnd(1280, 720, "aTitle");
+  Renderer              ren(1280, 720, wnd.GetHwnd());
   GraphicsPipelineState lol;
   lol.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
   lol.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
@@ -27,7 +27,7 @@ int main()
   lol.CreatePipelineState();
 
   ConstantBufferDescriptorHeap planetCBVHD;
-  ConstantBufferDescriptorHeap ViewProjCBVHD;
+  ConstantBufferDescriptorHeap skyBoxCBVHD;
 
   Camera::View view;
   view.fov       = 45.0f;
@@ -90,17 +90,26 @@ int main()
   Timer t;
   t.Start();
 
-  ConstantBuffer cb;
-  cb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 worldMat;
+  ConstantBuffer worldCb;
+  worldCb.Init(sizeof(DM::Mat4x4));
+  DM::Mat4x4     worldMat;
+  ConstantBuffer viewProjCb;
+  viewProjCb.Init(sizeof(DM::Mat4x4));
+  DM::Mat4x4 viewProj;
+  viewProj.Store(DirectX::XMMatrixIdentity());
+  viewProjCb.Update(&viewProj, sizeof(viewProj));
+
   worldMat.Store(DirectX::XMMatrixIdentity());
-  cb.Update(&worldMat, sizeof(worldMat));
-  planetCBVHD.Create({&cb}, &texBuff);
+  worldCb.Update(&worldMat, sizeof(worldMat));
+  skyBoxCBVHD.Create({&viewProjCb, & skyBoxConstantBuffer}, &skyboxTextureBuff);
+  planetCBVHD.Create({&viewProjCb, &worldCb}, &texBuff);
+
   float rotation      = 0.0f;
   float rotationSpeed = 0.01f;
+
   while (wnd.IsOpen())
   {
-    float dt = t.Stop();
+    float dt = (float)t.Stop();
     wnd.PollEvents();
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
@@ -125,6 +134,7 @@ int main()
         }
       }
     }
+
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
       EventHandler::ClearEvents(Event::Type::MouseWheel);
@@ -148,33 +158,20 @@ int main()
 
     worldMat.Store(DirectX::XMMatrixRotationY(rotation));
 
-    cb.Update(&worldMat, sizeof(worldMat));
+    worldCb.Update(&worldMat, sizeof(worldMat));
 
-    
+    viewProj = cam.GetViewProjection();
+    viewProjCb.Update(&viewProj, sizeof(viewProj));
 
     // Must be first
     ren.BeginFrame();
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
-    ren.UpdateViewProjection(cam.GetViewProjection());
-    //ren.DrawVertexBuffer(vb);
-    /*for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawVertexAndIndexBuffer(vbs[i], ibs[i]);*/
-    /*for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawVertexAndIndexAndTextureBuffer(vbs[i], ibs[i], texBuff);*/
 
-    /*for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-      ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
-          skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyboxTextureBuff, skyBoxConstantBuffer);*/
+    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+      ren.DrawShitLoad(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxCBVHD);
 
-    /*for (uint i = 0; i < m.GetMeshesCount(); i++)
-    {
-      ren.DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
-          vbs[i], ibs[i], texBuff, cb);
-    }*/
     for (uint i = 0; i < m.GetMeshesCount(); i++)
-    {
-      ren.DrawShitLoad(vbs[i], ibs[i], texBuff, planetCBVHD);
-    }
+      ren.DrawShitLoad(vbs[i], ibs[i], planetCBVHD);
 
     // Must be last
     ren.EndFrame();

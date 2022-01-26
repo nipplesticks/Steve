@@ -253,14 +253,6 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
 
 Renderer::~Renderer() { }
 
-void Renderer::UpdateViewProjection(const DM::Mat4x4& viewProj)
-{
-  void* adress_p = nullptr;
-  HR_ASSERT(myViewProjBuffer_p->Map(0, nullptr, &adress_p));
-  memcpy(adress_p, &viewProj, sizeof(viewProj));
-  myViewProjBuffer_p->Unmap(0, nullptr);
-}
-
 void Renderer::BeginFrame()
 {
   myCommandAllocator_p->Reset();
@@ -345,100 +337,8 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
   _HardWait();
 }
 
-void Renderer::DrawVertexBuffer(const VertexBuffer& vertexBuffer)
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
-
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
-
-  myCommandList4_p->DrawInstanced(vertexBuffer.GetVertexCount(), 1, 0, 0);
-}
-
-void Renderer::DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer,
-                                        const IndexBuffer&  indexBuffer)
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
-  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
-
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
-  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
-}
-
-void Renderer::DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuffer,
-                                                  const IndexBuffer&   indexBuffer,
-                                                  const TextureBuffer& textureBuffer)
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
-  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
-
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
-
-  ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
-
-  myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(
-      1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
-
-  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
-}
-
-void Renderer::DrawVertexAndIndexAndTextureBufferAndConstantBuffer(
-    const VertexBuffer&   vertexBuffer,
-    const IndexBuffer&    indexBuffer,
-    const TextureBuffer&  textureBuffer,
-    const ConstantBuffer& constantBuffer)
-{
-  myCommandList4_p->SetPipelineState(myPipelineState_p);
-  myCommandList4_p->SetGraphicsRootSignature(myRootSignature_p);
-
-  myCommandList4_p->RSSetViewports(1, &myViewport);
-  myCommandList4_p->RSSetScissorRects(1, &myScissorRect);
-
-  myCommandList4_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
-  myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
-
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
-  myCommandList4_p->SetGraphicsRootConstantBufferView(
-      2, constantBuffer.GetResource()->GetGPUVirtualAddress());
-
-  ID3D12DescriptorHeap* arr[1] = {textureBuffer.GetHeap()};
-
-  myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(
-      1, textureBuffer.GetHeap()->GetGPUDescriptorHandleForHeapStart());
-
-  myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
-}
-
 void Renderer::DrawShitLoad(const VertexBuffer&                 vertexBuffer,
                             const IndexBuffer&                  indexBuffer,
-                            const TextureBuffer&                textureBuffer,
                             const ConstantBufferDescriptorHeap& cbdh)
 {
 
@@ -452,15 +352,13 @@ void Renderer::DrawShitLoad(const VertexBuffer&                 vertexBuffer,
   myCommandList4_p->IASetVertexBuffers(0, 1, &vertexBuffer.GetVBV());
   myCommandList4_p->IASetIndexBuffer(&indexBuffer.GetIBV());
 
-  myCommandList4_p->SetGraphicsRootConstantBufferView(0,
-                                                      myViewProjBuffer_p->GetGPUVirtualAddress());
   ID3D12DescriptorHeap* arr[1]  = {cbdh.GetDescriptorHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
   myCommandList4_p->SetGraphicsRootDescriptorTable(
-      1, cbdh.GetTextureHeapLocationStart());
+      0, cbdh.GetTextureHeapLocationStart());
   myCommandList4_p->SetGraphicsRootDescriptorTable(
-      2, cbdh.GetConstantBufferHeapLocationStart());
+      1, cbdh.GetConstantBufferHeapLocationStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
@@ -545,65 +443,38 @@ void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
 
 void Renderer::_SetupShaderState()
 {
-  // Setup ViewProj buffer
-  {
-    D3D12_HEAP_PROPERTIES heapProp = {};
-    heapProp.Type                  = D3D12_HEAP_TYPE_UPLOAD;
-    heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heapProp.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC desc = {};
-    desc.DepthOrArraySize    = 1;
-    desc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
-    desc.Format              = DXGI_FORMAT_UNKNOWN;
-    desc.Height              = 1;
-    desc.Width               = sizeof(DirectX::XMFLOAT4X4);
-    desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    desc.MipLevels           = 1;
-    desc.SampleDesc.Count    = 1;
-    desc.SampleDesc.Quality  = 0;
-
-    HR_ASSERT(gDevice5_p->CreateCommittedResource(&heapProp,
-                                                  D3D12_HEAP_FLAG_NONE,
-                                                  &desc,
-                                                  D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                  nullptr,
-                                                  IID_PPV_ARGS(&myViewProjBuffer_p)));
-  }
-
   // Create root signature
   {
-    D3D12_ROOT_PARAMETER rootParam[3]      = {};
-    rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    D3D12_ROOT_PARAMETER rootParam[2]      = {};
+    /*rootParam[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParam[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParam[0].Descriptor.RegisterSpace  = 0;
-    rootParam[0].Descriptor.ShaderRegister = 0;
+    rootParam[0].Descriptor.ShaderRegister = 0;*/
 
     D3D12_DESCRIPTOR_RANGE rangeDesc = {};
     rangeDesc.RangeType              = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     rangeDesc.NumDescriptors         = 1;
 
+    rootParam[0].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[0].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[0].DescriptorTable.pDescriptorRanges   = &rangeDesc;
+
+    D3D12_DESCRIPTOR_RANGE rangeDesc2[1] = {};
+    rangeDesc2[0].RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    rangeDesc2[0].NumDescriptors          = 2;
+    rangeDesc2[0].RegisterSpace          = 0;
+    rangeDesc2[0].BaseShaderRegister      = 0;
+
     rootParam[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParam[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc;
-
-    D3D12_DESCRIPTOR_RANGE rangeDesc2 = {};
-    rangeDesc2.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    rangeDesc2.NumDescriptors          = 1;
-    rangeDesc2.RegisterSpace          = 0;
-    rangeDesc2.BaseShaderRegister      = 1;
-
-    rootParam[2].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[2].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_VERTEX;
-    rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
-    rootParam[2].DescriptorTable.pDescriptorRanges   = &rangeDesc2;
+    rootParam[1].DescriptorTable.pDescriptorRanges   = &rangeDesc2[0];
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
     rootSigDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    rootSigDesc.Desc_1_0.NumParameters = 3;
+    rootSigDesc.Desc_1_0.NumParameters = 2;
     rootSigDesc.Desc_1_0.pParameters   = &rootParam[0];
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};

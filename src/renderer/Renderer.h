@@ -3,10 +3,10 @@
 #include "../utility/DMath.h"
 #include "../utility/Typedef.h"
 #include "../utility/Vector4f.h"
+#include "ConstantBufferDescriptorHeap.h"
 #include "Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
-#include "ConstantBufferDescriptorHeap.h"
 
 struct IDXGISwapChain4;
 
@@ -21,27 +21,12 @@ public:
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
 
-  void UpdateViewProjection(const DM::Mat4x4& viewProj);
-
   void BeginFrame();
 
   void UploadTexture(const TextureBuffer& textureBuffer, void* data_p);
 
-  void DrawVertexBuffer(const VertexBuffer& vertexBuffer); // Temp
-  void DrawVertexAndIndexBuffer(const VertexBuffer& vertexBuffer,
-                                const IndexBuffer&  indexBuffer); // Temp
-  void DrawVertexAndIndexAndTextureBuffer(const VertexBuffer&  vertexBuffer,
-                                          const IndexBuffer&   indexBuffer,
-                                          const TextureBuffer& textureBuffer); // Temp
-  void
-  DrawVertexAndIndexAndTextureBufferAndConstantBuffer(const VertexBuffer&   vertexBuffer,
-                                                      const IndexBuffer&    indexBuffer,
-                                                      const TextureBuffer&  textureBuffer,
-                                                      const ConstantBuffer& constantBuffer); // Temp
-
-  void DrawShitLoad(const VertexBuffer&   vertexBuffer,
-                    const IndexBuffer&    indexBuffer,
-                    const TextureBuffer&  textureBuffer,
+  void DrawShitLoad(const VertexBuffer&                 vertexBuffer,
+                    const IndexBuffer&                  indexBuffer,
                     const ConstantBufferDescriptorHeap& cbdh);
 
   void Clear(const Vector4f& color = Vector4f());
@@ -100,6 +85,4 @@ private:
   uint64           myFenceValue                         = 0u;
 
   uint mySrvUavCbvDescriptorSize = 0u;
-
-  ID3D12Resource* myViewProjBuffer_p = nullptr;
 };
