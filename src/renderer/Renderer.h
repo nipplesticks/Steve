@@ -14,6 +14,7 @@ class VertexBuffer;
 class IndexBuffer;
 class TextureBuffer;
 class ConstantBuffer;
+class GraphicsPipelineState;
 
 class Renderer
 {
@@ -27,7 +28,13 @@ public:
 
   void DrawShitLoad(const VertexBuffer&                 vertexBuffer,
                     const IndexBuffer&                  indexBuffer,
-                    const ResourceDescriptorHeap& cbdh);
+                    const ResourceDescriptorHeap& rh);
+
+  void Draw(const VertexBuffer&           vertexBuffer,
+            const IndexBuffer&            indexBuffer,
+            const ResourceDescriptorHeap& rh,
+            const GraphicsPipelineState& pipelineState);
+
 
   void Clear(const Vector4f& color = Vector4f());
 

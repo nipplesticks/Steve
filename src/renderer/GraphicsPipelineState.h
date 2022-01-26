@@ -4,6 +4,8 @@
 #include <d3d12.h>
 #include <string>
 #include <vector>
+
+
 class GraphicsPipelineState : public D3D12_GRAPHICS_PIPELINE_STATE_DESC
 {
 public:

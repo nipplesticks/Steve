@@ -55,7 +55,7 @@ HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
                                     nullptr,
                                     nullptr,
                                     "main",
-                                    "vs_5_0",
+                                    "vs_5_1",
                                     compileFlags,
                                     0,
                                     &myVertexShader_p,
@@ -94,7 +94,7 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
                                     nullptr,
                                     nullptr,
                                     "main",
-                                    "ps_5_0",
+                                    "ps_5_1",
                                     compileFlags,
                                     0,
                                     &myPixelShader_p,
@@ -188,6 +188,7 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   {
     ShaderType                shaderType;
     uint                      shaderRegister;
+    uint                      registerSpace;
     D3D12_ROOT_PARAMETER_TYPE parameterType;
     bool                      operator==(const ShaderObject& other)
     {
@@ -222,9 +223,9 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
         shaderReflection_p->GetResourceBindingDesc(i, &desc);
         if (desc.Type == D3D_SIT_SAMPLER)
           continue;
-
-        shaderObj.parameterType  = ConvertToParameterType(desc.Type);
-        shaderObj.shaderRegister = desc.BindPoint;
+        shaderObj.parameterType   = ConvertToParameterType(desc.Type);
+        shaderObj.shaderRegister  = desc.BindPoint;
+        shaderObj.registerSpace   = desc.Space;
         shaderObjects.push_back(shaderObj);
       }
     }
@@ -238,12 +239,18 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
     D3D12_DESCRIPTOR_RANGE rangeDesc = {};
     rangeDesc.RangeType              = ConvertToRangeType(shaderObjects[i].parameterType);
     rangeDesc.NumDescriptors         = 1;
-    rangeDesc.RegisterSpace          = 0;
+    rangeDesc.RegisterSpace          = shaderObjects[i].registerSpace;
     rangeDesc.BaseShaderRegister     = shaderObjects[i].shaderRegister;
     if (rangeDesc.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV)
+    {
+      rangeDesc.OffsetInDescriptorsFromTableStart = cbvRanges.size();
       cbvRanges.push_back(rangeDesc);
+    }
     else if (rangeDesc.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV)
+    {
+      rangeDesc.OffsetInDescriptorsFromTableStart = srvRanges.size();
       srvRanges.push_back(rangeDesc);
+    }
   }
 
   D3D12_ROOT_PARAMETER rootParams[2] = {};
@@ -312,7 +319,7 @@ HRESULT GraphicsPipelineState::CreatePipelineState()
   InputLayout.pInputElementDescs = myInputElementDescs.data();
   InputLayout.NumElements        = myInputElementDescs.size();
   pRootSignature                 = myRootSignature_p;
-  HRESULT hr = 0;
+  HRESULT hr                     = 0;
   HR_ASSERT(hr = Renderer::GetDevice()->CreateGraphicsPipelineState(
                 this, IID_PPV_ARGS(&myPipelineState_p)));
 

@@ -90,17 +90,18 @@ int main()
   Timer t;
   t.Start();
 
-  ConstantBuffer worldCb;
-  worldCb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4     worldMat;
   ConstantBuffer viewProjCb;
   viewProjCb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 viewProj;
+  DM::Mat4x4     viewProj;
   viewProj.Store(DirectX::XMMatrixIdentity());
   viewProjCb.Update(&viewProj, sizeof(viewProj));
 
-  worldMat.Store(DirectX::XMMatrixIdentity());
+  ConstantBuffer worldCb;
+  worldCb.Init(sizeof(DM::Mat4x4));
+  DM::Mat4x4 worldMat;
   worldCb.Update(&worldMat, sizeof(worldMat));
+  worldMat.Store(DirectX::XMMatrixIdentity());
+
   skyBoxRh.Create({&viewProjCb, &skyBoxConstantBuffer}, {&skyboxTextureBuff});
   planetRh.Create({&viewProjCb, &worldCb}, {&texBuff});
 
@@ -167,11 +168,17 @@ int main()
     ren.BeginFrame();
     ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
 
-    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+    /*for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
       ren.DrawShitLoad(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh);
 
     for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.DrawShitLoad(vbs[i], ibs[i], planetRh);
+      ren.DrawShitLoad(vbs[i], ibs[i], planetRh);*/
+
+    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
+      ren.Draw(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh, lol);
+
+    for (uint i = 0; i < m.GetMeshesCount(); i++)
+      ren.Draw(vbs[i], ibs[i], planetRh, lol);
 
     // Must be last
     ren.EndFrame();
