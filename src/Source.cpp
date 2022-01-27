@@ -1,6 +1,6 @@
 #include "World/Planet.h"
 #include "events/EventHandler.h"
-#include "renderer/Camera.h"
+#include "renderer/Camera2.h"
 #include "renderer/ConstantBuffer.h"
 #include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
@@ -14,11 +14,19 @@
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
+#include "renderer/FpsCamera.h"
 
 int main()
 {
   Window                wnd(1280, 720, "aTitle");
   Renderer              ren(1280, 720, wnd.GetHwnd());
+
+  FpsCamera fpsCam;
+  fpsCam.SetPosition(0, 0, 2);
+  fpsCam.SetLookTo(0.0f, 0.0f, -1.0f);
+  auto up = fpsCam.GetUp();
+  auto right = fpsCam.GetRight();
+
 
   GraphicsPipelineState planetPipelineState;
   planetPipelineState.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
@@ -37,17 +45,17 @@ int main()
   ResourceDescriptorHeap planetRh;
   ResourceDescriptorHeap skyBoxRh;
 
-  Camera::View view;
-  view.fov       = 45.0f;
-  view.height    = 720.0f;
-  view.width     = 1280.0f;
-  view.nearPlane = 0.01f;
-  view.farPlane  = 1000.0f;
-  Camera cam;
-  cam.SetMaxZoom(1.f + view.nearPlane);
-  cam.SetPosition(0, 0, 2.0f);
-  cam.SetLookAt(0, 0, 0);
-  cam.SetView(view);
+  //Camera2::View view;
+  //view.fov       = 45.0f;
+  //view.height    = 720.0f;
+  //view.width     = 1280.0f;
+  //view.nearPlane = 0.01f;
+  //view.farPlane  = 1000.0f;
+  //Camera2 cam;
+  //cam.SetMaxZoom(1.f + view.nearPlane);
+  //cam.SetPosition(0, 0, 2.0f);
+  //cam.SetLookAt(0, 0, 0);
+  //cam.SetView(view);
 
   Planet p;
   p.Create(1.0f, 8, 1.0f);
@@ -122,6 +130,7 @@ int main()
   while (wnd.IsOpen())
   {
     float dt = (float)t.Stop();
+
     wnd.PollEvents();
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
@@ -134,11 +143,14 @@ int main()
 
         if (mouseEvent_p->MButtonPressed)
         {
-          cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
+          //cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
+          fpsCam.Rotate(0,0,mouseEvent_p->MouseDelta.x * rollSpeed * dt);
         }
         if (mouseEvent_p->LButtonPressed)
         {
-          cam.Rotate(-dx, -dy);
+          //cam.Rotate(-dx, -dy);
+
+          fpsCam.Rotate(dy, dx, 0.0f);
         }
         for (uint i = 0; i < events.size(); i++)
         {
@@ -159,7 +171,7 @@ int main()
           if (mouseEvent_p->Delta)
           {
             float z = (float)mouseEvent_p->Delta * zoomSpeed * dt;
-            cam.Zoom(z);
+            //cam.Zoom(z);
           }
           delete events[i];
         }
@@ -172,8 +184,11 @@ int main()
 
     worldCb.Update(&worldMat, sizeof(worldMat));
 
-    viewProj = cam.GetViewProjection();
+    //viewProj = cam.GetViewProjection();
+    //viewProjCb.Update(&viewProj, sizeof(viewProj));
+    viewProj = fpsCam.GetViewProjectionMatrix();
     viewProjCb.Update(&viewProj, sizeof(viewProj));
+
 
     // Must be first
     ren.BeginFrame();
@@ -182,13 +197,9 @@ int main()
     for (uint i = 0; i < m.GetMeshesCount(); i++)
       ren.Draw(vbs[i], ibs[i], planetRh, planetPipelineState);
 
-    Camera c = cam;
-    DM::Vec3f cPos = cam.GetPosition();
-    DM::Vec3f focus = cam.GetLookAt();
-    DM::Vec3f dir   = (focus - cPos).Normalize();
-    c.SetPosition(DM::Vec3f(), false);
-    c.SetLookAt(dir, false);
-    viewProjSkybox = c.GetViewProjection();
+    FpsCamera c = fpsCam;
+    c.SetPosition(0.0f);
+    viewProjSkybox = c.GetViewProjectionMatrix();
     viewProjCbSkybox.Update(&viewProjSkybox, sizeof(viewProjSkybox));
 
     for (uint i = 0; i < skyBox.GetMeshesCount(); i++)

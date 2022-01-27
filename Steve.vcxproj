@@ -154,7 +154,9 @@
     <ClCompile Include="src\events\Event.cpp" />
     <ClCompile Include="src\events\EventHandler.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
+    <ClCompile Include="src\renderer\Camera2.cpp" />
     <ClCompile Include="src\renderer\ConstantBuffer.cpp" />
+    <ClCompile Include="src\renderer\FpsCamera.cpp" />
     <ClCompile Include="src\renderer\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\renderer\IndexBuffer.cpp" />
     <ClCompile Include="src\renderer\Mesh.cpp" />
@@ -170,7 +172,9 @@
   <ItemGroup>
     <ClInclude Include="src\events\Event.h" />
     <ClInclude Include="src\events\EventHandler.h" />
+    <ClInclude Include="src\renderer\FpsCamera.h" />
     <ClInclude Include="src\renderer\Camera.h" />
+    <ClInclude Include="src\renderer\Camera2.h" />
     <ClInclude Include="src\renderer\ConstantBuffer.h" />
     <ClInclude Include="src\renderer\d3dx12.h" />
     <ClInclude Include="src\renderer\GraphicsPipelineState.h" />

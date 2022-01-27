@@ -1281,38 +1281,38 @@ namespace DM
       return val;
     }
 
-    Vec3f Cross(const DirectX::XMVECTOR& vector)
+    Vec3f Cross(const DirectX::XMVECTOR& vector) const
     {
       Vec3f val;
       val.Store(DirectX::XMVector3Cross(Load(), vector));
       return val;
     }
 
-    Vec3f Cross(const Vec3f& _Vec3f)
+    Vec3f Cross(const Vec3f& _Vec3f) const
     {
       Vec3f val;
       val.Store(DirectX::XMVector3Cross(Load(), _Vec3f.Load()));
       return val;
     }
 
-    Vec3f Cross(const DirectX::XMFLOAT3& _xmFlt)
+    Vec3f Cross(const DirectX::XMFLOAT3& _xmFlt) const
     {
       Vec3f val;
       val.Store(DirectX::XMVector3Cross(Load(), DirectX::XMLoadFloat3(&_xmFlt)));
       return val;
     }
 
-    float Dot(const DirectX::XMVECTOR& vector)
+    float Dot(const DirectX::XMVECTOR& vector) const
     {
       return DirectX::XMVectorGetX(DirectX::XMVector3Dot(Load(), vector));
     }
 
-    float Dot(const Vec3f& _Vec3f)
+    float Dot(const Vec3f& _Vec3f) const
     {
       return DirectX::XMVectorGetX(DirectX::XMVector3Dot(Load(), _Vec3f.Load()));
     }
 
-    float Dot(const DirectX::XMFLOAT3& _xmFlt)
+    float Dot(const DirectX::XMFLOAT3& _xmFlt) const
     {
       return DirectX::XMVectorGetX(DirectX::XMVector3Dot(Load(), DirectX::XMLoadFloat3(&_xmFlt)));
     }

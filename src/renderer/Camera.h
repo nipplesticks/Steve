@@ -4,7 +4,6 @@
 
 class Camera
 {
-public:
   struct View
   {
     float fov;
@@ -12,43 +11,49 @@ public:
     float width;
     float nearPlane;
     float farPlane;
+    bool  isPerspective;
   };
 
 public:
   Camera();
-  ~Camera();
+  Camera(const View& view);
 
-  void SetView(const View& view);
-  void SetPosition(float x, float y, float z, bool calcAxis = true);
-  void SetPosition(const DM::Vec3f& position, bool calcAxis = true);
-  void SetLookAt(float x, float y, float z, bool calcAxis = true);
-  void SetLookAt(const DM::Vec3f& lookAt, bool calcAxis = true);
-  void Rotate(float dx, float dy);
-  void Zoom(float factor);
-  void Roll(float d);
-  void SetMaxZoom(float z);
+  virtual ~Camera() = default;
 
-  const DM::Vec3f& GetPosition() const;
-  const DM::Vec3f& GetLookAt() const;
-  const DM::Vec3f& GetUp() const;
-  const DM::Vec3f& GetRight() const;
+  virtual void SetView(const View& view);
+  virtual void SetPosition(float x, float y, float z);
+  virtual void SetPosition(const DM::Vec3f& position);
+  virtual void Move(const DM::Vec3f& translation);
+  virtual void Move(float x, float y, float z);
+  virtual void Rotate(float x, float y, float z);
+  virtual void Rotate(const DM::Vec3f& rot);
+  virtual void SetRotation(float x, float y, float z);
+  virtual void SetRotation(const DM::Vec3f& axis);
+  virtual void UseCustomUpVector(bool flag);
+  virtual void SetCustomUpVector(const DM::Vec3f& up);
+  virtual void SetCustomUpVector(float x, float y, float z);
 
-  DM::Mat4x4 GetViewProjection();
+  virtual const View&      GetView() const;
+  virtual const DM::Vec3f& GetPosition() const;
+  virtual const DM::Vec3f& GetForward() const = 0;
+  virtual const DM::Vec3f& GetRight() const   = 0;
+  virtual const DM::Vec3f& GetUp() const      = 0;
+  virtual const DM::Vec4f& GetRotation() const;
+
+  virtual DM::Mat4x4        GetViewMatrix() const = 0;
+  virtual const DM::Mat4x4& GetProjectionMatrix() const;
+  virtual DM::Mat4x4        GetViewProjectionMatrix() const;
+  static Camera::View       GetDefaultView();
 
 private:
-  void _calcAxis();
-  void _rotateAxis(float dx, float dy);
+  void _buildProjection();
+  void _init();
 
-private:
-  DM::Mat4x4 myViewMatrix;
+protected:
+  View       myView;
   DM::Mat4x4 myProjectionMatrix;
-
-  DM::Vec3f myPosition;
-
-  DM::Vec3f myLookAt;
-
-  DM::Vec3f myTranslatedUp;
-  DM::Vec3f myTranslatedRight;
-  float     myMaxZoom = 1.0f;
-
+  DM::Vec3f  myPosition;
+  DM::Vec3f  myCustomUp;
+  DM::Vec4f  myRotationQuat;
+  bool       myUseCustomUp = false;
 };
