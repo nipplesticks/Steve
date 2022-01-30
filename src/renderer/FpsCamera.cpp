@@ -1,18 +1,18 @@
 #include "FpsCamera.h"
 
-const DM::Vec3f& FpsCamera::GetForward() const
+DM::Vec3f FpsCamera::GetForward() const
 {
   return myLookTo;
 }
 
-const DM::Vec3f& FpsCamera::GetRight() const
+DM::Vec3f FpsCamera::GetRight() const
 {
   DM::Vec3f dir = GetForward();
   DM::Vec3f up = GetUp();
   return dir.Cross(up).Normalize();
 }
 
-const DM::Vec3f& FpsCamera::GetUp() const
+DM::Vec3f FpsCamera::GetUp() const
 {
   DM::Vec3f dir = GetForward();
 
@@ -46,6 +46,27 @@ DM::Mat4x4 FpsCamera::GetViewMatrix() const
 
   viewMat.Store(DirectX::XMMatrixLookToRH(myPosition.Load(), dir.Load(), up.Load()));
   return viewMat;
+}
+
+DM::Vec3f FpsCamera::GetRelativeForward() const
+{
+  DM::Vec3f f;
+  f.Store(DirectX::XMVector3Rotate(GetForward().Load(), myRotationQuat.Load()));
+  return f.Normalize();
+}
+
+DM::Vec3f FpsCamera::GetRelativeUp() const
+{
+  DM::Vec3f u;
+  u.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
+  return u;
+}
+
+DM::Vec3f FpsCamera::GetRelativeRight() const
+{
+  DM::Vec3f r;
+  r.Store(DirectX::XMVector3Rotate(GetRight().Load(), myRotationQuat.Load()));
+  return r;
 }
 
 void FpsCamera::SetLookTo(float x, float y, float z)

@@ -1,7 +1,9 @@
+#include "Input/KeyboardInput.h"
 #include "World/Planet.h"
 #include "events/EventHandler.h"
 #include "renderer/Camera2.h"
 #include "renderer/ConstantBuffer.h"
+#include "renderer/FpsCamera.h"
 #include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
@@ -14,19 +16,20 @@
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
-#include "renderer/FpsCamera.h"
 
 int main()
 {
-  Window                wnd(1280, 720, "aTitle");
-  Renderer              ren(1280, 720, wnd.GetHwnd());
+  Window   wnd(1280, 720, "aTitle");
+  Renderer::Init(1280, 720, wnd.GetHwnd());
+  Camera::InitViewProjectionCb();
+
+  Renderer* ren_p = Renderer::GetInstance();
 
   FpsCamera fpsCam;
-  fpsCam.SetPosition(0, 0, 2);
+  fpsCam.SetPosition(0, 0, 11);
   fpsCam.SetLookTo(0.0f, 0.0f, -1.0f);
-  auto up = fpsCam.GetUp();
+  auto up    = fpsCam.GetUp();
   auto right = fpsCam.GetRight();
-
 
   GraphicsPipelineState planetPipelineState;
   planetPipelineState.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
@@ -42,62 +45,26 @@ int main()
   skyboxPipelineState.GenerateRootSignature();
   skyboxPipelineState.CreatePipelineState();
 
-  ResourceDescriptorHeap planetRh;
-  ResourceDescriptorHeap skyBoxRh;
-
-  //Camera2::View view;
-  //view.fov       = 45.0f;
-  //view.height    = 720.0f;
-  //view.width     = 1280.0f;
-  //view.nearPlane = 0.01f;
-  //view.farPlane  = 1000.0f;
-  //Camera2 cam;
-  //cam.SetMaxZoom(1.f + view.nearPlane);
-  //cam.SetPosition(0, 0, 2.0f);
-  //cam.SetLookAt(0, 0, 0);
-  //cam.SetView(view);
-
-  Planet p;
-  p.Create(1.0f, 8, 1.0f);
-  Mesh                      m = p.GetMesh();
-  std::vector<VertexBuffer> vbs;
-  std::vector<IndexBuffer>  ibs;
-  TextureBuffer             texBuff;
-  vbs.resize(m.GetMeshesCount());
-  ibs.resize(m.GetMeshesCount());
-
-  Mesh skyBox;
-  skyBox.LoadMesh("assets/models/Skybox/skybox.obj", false);
+  Planet planet;
+  Drawable skybox;
+  planet.Create(1.0f, 3, 1.0f);
+  planet.SetGraphicsPipelineState(&planetPipelineState);
+  planet.Bind();
+  
+  Mesh skyboxMesh;
+  skyboxMesh.LoadMesh("assets/models/Skybox/skybox.obj", false);
   TextureLoader::Image img = TextureLoader::LoadImageData("assets/models/Skybox/skybox.jpg");
   TextureBuffer        skyboxTextureBuff;
   skyboxTextureBuff.Init(img.width, img.height);
-  skyboxTextureBuff.Update(&ren, img.pixels.data());
-  DM::Mat4x4 skyBoxTranslation;
-  skyBoxTranslation.Store(DirectX::XMMatrixScaling(100, 100, 100));
-  std::vector<VertexBuffer> skyBoxVertexBuffer(skyBox.GetMeshesCount());
-  std::vector<IndexBuffer>  skyBoxIndexBuffer(skyBox.GetMeshesCount());
+  skyboxTextureBuff.Update(ren_p, img.pixels.data());
+  skyboxMesh.CreateBuffers();
 
-  for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-  {
-    skyBoxVertexBuffer[i].Init(skyBox.GetByteSizeOfVertices(i), sizeof(Vertex));
-    skyBoxVertexBuffer[i].Update(skyBox.GetRawVertices(i), skyBox.GetByteSizeOfVertices(i));
-    skyBoxIndexBuffer[i].Init(skyBox.GetNumberOfIndices(i));
-    skyBoxIndexBuffer[i].Update(skyBox.GetRawIndices(i));
-  }
+  skybox.SetGraphicsPipelineState(&skyboxPipelineState);
+  skybox.SetMesh(&skyboxMesh);
+  skybox.SetTexture(&skyboxTextureBuff);
+  skybox.Bind();
 
-  for (uint i = 0; i < m.GetMeshesCount(); i++)
-  {
-    vbs[i].Init(m.GetByteSizeOfVertices(i), sizeof(Vertex));
-    vbs[i].Update(m.GetRawVertices(i), m.GetByteSizeOfVertices(i));
-    ibs[i].Init(m.GetNumberOfIndices(i));
-    ibs[i].Update(m.GetRawIndices(i));
-  }
-  uint   w, h;
-  uint8* rawImg = m.GetRawImage(0, &w, &h);
-  texBuff.Init(w, h);
-  texBuff.Update(&ren, rawImg);
-
-  float speed     = 0.1f;
+  float speed     = 0.001f;
   float zoomSpeed = 0.1f;
   float rollSpeed = 0.5f;
   Timer t;
@@ -111,7 +78,7 @@ int main()
 
   ConstantBuffer viewProjCb;
   viewProjCb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4     viewProj;
+  DM::Mat4x4 viewProj;
   viewProj.Store(DirectX::XMMatrixIdentity());
   viewProjCb.Update(&viewProj, sizeof(viewProj));
 
@@ -121,44 +88,78 @@ int main()
   worldMat.Store(DirectX::XMMatrixIdentity());
   worldCb.Update(&worldMat, sizeof(worldMat));
 
-  skyBoxRh.Create({&viewProjCbSkybox}, {&skyboxTextureBuff});
-  planetRh.Create({&viewProjCb, &worldCb}, {&texBuff});
-
   float rotation      = 0.0f;
   float rotationSpeed = 0.01f;
+
+  bool goForward = false;
+
+  KeyboardInput::SetAnActionToKey("forward", (uint16)'W');
+  KeyboardInput::SetAnActionToKey("back", (uint16)'S');
+  KeyboardInput::SetAnActionToKey("right", (uint16)'D');
+  KeyboardInput::SetAnActionToKey("left", (uint16)'A');
+  KeyboardInput::SetAnActionToKey("up", 32); // space
+  KeyboardInput::SetAnActionToKey("down", 17); // LCtrl
+  KeyboardInput::SetAnActionToKey("rollLeft", (uint16)'Q');
+  KeyboardInput::SetAnActionToKey("rollRight", (uint16)'E');
+  KeyboardInput::SetAnActionToKey("toggleLockMouse", (uint16)'F');
+
+  bool lockMouse = false;
+  DM::Vec2i mpLast;
 
   while (wnd.IsOpen())
   {
     float dt = (float)t.Stop();
 
     wnd.PollEvents();
+    KeyboardInput::Update();
+
+    if (KeyboardInput::IsKeyFirstPressedThisFrame("toggleLockMouse"))
     {
-      std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
-      EventHandler::ClearEvents(Event::Type::MouseMoved);
-      if (!events.empty())
+      lockMouse = !lockMouse;
+      if (lockMouse)
+        ShowCursor(false);
+      else
+        ShowCursor(true);
+    }
+
+    {
       {
-        EventMouseMoved* mouseEvent_p = (EventMouseMoved*)events.back();
-        float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed * dt;
-        float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed * dt;
+        std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
+        EventHandler::ClearEvents(Event::Type::MouseMoved);
+        if (!events.empty())
+        {
+          for (Event* event_p : events)
+          {
+            EventMouseMoved* mouseEvent_p = (EventMouseMoved*)event_p;
+            float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed;
+            float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed;
+            if (!lockMouse)
+            {
+              mpLast                        = mouseEvent_p->MousePosition;
+              if (mouseEvent_p->MButtonPressed)
+              {
+                //cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
+                fpsCam.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
+              }
+              if (mouseEvent_p->LButtonPressed)
+                fpsCam.Rotate(dy, dx, 0.0f);
+            }
+            else
+            {
+              int x = mpLast.x;
+              int y = mpLast.y;
 
-        if (mouseEvent_p->MButtonPressed)
-        {
-          //cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
-          fpsCam.Rotate(0,0,mouseEvent_p->MouseDelta.x * rollSpeed * dt);
-        }
-        if (mouseEvent_p->LButtonPressed)
-        {
-          //cam.Rotate(-dx, -dy);
-
-          fpsCam.Rotate(dy, dx, 0.0f);
-        }
-        for (uint i = 0; i < events.size(); i++)
-        {
-          delete events[i];
+              dx = ((float)mouseEvent_p->MousePosition.x - x) * -speed;
+              dy = ((float)mouseEvent_p->MousePosition.y - y) * -speed;
+              fpsCam.Rotate(dy, dx, 0.0f);
+              wnd.SetMousePosition(mpLast.x, mpLast.y);
+            }
+          }
+          for (uint i = 0; i < events.size(); i++)
+            delete events[i];
         }
       }
     }
-
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
       EventHandler::ClearEvents(Event::Type::MouseWheel);
@@ -178,35 +179,38 @@ int main()
       }
     }
 
-    rotation += rotationSpeed * dt * DirectX::XM_PI;
+    if (KeyboardInput::IsKeyPressed("forward"))
+      fpsCam.Move(fpsCam.GetRelativeForward() * dt);
+    if (KeyboardInput::IsKeyPressed("back"))
+      fpsCam.Move(fpsCam.GetRelativeForward() * -dt);
+    if (KeyboardInput::IsKeyPressed("right"))
+      fpsCam.Move(fpsCam.GetRelativeRight() * dt);
+    if (KeyboardInput::IsKeyPressed("left"))
+      fpsCam.Move(fpsCam.GetRelativeRight() * -dt);
+    if (KeyboardInput::IsKeyPressed("up"))
+      fpsCam.Move(fpsCam.GetRelativeUp() * dt);
+    if (KeyboardInput::IsKeyPressed("down"))
+      fpsCam.Move(fpsCam.GetRelativeUp() * -dt);
 
-    worldMat.Store(DirectX::XMMatrixRotationY(rotation));
+    if (KeyboardInput::IsKeyPressed("rollRight"))
+      fpsCam.Rotate(0, 0, dt);
+    if (KeyboardInput::IsKeyPressed("rollLeft"))
+      fpsCam.Rotate(0, 0, -dt);
 
-    worldCb.Update(&worldMat, sizeof(worldMat));
-
-    //viewProj = cam.GetViewProjection();
-    //viewProjCb.Update(&viewProj, sizeof(viewProj));
-    viewProj = fpsCam.GetViewProjectionMatrix();
-    viewProjCb.Update(&viewProj, sizeof(viewProj));
-
+    planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
+    planet.UpdateConstantBuffer();
+    fpsCam.SetAsMainCameraAndUpdate();
+    skybox.SetPosition(fpsCam.GetPosition());
+    skybox.UpdateConstantBuffer();
 
     // Must be first
-    ren.BeginFrame();
-    ren.Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
-
-    for (uint i = 0; i < m.GetMeshesCount(); i++)
-      ren.Draw(vbs[i], ibs[i], planetRh, planetPipelineState);
-
-    FpsCamera c = fpsCam;
-    c.SetPosition(0.0f);
-    viewProjSkybox = c.GetViewProjectionMatrix();
-    viewProjCbSkybox.Update(&viewProjSkybox, sizeof(viewProjSkybox));
-
-    for (uint i = 0; i < skyBox.GetMeshesCount(); i++)
-      ren.Draw(skyBoxVertexBuffer[i], skyBoxIndexBuffer[i], skyBoxRh, skyboxPipelineState);
+    ren_p->BeginFrame();
+    ren_p->Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
+    planet.Draw();
+    skybox.Draw();
 
     // Must be last
-    ren.EndFrame();
+    ren_p->EndFrame();
   }
 
   return 0;

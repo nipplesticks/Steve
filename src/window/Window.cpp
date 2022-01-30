@@ -64,28 +64,80 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
     myIsOpen = false;
     break;
   }
+  case WM_KEYDOWN:
+  {
+    EventKeyDown* ev_p = new EventKeyDown();
+    ev_p->KeyCode      = static_cast<uint16>(aWParam);
+    ev_p->Signal();
+    return true;
+  }
+  case WM_KEYUP:
+  {
+    EventKeyUp* ev_p = new EventKeyUp();
+    ev_p->KeyCode      = static_cast<uint16>(aWParam);
+    ev_p->Signal();
+  }
+  case WM_CHAR:
+  {
+    /*EventTextTyped* ev_p = new EventTextTyped();
+    ev_p->KeyCode        = static_cast<uint>(aWParam);
+    ev_p->Signal();*/
+    return true;
+  }
+
+  case WM_RBUTTONDOWN:
+  case WM_LBUTTONDOWN:
+  case WM_MBUTTONDOWN:
+  {
+    uint               x = LOWORD(aLParam);
+    uint               y = HIWORD(aLParam);
+    DM::Vec2i          mp(x, y);
+    EventMousePressed* ev_p = new EventMousePressed();
+
+    ev_p->MousePosition  = mp;
+    ev_p->MButtonPressed = aWParam & MK_MBUTTON;
+    ev_p->LButtonPressed = aWParam & MK_LBUTTON;
+    ev_p->RButtonPressed = aWParam & MK_RBUTTON;
+    ev_p->Signal();
+    return true;
+  }
+  case WM_RBUTTONUP:
+  case WM_LBUTTONUP:
+  case WM_MBUTTONUP:
+  {
+    uint                x = LOWORD(aLParam);
+    uint                y = HIWORD(aLParam);
+    DM::Vec2i           mp(x, y);
+    EventMouseReleased* ev_p = new EventMouseReleased();
+
+    ev_p->MousePosition   = mp;
+    ev_p->MButtonReleased = aMessage == WM_MBUTTONUP;
+    ev_p->LButtonReleased = aMessage == WM_LBUTTONUP;
+    ev_p->RButtonReleased = aMessage == WM_RBUTTONUP;
+    ev_p->Signal();
+    return true;
+  }
   case WM_MOUSEMOVE:
   {
     uint x = LOWORD(aLParam);
     uint y = HIWORD(aLParam);
 
     DM::Vec2i        mp(x, y);
-    EventMouseMoved* ev_p = new EventMouseMoved(Event::Type::MouseMoved);
+    EventMouseMoved* ev_p = new EventMouseMoved();
     ev_p->MousePosition   = mp;
     ev_p->MouseDelta      = mp - myLastMousePosition;
+    myLastMousePosition   = mp;
+    ev_p->MButtonPressed  = aWParam & MK_MBUTTON;
+    ev_p->LButtonPressed  = aWParam & MK_LBUTTON;
+    ev_p->RButtonPressed  = aWParam & MK_RBUTTON;
     ev_p->Signal();
-    myLastMousePosition = mp;
-
-    ev_p->MButtonPressed = aWParam & MK_MBUTTON;
-    ev_p->LButtonPressed = aWParam & MK_LBUTTON;
-    ev_p->RButtonPressed = aWParam & MK_RBUTTON;
 
     return true;
   }
   case WM_MOUSEWHEEL:
   {
-    EventMouseWheel* ev_p  = new EventMouseWheel(Event::Type::MouseWheel);
-    ev_p->Delta = GET_WHEEL_DELTA_WPARAM(aWParam);
+    EventMouseWheel* ev_p = new EventMouseWheel();
+    ev_p->Delta           = GET_WHEEL_DELTA_WPARAM(aWParam);
     ev_p->Signal();
     return true;
   }
@@ -104,7 +156,16 @@ void Window::SetFullscreen(bool isFullscreen) { }
 Vector2u Window::GetSize() const
 {
 
-  return Vector2u();
+  return Vector2u(1920 / 2, 1080 / 2);
+}
+
+void Window::SetMousePosition(int x, int y)
+{
+  POINT pt;
+  pt.x = x;
+  pt.y = y;
+  ClientToScreen(myHwnd, &pt);
+  SetCursorPos(pt.x, pt.y);
 }
 
 void Window::PollEvents()

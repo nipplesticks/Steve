@@ -1,14 +1,22 @@
 #pragma once
-
+#define NOMINMAX
 #include "../utility/Typedef.h"
 #include "TextureLoader.h"
 #include "Vertex.h"
 #include <string>
 #include <vector>
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 class Mesh
 {
 public:
+  struct Buffers
+  {
+    VertexBuffer vb;
+    IndexBuffer  ib;
+  };
+
   Mesh();
   ~Mesh();
 
@@ -22,6 +30,10 @@ public:
   void SetIndices(std::vector<std::vector<uint>>&& indices);
   void SetImages(TextureLoader::Image&& image);
   void SetImages(std::vector<TextureLoader::Image>&& images);
+
+  void CreateBuffers();
+
+  const std::vector<Buffers>& GetBuffers() const;
 
   uint GetMeshesCount() const;
 
@@ -45,4 +57,5 @@ private:
   std::vector<std::vector<Vertex>>  myMesh;
   std::vector<std::vector<uint>>    myIndices;
   std::vector<TextureLoader::Image> myImages;
+  std::vector<Buffers>              myBuffers;
 };

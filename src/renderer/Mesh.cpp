@@ -147,6 +147,25 @@ void Mesh::SetImages(std::vector<TextureLoader::Image>&& images)
   myImages = images;
 }
 
+void Mesh::CreateBuffers()
+{
+  uint meshCount = GetMeshesCount();
+  myBuffers.resize(meshCount);
+
+  for (uint i = 0; i < meshCount; i++)
+  {
+    myBuffers[i].vb.Init(GetByteSizeOfVertices(i), sizeof(Vertex));
+    myBuffers[i].vb.Update(GetRawVertices(i), GetByteSizeOfVertices(i));
+    myBuffers[i].ib.Init(GetNumberOfIndices(i));
+    myBuffers[i].ib.Update(GetRawIndices(i));
+  }
+}
+
+const std::vector<Mesh::Buffers>& Mesh::GetBuffers() const
+{
+  return myBuffers;
+}
+
 uint Mesh::GetMeshesCount() const
 {
   return myMesh.size();

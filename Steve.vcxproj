@@ -151,8 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\entity\Drawable.cpp" />
+    <ClCompile Include="src\entity\Transform.cpp" />
     <ClCompile Include="src\events\Event.cpp" />
     <ClCompile Include="src\events\EventHandler.cpp" />
+    <ClCompile Include="src\Input\KeyboardInput.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
     <ClCompile Include="src\renderer\Camera2.cpp" />
     <ClCompile Include="src\renderer\ConstantBuffer.cpp" />
@@ -170,8 +173,10 @@
     <ClCompile Include="src\World\Planet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\entity\Drawable.h" />
     <ClInclude Include="src\events\Event.h" />
     <ClInclude Include="src\events\EventHandler.h" />
+    <ClInclude Include="src\Input\KeyboardInput.h" />
     <ClInclude Include="src\renderer\FpsCamera.h" />
     <ClInclude Include="src\renderer\Camera.h" />
     <ClInclude Include="src\renderer\Camera2.h" />
@@ -187,6 +192,7 @@
     <ClInclude Include="src\renderer\TextureLoader.h" />
     <ClInclude Include="src\renderer\Vertex.h" />
     <ClInclude Include="src\renderer\VertexBuffer.h" />
+    <ClInclude Include="src\entity\Transform.h" />
     <ClInclude Include="src\utility\DMath.h" />
     <ClInclude Include="src\utility\RenderUtility.h" />
     <ClInclude Include="src\utility\Timer.h" />

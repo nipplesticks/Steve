@@ -19,6 +19,7 @@ public:
 
   void     SetFullscreen(bool isFullscreen);
   Vector2u GetSize() const;
+  void     SetMousePosition(int x, int y);
 
 public:
   static LRESULT CALLBACK PreWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

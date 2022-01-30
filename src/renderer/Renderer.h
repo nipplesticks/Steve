@@ -18,9 +18,15 @@ class ResourceDescriptorHeap;
 
 class Renderer
 {
-public:
+private:
+  static Renderer* gRenderer_p;
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
+public:
+  static void Init(uint x, uint y, HWND hwnd);
+  static void Release();
+  static Renderer* GetInstance();
+
 
   void BeginFrame();
 
@@ -33,6 +39,8 @@ public:
 
 
   void Clear(const Vector4f& color = Vector4f());
+
+  void Flush();
 
   void EndFrame();
 

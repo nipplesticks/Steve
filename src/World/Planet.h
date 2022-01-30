@@ -1,10 +1,14 @@
 #pragma once
+#include "../entity/Drawable.h"
 #include "../renderer/Mesh.h"
 #include "../utility/DMath.h"
+#include "../renderer/TextureBuffer.h"
 
 struct TextureLoader::Image;
+class TextureBuffer;
 
-class Planet
+
+class Planet : public Drawable
 {
 public:
   Planet();
@@ -42,4 +46,5 @@ private:
 
 private:
   Mesh myMesh;
+  TextureBuffer myTextureBuffer;
 };

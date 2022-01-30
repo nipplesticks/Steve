@@ -1,5 +1,5 @@
 #include "Renderer.h"
-
+#define NOMINMAX
 #include "../utility/RenderUtility.h"
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
@@ -10,7 +10,8 @@
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
 #include "ResourceDescriptorHeap.h"
 #include "GraphicsPipelineState.h"
-
+#include "../entity/Drawable.h"
+#include "Mesh.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "DXGI.lib")
@@ -19,6 +20,7 @@
 ID3D12Device5*        Renderer::gDevice5_p               = nullptr;
 ID3D12DescriptorHeap* Renderer::gUploadHeap_p            = nullptr;
 uint                  Renderer::gSrvUavCbvDescriptorSize = 0u;
+Renderer*             Renderer::gRenderer_p              = nullptr;
 
 template <class Interface>
 inline void SafeRelease(Interface** ppInterfaceToRelease)
@@ -253,6 +255,21 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
 
 Renderer::~Renderer() { }
 
+void Renderer::Init(uint x, uint y, HWND hwnd)
+{
+  if (!gRenderer_p)
+  {
+    gRenderer_p = new Renderer(x, y, hwnd);
+  }
+}
+
+void Renderer::Release() { }
+
+Renderer* Renderer::GetInstance()
+{
+  return gRenderer_p;
+}
+
 void Renderer::BeginFrame()
 {
   myCommandAllocator_p->Reset();
@@ -374,8 +391,32 @@ void Renderer::Clear(const Vector4f& color)
   myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
 }
 
+void Renderer::Flush()
+{
+  for (auto& gps : Drawable::DRAW_QUEUE)
+  {
+    Drawable::DrawQueue* drawQueue     = &gps.second;
+    uint                 nrOfDrawables = drawQueue->nrOfElements;
+    for (uint i = 0; i < nrOfDrawables; i++)
+    {
+      Drawable* d_p = drawQueue->queue[i];
+      Mesh*     mesh_p = d_p->GetMesh();
+      const ResourceDescriptorHeap& rdh  = d_p->GetResourceDescHeap();
+      const std::vector<Mesh::Buffers>& meshBuffers = mesh_p->GetBuffers();
+
+      for (auto& buffer : meshBuffers)
+      {
+        Draw(buffer.vb, buffer.ib, rdh, *gps.first);
+      }
+    }
+    drawQueue->Clear();
+  }
+}
+
 void Renderer::EndFrame()
 {
+  Flush();
+
   _SetResourceTransitionBarrier(myCommandList4_p,
                                 myRenderTargets_pp[myCurrentBackbufferIndex],
                                 D3D12_RESOURCE_STATE_RENDER_TARGET,

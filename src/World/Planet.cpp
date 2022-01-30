@@ -4,9 +4,10 @@
 #include <iostream>
 #include <unordered_map>
 #include <map>
+#include "../renderer/Renderer.h"
 
 //https://mft-dev.dk/uv-mapping-sphere/
-Planet::Planet() { }
+Planet::Planet() : Drawable() { }
 
 Planet::~Planet() { }
 
@@ -112,9 +113,17 @@ void Planet::Create(float size, uint div, float uvTiles)
 
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
-
+  myMesh.CreateBuffers();
   TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
+
+  uint w, h;
   myMesh.SetImages(std::move(shrek2));
+  uint8* img_p = myMesh.GetRawImage(0, &w, &h);
+  myTextureBuffer.Init(w, h);
+  myTextureBuffer.Update(Renderer::GetInstance(), img_p);
+
+  SetTexture(&myTextureBuffer);
+  SetMesh(&myMesh);
 }
 
 const Mesh& Planet::GetMesh() const

@@ -1,6 +1,8 @@
 #include "Camera.h"
 #include "../utility/Typedef.h"
 
+ConstantBuffer Camera::VIEW_PROJECTION_CB;
+
 Camera::Camera()
 {
   _init();
@@ -63,7 +65,6 @@ void Camera::Rotate(const DM::Vec3f& axis)
   rot.Store(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()),
                                           zq.Load()));
   myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), rot.Load()));
-  //myRotationQuat = rot;
 }
 
 void Camera::SetRotation(float x, float y, float z)
@@ -126,6 +127,17 @@ Camera::View Camera::GetDefaultView()
   view.farPlane      = 1000.0f;
   view.isPerspective = true;
   return view;
+}
+
+void Camera::SetAsMainCameraAndUpdate() const
+{
+  DM::Mat4x4 vp = GetViewProjectionMatrix();
+  VIEW_PROJECTION_CB.Update(&vp, sizeof(vp));
+}
+
+void Camera::InitViewProjectionCb()
+{
+  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4));
 }
 
 void Camera::_buildProjection()

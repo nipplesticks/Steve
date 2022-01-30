@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utility/DMath.h"
+#include "ConstantBuffer.h"
 
 class Camera
 {
@@ -33,17 +34,25 @@ public:
   virtual void SetCustomUpVector(const DM::Vec3f& up);
   virtual void SetCustomUpVector(float x, float y, float z);
 
+  virtual DM::Vec3f GetRelativeForward() const = 0;
+  virtual DM::Vec3f GetRelativeUp() const      = 0;
+  virtual DM::Vec3f GetRelativeRight() const   = 0;
+
   virtual const View&      GetView() const;
   virtual const DM::Vec3f& GetPosition() const;
-  virtual const DM::Vec3f& GetForward() const = 0;
-  virtual const DM::Vec3f& GetRight() const   = 0;
-  virtual const DM::Vec3f& GetUp() const      = 0;
+  virtual DM::Vec3f        GetForward() const = 0;
+  virtual DM::Vec3f        GetRight() const   = 0;
+  virtual DM::Vec3f        GetUp() const      = 0;
   virtual const DM::Vec4f& GetRotation() const;
 
   virtual DM::Mat4x4        GetViewMatrix() const = 0;
   virtual const DM::Mat4x4& GetProjectionMatrix() const;
   virtual DM::Mat4x4        GetViewProjectionMatrix() const;
   static Camera::View       GetDefaultView();
+
+  virtual void          SetAsMainCameraAndUpdate() const;
+  static void           InitViewProjectionCb();
+  static ConstantBuffer VIEW_PROJECTION_CB;
 
 private:
   void _buildProjection();
