@@ -1,5 +1,5 @@
 SamplerState aSampler : register(s0);
-Texture2D<float4> aTexture : register(t0);
+Texture2D<float4> aTexture : register(t1);
 
 struct Vertex
 {
@@ -24,6 +24,7 @@ float4 main(Vertex vertex)
   
   //return float4(vertex.col.rgb, 1);
   return saturate(float4(finalColor, 1.0f));
+  //return (float4(vertex.nor.xyz + finalColor.xyz * 0.0f, 1.0f));
   //return float4(color, 1.0f);
   //return float4(pos.x, pos.y, pos.z, 1.0f);
   //return float4(vertex.uv.x, vertex.uv.y, 1.0f, 1.0f);

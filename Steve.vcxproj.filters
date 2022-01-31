@@ -173,5 +173,6 @@
     <FxCompile Include="assets\shaders\PixelHelloTriangle.hlsl" />
     <FxCompile Include="assets\shaders\VertexSkybox.hlsl" />
     <FxCompile Include="assets\shaders\PixelSkybox.hlsl" />
+    <FxCompile Include="assets\shaders\PlanetVertexShader.hlsl" />
   </ItemGroup>
 </Project>

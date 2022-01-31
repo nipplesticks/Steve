@@ -67,6 +67,7 @@ namespace DM
 
       return *this;
     }
+    
 #pragma endregion
 
 #pragma region Functions
@@ -703,7 +704,7 @@ namespace DM
 
     Vec2f Abs() const
     {
-      return Vec2f(fabs(x), fabs(y));
+      return Vec2f(fabsf(x), fabsf(y));
     }
 
     Vec2f Normalize() const
@@ -1262,7 +1263,7 @@ namespace DM
 
     Vec3f Abs() const
     {
-      return Vec3f(fabs(x), fabs(y), fabs(z));
+      return Vec3f(fabsf(x), fabsf(y), fabsf(z));
     }
 
     Vec3f Normalize() const
@@ -1769,7 +1770,7 @@ namespace DM
 
     Vec4f Abs() const
     {
-      return Vec4f(fabs(x), fabs(y), fabs(z));
+      return Vec4f(fabsf(x), fabsf(y), fabsf(z));
     }
 
     Vec4f Normalize() const

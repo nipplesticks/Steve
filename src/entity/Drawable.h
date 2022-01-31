@@ -43,7 +43,7 @@ public:
   void SetMesh(Mesh* mesh_p);
   void SetTexture(TextureBuffer* textureBuffer_p);
   void SetGraphicsPipelineState(GraphicsPipelineState* state_p);
-  void Bind();
+  virtual void Bind();
   void UpdateConstantBuffer();
 
   void Draw();
@@ -58,7 +58,7 @@ public:
 private:
   static void PushDrawableToDrawQueue(Drawable* drawable);
 
-private:
+protected:
   bool                   myIsBinded        = false;
   Mesh*                  myMesh_p          = nullptr;
   TextureBuffer*         myTextureBuffer_p = nullptr;

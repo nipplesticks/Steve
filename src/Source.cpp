@@ -17,6 +17,28 @@
 #include "window/Window.h"
 #include <iostream>
 
+DM::Mat3x3 FindRotationMatrix2(const DM::Vec3f& A, const DM::Vec3f& B)
+{
+  DM::Vec3f axis = A.Cross(B);
+
+  const float cosA = A.Dot(B);
+  const float k    = 1.0f / (1.0f + cosA);
+
+  DM::Mat3x3 result;
+  result._11 = (axis.x * axis.x * k) + cosA;
+  result._12 = (axis.y * axis.x * k) - axis.z;
+  result._13 = (axis.z * axis.x * k) + axis.y;
+  result._21 = (axis.x * axis.y * k) + axis.z;
+  result._22 = (axis.y * axis.y * k) + cosA;
+  result._23 = (axis.z * axis.y * k) - axis.x;
+  result._31 = (axis.x * axis.z * k) - axis.y;
+  result._32 = (axis.y * axis.z * k) + axis.x;
+  result._33 = (axis.z * axis.z * k) + cosA;
+
+  return result;
+}
+
+
 int main()
 {
   Window   wnd(1280, 720, "aTitle");
@@ -26,11 +48,12 @@ int main()
   Renderer* ren_p = Renderer::GetInstance();
 
   FpsCamera camera;
-  camera.SetLookTo(0.0f, 0.0f, -1.0f);
+  camera.SetLookTo(0.0f, 0.0f, -20.0f);
   camera.SetPosition(0, 0, 11);
 
   GraphicsPipelineState planetPipelineState;
-  planetPipelineState.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
+  //planetPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+  planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
   planetPipelineState.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
   planetPipelineState.GenerateInputElementDesc();
   planetPipelineState.GenerateRootSignature();
@@ -44,7 +67,8 @@ int main()
   skyboxPipelineState.CreatePipelineState();
 
   Planet planet;
-  planet.Create(1.0f, 3, 1.0f);
+  planet.Create(1.0f, 8, 1.0f);
+  planet.SetScale(10, 10, 10);
   planet.SetGraphicsPipelineState(&planetPipelineState);
   planet.Bind();
   
@@ -82,11 +106,13 @@ int main()
   KeyboardInput::SetAnActionToKey("rollLeft", (uint16)'Q');
   KeyboardInput::SetAnActionToKey("rollRight", (uint16)'E');
   KeyboardInput::SetAnActionToKey("toggleLockMouse", (uint16)'F');
+  KeyboardInput::SetAnActionToKey("close", (uint16)0x1B); // escape
+  KeyboardInput::SetAnActionToKey("speed", (uint16)0x10); // shift
 
   bool lockMouse = false;
   DM::Vec2i mpLast;
 
-  while (wnd.IsOpen())
+  while (wnd.IsOpen() && !KeyboardInput::IsKeyPressed("close"))
   {
     float dt = (float)t.Stop();
 
@@ -157,25 +183,31 @@ int main()
       }
     }
 
+    float speedModifier = 1.0f;
+    if (KeyboardInput::IsKeyPressed("speed"))
+    {
+      speedModifier = 10.0f;
+    }
+
     if (KeyboardInput::IsKeyPressed("forward"))
-      camera.Move(camera.GetRelativeForward() * dt);
+      camera.Move(camera.GetRelativeForward() * dt * speedModifier);
     if (KeyboardInput::IsKeyPressed("back"))
-      camera.Move(camera.GetRelativeForward() * -dt);
+      camera.Move(camera.GetRelativeForward() * -dt * speedModifier);
     if (KeyboardInput::IsKeyPressed("right"))
-      camera.Move(camera.GetRelativeRight() * dt);
+      camera.Move(camera.GetRelativeRight() * dt * speedModifier);
     if (KeyboardInput::IsKeyPressed("left"))
-      camera.Move(camera.GetRelativeRight() * -dt);
+      camera.Move(camera.GetRelativeRight() * -dt * speedModifier);
     if (KeyboardInput::IsKeyPressed("up"))
-      camera.Move(camera.GetRelativeUp() * dt);
+      camera.Move(camera.GetRelativeUp() * dt * speedModifier);
     if (KeyboardInput::IsKeyPressed("down"))
-      camera.Move(camera.GetRelativeUp() * -dt);
+      camera.Move(camera.GetRelativeUp() * -dt * speedModifier);
 
     if (KeyboardInput::IsKeyPressed("rollRight"))
       camera.Rotate(0, 0, dt);
     if (KeyboardInput::IsKeyPressed("rollLeft"))
       camera.Rotate(0, 0, -dt);
 
-    planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
+    //planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
     planet.UpdateConstantBuffer();
     
     skybox.SetPosition(camera.GetPosition());

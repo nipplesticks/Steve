@@ -35,8 +35,8 @@ void ResourceDescriptorHeap::Create(const std::vector<ConstantBuffer*>& constant
     rsvDesc.Format                          = DXGI_FORMAT_R8G8B8A8_UNORM;
     rsvDesc.ViewDimension                   = D3D12_SRV_DIMENSION_TEXTURE2D;
     rsvDesc.Texture2D.MipLevels             = 1;
-
     gDevice_p->CreateShaderResourceView(tx->GetResource(), &rsvDesc, handle);
+    handle.ptr += SrvUavCbvDescriptorSize;
   }
 }
 

@@ -4,11 +4,6 @@ cbuffer cbv0 : register(b0)
   float4x4 proj;
 };
 
-cbuffer cbv1 : register(b1)
-{
-  float4x4 worldMat;
-}
-
 struct Vertex
 {
   float4 pos : SV_POSITION;
@@ -19,7 +14,9 @@ struct Vertex
 
 Vertex main(Vertex vertex)
 {
-  vertex.pos = mul(vertex.pos, transpose(mul(proj, view)));
+  float4x4 viewWithoutTranslation = view;
+  viewWithoutTranslation[0][3] = viewWithoutTranslation[1][3] = viewWithoutTranslation[2][3] = 0.0f;
+  vertex.pos = mul(vertex.pos, transpose(mul(proj, viewWithoutTranslation)));
   vertex.pos.z = 1.0f;
 
   return vertex;

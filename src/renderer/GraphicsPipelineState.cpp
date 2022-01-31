@@ -47,6 +47,7 @@ GraphicsPipelineState::~GraphicsPipelineState() { }
 
 HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
 {
+  std::cout << "shader: " << vertexShader << std::endl;
   std::wstring shaderLocation(vertexShader.begin(), vertexShader.end());
   ID3DBlob*    errorBlob_p  = nullptr;
   UINT         compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -87,6 +88,7 @@ HRESULT GraphicsPipelineState::SetGeometryShader(const std::string& geometryShad
 
 HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
 {
+  std::cout << "shader: " << pixelShader << std::endl;
   std::wstring shaderLocation(pixelShader.begin(), pixelShader.end());
   ID3DBlob* errorBlob_p  = nullptr;
   UINT      compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -253,6 +255,10 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
       srvRanges.push_back(rangeDesc);
     }
   }
+
+  std::cout << "cbvRanges=" << cbvRanges.size() << std::endl;
+  std::cout << "srvRanges=" << srvRanges.size() << std::endl;
+
 
   D3D12_ROOT_PARAMETER rootParams[2] = {};
 

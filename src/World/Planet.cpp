@@ -1,13 +1,16 @@
 #include "Planet.h"
+#include "../renderer/Camera.h"
+#include "../renderer/Renderer.h"
 #include "../renderer/TextureLoader.h"
 #include "../utility/Timer.h"
 #include <iostream>
-#include <unordered_map>
 #include <map>
-#include "../renderer/Renderer.h"
+#include <unordered_map>
 
 //https://mft-dev.dk/uv-mapping-sphere/
-Planet::Planet() : Drawable() { }
+Planet::Planet()
+    : Drawable()
+{ }
 
 Planet::~Planet() { }
 
@@ -42,6 +45,27 @@ void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
   vec.push_back(a);
   vec.push_back(b);
   vec.push_back(c);
+}
+
+DM::Mat3x3 FindRotationMatrix(const DM::Vec3f& A, const DM::Vec3f& B)
+{
+  DM::Vec3f axis = A.Cross(B);
+
+  const float cosA = A.Dot(B);
+  const float k    = 1.0f / (1.0f + cosA);
+
+  DM::Mat3x3 result;
+  result._11 = (axis.x * axis.x * k) + cosA;
+  result._12 = (axis.y * axis.x * k) - axis.z;
+  result._13 = (axis.z * axis.x * k) + axis.y;
+  result._21 = (axis.x * axis.y * k) + axis.z;
+  result._22 = (axis.y * axis.y * k) + cosA;
+  result._23 = (axis.z * axis.y * k) - axis.x;
+  result._31 = (axis.x * axis.z * k) - axis.y;
+  result._32 = (axis.y * axis.z * k) + axis.x;
+  result._33 = (axis.z * axis.z * k) + cosA;
+
+  return result;
 }
 
 void Planet::Create(float size, uint div, float uvTiles)
@@ -101,10 +125,74 @@ void Planet::Create(float size, uint div, float uvTiles)
   _fixWrappedUVCoords(wrapped, indices, verts);
   _fixSharedPoleVertices(indices, verts);
 
+  TextureLoader::Image heightMap =
+      TextureLoader::LoadImageData("assets/textures/earthHeightMap.jpg");
+
+  uint8 maxValue = 0;
+  uint8 minValue = UINT8_MAX;
+
+  for (uint i = 0; i < heightMap.width * heightMap.height; i++)
+  {
+    uint x = i % heightMap.width;
+    uint y = i / heightMap.width;
+
+    uint8 r = heightMap.GetPixel(x, y).r;
+
+    minValue = std::min(minValue, r);
+    maxValue = std::max(maxValue, r);
+  }
+  std::cout << "max: " << (int)maxValue << std::endl;
+  std::cout << "min: " << (int)minValue << std::endl;
+  float asd = 0.0f;
+
+  uint8 range = maxValue - minValue;
+
+  auto GetHeight = [&](uint x, uint y, uint sampleSize, float pw) {
+    uint8 hValue   = heightMap.GetAveragePixel(x, y, sampleSize).r;
+    hValue         = std::pow(hValue, pw);
+    float newValue = ((float)(hValue - minValue)) / (float)range;
+    return newValue;
+  };
+
   for (auto& v : verts)
   {
     v.uv.x *= -uvTiles;
     v.uv.y *= uvTiles;
+
+    float _x = (fmodf(v.uv.x, 1.0f));
+    float _y = (fmodf(v.uv.y, 1.0f));
+
+    if (v.uv.x < 0)
+      _x = 1.0f + _x;
+    if (v.uv.y < 0)
+      _y = 1.0f + _y;
+
+    uint x = heightMap.width * _x;
+    uint y = heightMap.height * _y;
+
+    float height = GetHeight(x, y, 10, 0.6f);
+    float h0     = GetHeight(x, y, 0, 1.0f);
+    float h1     = GetHeight(x + 1, y, 0, 1.0f);
+    float h2     = GetHeight(x, y + 1, 0, 1.0f);
+
+    DM::Vec3f nor = v.normal;
+    DM::Vec3f defaultNor(0, 1.0f, 0);
+
+    DM::Vec3f v0(0, h0, 0);
+    DM::Vec3f v1(1, h1, 0);
+    DM::Vec3f v2(0, h2, 1);
+
+    DM::Vec3f e0     = v1 - v0;
+    DM::Vec3f e1     = v2 - v0;
+    DM::Vec3f newNor = e1.Cross(e0).Normalize();
+    DM::Mat3x3 rot = FindRotationMatrix(nor, defaultNor);
+
+    newNor.Store(DirectX::XMVector3Transform(newNor.Load(), rot.Load()));
+
+    DM::Vec3f pos = v.position;
+    pos           = pos + nor * height;
+    v.position    = pos.AsXmFloat4APoint();
+    v.normal      = newNor.Normalize().AsXmFloat4AVector();
   }
 
   std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
@@ -204,7 +292,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(ab) == vertIdxMap.end())
     {
       vertices.push_back(ab);
-      abIdx                     = vertices.size() - 1;
+      abIdx          = vertices.size() - 1;
       vertIdxMap[ab] = abIdx;
     }
     else
@@ -214,7 +302,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(bc) == vertIdxMap.end())
     {
       vertices.push_back(bc);
-      bcIdx                     = vertices.size() - 1;
+      bcIdx          = vertices.size() - 1;
       vertIdxMap[bc] = bcIdx;
     }
     else
@@ -224,7 +312,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(ca) == vertIdxMap.end())
     {
       vertices.push_back(ca);
-      caIdx                     = vertices.size() - 1;
+      caIdx          = vertices.size() - 1;
       vertIdxMap[ca] = caIdx;
     }
     else
@@ -271,7 +359,7 @@ void Planet::_fixWrappedUVCoords(std::vector<uint>&   wrapped,
                                  std::vector<uint>&   indices,
                                  std::vector<Vertex>& vertices)
 {
-  uint                 verticeIndex = vertices.size() - 1;
+  uint                           verticeIndex = vertices.size() - 1;
   std::unordered_map<uint, uint> visited;
 
   for (auto& i : wrapped)
