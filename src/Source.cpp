@@ -26,7 +26,7 @@ int main()
   Renderer* ren_p = Renderer::GetInstance();
 
   FpsCamera camera;
-  camera.SetLookTo(0.0f, -1.0f, 0.0f);
+  camera.SetLookTo(0.0f, 0.0f, -1.0f);
   camera.SetPosition(0, 0, 11);
 
   GraphicsPipelineState planetPipelineState;
@@ -44,10 +44,8 @@ int main()
   skyboxPipelineState.CreatePipelineState();
 
   Planet planet;
-  Drawable skybox;
   planet.Create(1.0f, 3, 1.0f);
   planet.SetGraphicsPipelineState(&planetPipelineState);
-  planet.Bind();
   planet.Bind();
   
   Mesh skyboxMesh;
@@ -58,6 +56,7 @@ int main()
   skyboxTextureBuff.Update(ren_p, img.pixels.data());
   skyboxMesh.CreateBuffers();
 
+  Drawable skybox;
   skybox.SetGraphicsPipelineState(&skyboxPipelineState);
   skybox.SetMesh(&skyboxMesh);
   skybox.SetTexture(&skyboxTextureBuff);
@@ -68,24 +67,6 @@ int main()
   float rollSpeed = 0.5f;
   Timer t;
   t.Start();
-
-  ConstantBuffer viewProjCbSkybox;
-  viewProjCbSkybox.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 viewProjSkybox;
-  viewProjSkybox.Store(DirectX::XMMatrixIdentity());
-  viewProjCbSkybox.Update(&viewProjSkybox, sizeof(viewProjSkybox));
-
-  ConstantBuffer viewProjCb;
-  viewProjCb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 viewProj;
-  viewProj.Store(DirectX::XMMatrixIdentity());
-  viewProjCb.Update(&viewProj, sizeof(viewProj));
-
-  ConstantBuffer worldCb;
-  worldCb.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 worldMat;
-  worldMat.Store(DirectX::XMMatrixIdentity());
-  worldCb.Update(&worldMat, sizeof(worldMat));
 
   float rotation      = 0.0f;
   float rotationSpeed = 0.01f;
@@ -137,7 +118,6 @@ int main()
               mpLast                        = mouseEvent_p->MousePosition;
               if (mouseEvent_p->MButtonPressed)
               {
-                //cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
                 camera.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
               }
               if (mouseEvent_p->LButtonPressed)
@@ -171,7 +151,6 @@ int main()
           if (mouseEvent_p->Delta)
           {
             float z = (float)mouseEvent_p->Delta * zoomSpeed * dt;
-            //cam.Zoom(z);
           }
           delete events[i];
         }
@@ -198,13 +177,15 @@ int main()
 
     planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
     planet.UpdateConstantBuffer();
-    camera.SetAsMainCameraAndUpdate();
+    
     skybox.SetPosition(camera.GetPosition());
     skybox.UpdateConstantBuffer();
 
     // Must be first
     ren_p->BeginFrame();
+
     ren_p->Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
+    camera.SetAsMainCameraAndUpdate();
     planet.Draw();
     skybox.Draw();
 

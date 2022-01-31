@@ -1,6 +1,7 @@
 cbuffer cbv0 : register(b0)
 {
-  float4x4 viewProj;
+  float4x4 view;
+  float4x4 proj;
 };
 
 cbuffer cbv1 : register(b1)
@@ -19,7 +20,7 @@ struct Vertex
 Vertex main(Vertex vertex)
 {
   vertex.pos = mul(vertex.pos, transpose(worldMat));
-  vertex.pos = mul(vertex.pos, transpose(viewProj));
+  vertex.pos = mul(vertex.pos, transpose(mul(proj, view)));
   vertex.pos.z = 1.0f;
 
   return vertex;

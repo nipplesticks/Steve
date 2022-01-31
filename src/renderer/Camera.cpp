@@ -54,9 +54,6 @@ void Camera::Rotate(const DM::Vec3f& axis)
   xq = GetRelativeRight().AsXmFloat4AVector();
   yq = GetRelativeUp().AsXmFloat4AVector();
   zq = GetRelativeForward().AsXmFloat4AVector();
-  //xq.Store(DirectX::XMVector3Rotate(GetRight().Load(), myRotationQuat.Load()));
-  //yq.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
-  //zq.Store(DirectX::XMVector3Rotate(GetForward().Load(), myRotationQuat.Load()));
 
   xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
   yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));
@@ -132,13 +129,23 @@ Camera::View Camera::GetDefaultView()
 
 void Camera::SetAsMainCameraAndUpdate() const
 {
-  DM::Mat4x4 vp = GetViewProjectionMatrix();
-  VIEW_PROJECTION_CB.Update(&vp, sizeof(vp));
+  struct
+  {
+    DM::Mat4x4 view;
+    DM::Mat4x4 projection;
+  } viewProjection;
+
+  viewProjection.view = GetViewMatrix();
+  viewProjection.projection = GetProjectionMatrix();
+
+
+
+  VIEW_PROJECTION_CB.Update(&viewProjection, sizeof(viewProjection));
 }
 
 void Camera::InitViewProjectionCb()
 {
-  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4));
+  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4) * 2);
 }
 
 void Camera::_buildProjection()
