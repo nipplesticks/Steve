@@ -157,12 +157,12 @@
     <ClCompile Include="src\events\EventHandler.cpp" />
     <ClCompile Include="src\Input\KeyboardInput.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
-    <ClCompile Include="src\renderer\Camera2.cpp" />
     <ClCompile Include="src\renderer\ConstantBuffer.cpp" />
     <ClCompile Include="src\renderer\FpsCamera.cpp" />
     <ClCompile Include="src\renderer\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\renderer\IndexBuffer.cpp" />
     <ClCompile Include="src\renderer\Mesh.cpp" />
+    <ClCompile Include="src\renderer\OrbitCamera.cpp" />
     <ClCompile Include="src\renderer\Renderer.cpp" />
     <ClCompile Include="src\renderer\ResourceDescriptorHeap.cpp" />
     <ClCompile Include="src\renderer\TextureBuffer.cpp" />
@@ -179,12 +179,12 @@
     <ClInclude Include="src\Input\KeyboardInput.h" />
     <ClInclude Include="src\renderer\FpsCamera.h" />
     <ClInclude Include="src\renderer\Camera.h" />
-    <ClInclude Include="src\renderer\Camera2.h" />
     <ClInclude Include="src\renderer\ConstantBuffer.h" />
     <ClInclude Include="src\renderer\d3dx12.h" />
     <ClInclude Include="src\renderer\GraphicsPipelineState.h" />
     <ClInclude Include="src\renderer\IndexBuffer.h" />
     <ClInclude Include="src\renderer\Mesh.h" />
+    <ClInclude Include="src\renderer\OrbitCamera.h" />
     <ClInclude Include="src\renderer\Renderer.h" />
     <ClInclude Include="src\renderer\ResourceDescriptorHeap.h" />
     <ClInclude Include="src\renderer\stb_image.h" />

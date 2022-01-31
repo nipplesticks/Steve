@@ -1,9 +1,9 @@
 #include "Input/KeyboardInput.h"
 #include "World/Planet.h"
 #include "events/EventHandler.h"
-#include "renderer/Camera2.h"
 #include "renderer/ConstantBuffer.h"
 #include "renderer/FpsCamera.h"
+#include "renderer/OrbitCamera.h"
 #include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
@@ -25,11 +25,9 @@ int main()
 
   Renderer* ren_p = Renderer::GetInstance();
 
-  FpsCamera fpsCam;
-  fpsCam.SetPosition(0, 0, 11);
-  fpsCam.SetLookTo(0.0f, 0.0f, -1.0f);
-  auto up    = fpsCam.GetUp();
-  auto right = fpsCam.GetRight();
+  FpsCamera camera;
+  camera.SetLookTo(0.0f, -1.0f, 0.0f);
+  camera.SetPosition(0, 0, 11);
 
   GraphicsPipelineState planetPipelineState;
   planetPipelineState.SetVertexShader("assets/shaders/VertexHelloTriangle.hlsl");
@@ -49,6 +47,7 @@ int main()
   Drawable skybox;
   planet.Create(1.0f, 3, 1.0f);
   planet.SetGraphicsPipelineState(&planetPipelineState);
+  planet.Bind();
   planet.Bind();
   
   Mesh skyboxMesh;
@@ -139,10 +138,10 @@ int main()
               if (mouseEvent_p->MButtonPressed)
               {
                 //cam.Roll((-(float)mouseEvent_p->MouseDelta.x) * rollSpeed * dt);
-                fpsCam.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
+                camera.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
               }
               if (mouseEvent_p->LButtonPressed)
-                fpsCam.Rotate(dy, dx, 0.0f);
+                camera.Rotate(dy, dx, 0.0f);
             }
             else
             {
@@ -151,7 +150,7 @@ int main()
 
               dx = ((float)mouseEvent_p->MousePosition.x - x) * -speed;
               dy = ((float)mouseEvent_p->MousePosition.y - y) * -speed;
-              fpsCam.Rotate(dy, dx, 0.0f);
+              camera.Rotate(dy, dx, 0.0f);
               wnd.SetMousePosition(mpLast.x, mpLast.y);
             }
           }
@@ -180,27 +179,27 @@ int main()
     }
 
     if (KeyboardInput::IsKeyPressed("forward"))
-      fpsCam.Move(fpsCam.GetRelativeForward() * dt);
+      camera.Move(camera.GetRelativeForward() * dt);
     if (KeyboardInput::IsKeyPressed("back"))
-      fpsCam.Move(fpsCam.GetRelativeForward() * -dt);
+      camera.Move(camera.GetRelativeForward() * -dt);
     if (KeyboardInput::IsKeyPressed("right"))
-      fpsCam.Move(fpsCam.GetRelativeRight() * dt);
+      camera.Move(camera.GetRelativeRight() * dt);
     if (KeyboardInput::IsKeyPressed("left"))
-      fpsCam.Move(fpsCam.GetRelativeRight() * -dt);
+      camera.Move(camera.GetRelativeRight() * -dt);
     if (KeyboardInput::IsKeyPressed("up"))
-      fpsCam.Move(fpsCam.GetRelativeUp() * dt);
+      camera.Move(camera.GetRelativeUp() * dt);
     if (KeyboardInput::IsKeyPressed("down"))
-      fpsCam.Move(fpsCam.GetRelativeUp() * -dt);
+      camera.Move(camera.GetRelativeUp() * -dt);
 
     if (KeyboardInput::IsKeyPressed("rollRight"))
-      fpsCam.Rotate(0, 0, dt);
+      camera.Rotate(0, 0, dt);
     if (KeyboardInput::IsKeyPressed("rollLeft"))
-      fpsCam.Rotate(0, 0, -dt);
+      camera.Rotate(0, 0, -dt);
 
     planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
     planet.UpdateConstantBuffer();
-    fpsCam.SetAsMainCameraAndUpdate();
-    skybox.SetPosition(fpsCam.GetPosition());
+    camera.SetAsMainCameraAndUpdate();
+    skybox.SetPosition(camera.GetPosition());
     skybox.UpdateConstantBuffer();
 
     // Must be first

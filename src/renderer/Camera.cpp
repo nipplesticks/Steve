@@ -48,14 +48,15 @@ void Camera::Rotate(float x, float y, float z)
 
 void Camera::Rotate(const DM::Vec3f& axis)
 {
-  DM::Vec4f xq, yq, zq;
-  xq.Store(DirectX::XMVector3Rotate(GetRight().Load(), myRotationQuat.Load()));
-  yq.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
-  zq.Store(DirectX::XMVector3Rotate(GetForward().Load(), myRotationQuat.Load()));
-
-  xq = xq.Normalize();
-  yq = yq.Normalize();
-  zq = zq.Normalize();
+  DM::Vec4f xq;
+  DM::Vec4f yq;
+  DM::Vec4f zq;
+  xq = GetRelativeRight().AsXmFloat4AVector();
+  yq = GetRelativeUp().AsXmFloat4AVector();
+  zq = GetRelativeForward().AsXmFloat4AVector();
+  //xq.Store(DirectX::XMVector3Rotate(GetRight().Load(), myRotationQuat.Load()));
+  //yq.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
+  //zq.Store(DirectX::XMVector3Rotate(GetForward().Load(), myRotationQuat.Load()));
 
   xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
   yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));

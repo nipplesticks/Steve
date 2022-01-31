@@ -38,13 +38,7 @@ DM::Vec3f FpsCamera::GetUp() const
 DM::Mat4x4 FpsCamera::GetViewMatrix() const
 {
   DM::Mat4x4 viewMat;
-  DM::Vec3f  up;
-  DM::Vec3f  dir;
-
-  up.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
-  dir.Store(DirectX::XMVector3Rotate(GetForward().Load(), myRotationQuat.Load()));
-
-  viewMat.Store(DirectX::XMMatrixLookToRH(myPosition.Load(), dir.Load(), up.Load()));
+  viewMat.Store(DirectX::XMMatrixLookToRH(myPosition.LoadAsVec4(1.0f), GetRelativeForward().Load(), GetRelativeUp().Load()));
   return viewMat;
 }
 

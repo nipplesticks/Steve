@@ -10,8 +10,8 @@ public:
   virtual DM::Vec3f  GetUp() const override;
   virtual DM::Mat4x4 GetViewMatrix() const override;
   virtual DM::Vec3f  GetRelativeForward() const override;
-  virtual DM::Vec3f  GetRelativeUp() const;
-  virtual DM::Vec3f  GetRelativeRight() const;
+  virtual DM::Vec3f  GetRelativeUp() const override;
+  virtual DM::Vec3f  GetRelativeRight() const override;
 
   void SetLookTo(float x, float y, float z);
   void SetLookTo(const DM::Vec3f& lookTo);
