@@ -19,7 +19,6 @@ struct Vertex
 
 Vertex main(Vertex vertex)
 {
-  vertex.pos = mul(vertex.pos, transpose(worldMat));
   vertex.pos = mul(vertex.pos, transpose(mul(proj, view)));
   vertex.pos.z = 1.0f;
 
