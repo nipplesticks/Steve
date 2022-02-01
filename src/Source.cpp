@@ -207,7 +207,7 @@ int main()
     if (KeyboardInput::IsKeyPressed("rollLeft"))
       camera.Rotate(0, 0, -dt);
 
-    //planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
+    planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
     planet.UpdateConstantBuffer();
     
     skybox.SetPosition(camera.GetPosition());

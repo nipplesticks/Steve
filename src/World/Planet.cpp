@@ -170,30 +170,50 @@ void Planet::Create(float size, uint div, float uvTiles)
     uint x = heightMap.width * _x;
     uint y = heightMap.height * _y;
 
-    float height = GetHeight(x, y, 10, 0.6f);
-    float h0     = GetHeight(x, y, 0, 1.0f);
-    float h1     = GetHeight(x + 1, y, 0, 1.0f);
-    float h2     = GetHeight(x, y + 1, 0, 1.0f);
+    float height = GetHeight(x, y, 10, 0.5f);
 
     DM::Vec3f nor = v.normal;
-    DM::Vec3f defaultNor(0, 1.0f, 0);
-
-    DM::Vec3f v0(0, h0, 0);
-    DM::Vec3f v1(1, h1, 0);
-    DM::Vec3f v2(0, h2, 1);
-
-    DM::Vec3f e0     = v1 - v0;
-    DM::Vec3f e1     = v2 - v0;
-    DM::Vec3f newNor = e1.Cross(e0).Normalize();
-    DM::Mat3x3 rot = FindRotationMatrix(nor, defaultNor);
-
-    newNor.Store(DirectX::XMVector3Transform(newNor.Load(), rot.Load()));
-
     DM::Vec3f pos = v.position;
     pos           = pos + nor * height;
     v.position    = pos.AsXmFloat4APoint();
-    v.normal      = newNor.Normalize().AsXmFloat4AVector();
   }
+
+  struct TempNor
+  {
+    DM::Vec3f allNormals = DM::Vec3f(0.0f, 0.0f, 0.0f);
+    uint      nrOfNormals = 0;
+  };
+
+  std::vector<TempNor> tempNor(verts.size());
+
+  for (uint i = 0; i < indices.size(); i+=3)
+  {
+    uint i1 = indices[i];
+    uint i2 = indices[i + 1];
+    uint i3 = indices[i + 2];
+
+    DM::Vec3f v1 = verts[i1].position;
+    DM::Vec3f v2 = verts[i2].position;
+    DM::Vec3f v3 = verts[i3].position;
+    DM::Vec3f e0 = v2 - v1;
+    DM::Vec3f e1 = v3 - v1;
+    DM::Vec3f n  = e1.Cross(e0).Normalize();
+
+    tempNor[i1].allNormals = tempNor[i1].allNormals + n;
+    tempNor[i1].nrOfNormals++;
+    tempNor[i2].allNormals = tempNor[i2].allNormals + n;
+    tempNor[i2].nrOfNormals++;
+    tempNor[i3].allNormals = tempNor[i3].allNormals + n;
+    tempNor[i3].nrOfNormals++;
+  }
+
+  for (uint i = 0; i < verts.size(); i++)
+  {
+    DM::Vec3f n = tempNor[i].allNormals / (float)tempNor[i].nrOfNormals;
+    n           = n.Normalize();
+    verts[i].normal = n.AsXmFloat4AVector();
+  }
+
 
   std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
   std::cout << "nrOfTris: \t" << indices.size() / 3 << std::endl;
