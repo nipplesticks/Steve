@@ -1,4 +1,5 @@
 #include "Planet.h"
+#include "../Noise/PerlinNoise.h"
 #include "../renderer/Camera.h"
 #include "../renderer/Renderer.h"
 #include "../renderer/TextureLoader.h"
@@ -40,6 +41,31 @@ Planet::~Planet() { }
 //  return image;
 //}
 
+/*
+* 
+
+If you don't want any seams and warping on your sphere texture, you will need to generate the texture from a 3D perlin noise.
+
+The Sphere is mapped in a longitude/latitude way, so you can deduce the 3D coordinates from the UV (or 2d coords) and some trigonometry :
+
+    y = sin( UVy * pi - pi/2 )
+
+    x = cos( UVx 2 pi ) cos( UVy pi - pi/2 )
+
+    z = sin( UVx 2 pi ) cos( UVy pi - pi/2 )
+
+    x, y and z are now values in the range [-1;1]. You need to remap them to [0;1] by doing : value = value * 0.5 + 0.5.
+
+    Now you can get a 3D perlin noise value by chaining 2 2D perlin noise :
+
+    float sample = Mathf.PerlinNoise( Mathf.PerlinNoise(x, y),z);
+
+
+
+I haven't tried, but this should work.
+
+*/
+
 void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
 {
   vec.push_back(a);
@@ -47,185 +73,46 @@ void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
   vec.push_back(c);
 }
 
-DM::Mat3x3 FindRotationMatrix(const DM::Vec3f& A, const DM::Vec3f& B)
-{
-  DM::Vec3f axis = A.Cross(B);
-
-  const float cosA = A.Dot(B);
-  const float k    = 1.0f / (1.0f + cosA);
-
-  DM::Mat3x3 result;
-  result._11 = (axis.x * axis.x * k) + cosA;
-  result._12 = (axis.y * axis.x * k) - axis.z;
-  result._13 = (axis.z * axis.x * k) + axis.y;
-  result._21 = (axis.x * axis.y * k) + axis.z;
-  result._22 = (axis.y * axis.y * k) + cosA;
-  result._23 = (axis.z * axis.y * k) - axis.x;
-  result._31 = (axis.x * axis.z * k) - axis.y;
-  result._32 = (axis.y * axis.z * k) + axis.x;
-  result._33 = (axis.z * axis.z * k) + cosA;
-
-  return result;
-}
-
 void Planet::Create(float size, uint div, float uvTiles)
 {
   if (fabs(uvTiles) < FLT_EPSILON)
-  {
     uvTiles = 1.0f;
-  }
+
   std::vector<DM::Vec3f> points;
   std::vector<uint>      indices;
-  _createIcosahedron(indices, points);
-  Timer t;
-  t.Start();
+  std::vector<Vertex>    verts;
+  std::vector<uint>      wrappedIndices;
 
-  {
-    std::vector<Triangle> tri(indices.size() / 3u);
-    uint                  triCounter = 0;
-    for (uint i = 0; i < indices.size(); i += 3)
-    {
-      tri[triCounter].A   = indices[i];
-      tri[triCounter].B   = indices[i + 1];
-      tri[triCounter++].C = indices[i + 2];
-    }
-    indices.clear();
-    for (uint i = 0; i < div; i++)
-    {
-      _subdivideIcosahedron(tri, points);
-    }
-    indices.resize(tri.size() * 3u);
-    uint indCounter = 0;
-    for (uint i = 0; i < tri.size(); i++)
-    {
-      indices[indCounter++] = tri[i].A;
-      indices[indCounter++] = tri[i].B;
-      indices[indCounter++] = tri[i].C;
-    }
-  }
+  _createIcosahedronAndSubdivide(indices, points, div);
 
-  double divTime = t.Stop();
-  std::cout << "Subdivition time: " << divTime << " seconds\n";
+  _createVertices(verts, points);
 
-  std::vector<Vertex> verts(points.size());
-  Vertex              defaultVert = {};
-  defaultVert.color               = DirectX::XMFLOAT4A(1, 1, 1, 1);
-  float PI                        = DirectX::XM_PI;
-  for (uint i = 0; i < points.size(); i++)
-  {
-    verts[i]          = defaultVert;
-    verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
-    //verts[i].position = points[i].AsXmFloat4APoint();
-    verts[i].normal = points[i].Normalize().AsXmFloat4AVector();
-    verts[i].uv.x   = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
-    verts[i].uv.y   = 0.5f - (std::asin(verts[i].position.y) / PI);
-  }
+  _detectWrappedUVCoords(indices, verts, wrappedIndices);
 
-  std::vector<uint> wrapped = _detectWrappedUVCoords(indices, verts);
-  _fixWrappedUVCoords(wrapped, indices, verts);
+  _fixWrappedUVCoords(wrappedIndices, indices, verts);
+
   _fixSharedPoleVertices(indices, verts);
 
-  TextureLoader::Image heightMap =
-      TextureLoader::LoadImageData("assets/textures/earthHeightMap.jpg");
+  _scaleUVs(verts, uvTiles);
 
-  uint8 maxValue = 0;
-  uint8 minValue = UINT8_MAX;
-
-  for (uint i = 0; i < heightMap.width * heightMap.height; i++)
-  {
-    uint x = i % heightMap.width;
-    uint y = i / heightMap.width;
-
-    uint8 r = heightMap.GetPixel(x, y).r;
-
-    minValue = std::min(minValue, r);
-    maxValue = std::max(maxValue, r);
-  }
-  std::cout << "max: " << (int)maxValue << std::endl;
-  std::cout << "min: " << (int)minValue << std::endl;
-  float asd = 0.0f;
-
-  uint8 range = maxValue - minValue;
-
-  auto GetHeight = [&](uint x, uint y, uint sampleSize, float pw) {
-    uint8 hValue   = heightMap.GetAveragePixel(x, y, sampleSize).r;
-    hValue         = std::pow(hValue, pw);
-    float newValue = ((float)(hValue - minValue)) / (float)range;
-    return newValue;
-  };
-
-  for (auto& v : verts)
-  {
-    v.uv.x *= -uvTiles;
-    v.uv.y *= uvTiles;
-
-    float _x = (fmodf(v.uv.x, 1.0f));
-    float _y = (fmodf(v.uv.y, 1.0f));
-
-    if (v.uv.x < 0)
-      _x = 1.0f + _x;
-    if (v.uv.y < 0)
-      _y = 1.0f + _y;
-
-    uint x = heightMap.width * _x;
-    uint y = heightMap.height * _y;
-
-    float height = GetHeight(x, y, 10, 0.5f);
-
-    DM::Vec3f nor = v.normal;
-    DM::Vec3f pos = v.position;
-    pos           = pos + nor * height;
-    v.position    = pos.AsXmFloat4APoint();
-  }
-
-  struct TempNor
-  {
-    DM::Vec3f allNormals = DM::Vec3f(0.0f, 0.0f, 0.0f);
-    uint      nrOfNormals = 0;
-  };
-
-  std::vector<TempNor> tempNor(verts.size());
-
-  for (uint i = 0; i < indices.size(); i+=3)
-  {
-    uint i1 = indices[i];
-    uint i2 = indices[i + 1];
-    uint i3 = indices[i + 2];
-
-    DM::Vec3f v1 = verts[i1].position;
-    DM::Vec3f v2 = verts[i2].position;
-    DM::Vec3f v3 = verts[i3].position;
-    DM::Vec3f e0 = v2 - v1;
-    DM::Vec3f e1 = v3 - v1;
-    DM::Vec3f n  = e1.Cross(e0).Normalize();
-
-    tempNor[i1].allNormals = tempNor[i1].allNormals + n;
-    tempNor[i1].nrOfNormals++;
-    tempNor[i2].allNormals = tempNor[i2].allNormals + n;
-    tempNor[i2].nrOfNormals++;
-    tempNor[i3].allNormals = tempNor[i3].allNormals + n;
-    tempNor[i3].nrOfNormals++;
-  }
-
-  for (uint i = 0; i < verts.size(); i++)
-  {
-    DM::Vec3f n = tempNor[i].allNormals / (float)tempNor[i].nrOfNormals;
-    n           = n.Normalize();
-    verts[i].normal = n.AsXmFloat4AVector();
-  }
-
+  //TextureLoader::Image heightMap =
+  //    TextureLoader::LoadImageData("assets/textures/earthHeightMap.jpg"); // Use generated heightMap
+  //_offsetBasedOnHeightMap(&heightMap, indices, verts);
 
   std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
   std::cout << "nrOfTris: \t" << indices.size() / 3 << std::endl;
   std::cout << "nrOfIdx: \t" << indices.size() << std::endl;
 
+  //TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
+  TextureLoader::Image H, D;
+  _generateHeightMapAndTexture(&H, &D, 4080, 4080, verts);
+  _offsetBasedOnHeightMap(&H, indices, verts);
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
   myMesh.CreateBuffers();
-  TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
 
   uint w, h;
-  myMesh.SetImages(std::move(shrek2));
+  myMesh.SetImages(std::move(D));
   uint8* img_p = myMesh.GetRawImage(0, &w, &h);
   myTextureBuffer.Init(w, h);
   myTextureBuffer.Update(Renderer::GetInstance(), img_p);
@@ -237,6 +124,40 @@ void Planet::Create(float size, uint div, float uvTiles)
 const Mesh& Planet::GetMesh() const
 {
   return myMesh;
+}
+
+void Planet::_createIcosahedronAndSubdivide(std::vector<uint>&      indices,
+                                            std::vector<DM::Vec3f>& vertices,
+                                            uint                    divitions)
+{
+  Timer t;
+  t.Start();
+  _createIcosahedron(indices, vertices);
+  {
+    std::vector<Triangle> tri(indices.size() / 3u);
+    uint                  triCounter = 0;
+    for (uint i = 0; i < indices.size(); i += 3)
+    {
+      tri[triCounter].A   = indices[i];
+      tri[triCounter].B   = indices[i + 1];
+      tri[triCounter++].C = indices[i + 2];
+    }
+    indices.clear();
+    for (uint i = 0; i < divitions; i++)
+    {
+      _subdivideIcosahedron(tri, vertices);
+    }
+    indices.resize(tri.size() * 3u);
+    uint indCounter = 0;
+    for (uint i = 0; i < tri.size(); i++)
+    {
+      indices[indCounter++] = tri[i].A;
+      indices[indCounter++] = tri[i].B;
+      indices[indCounter++] = tri[i].C;
+    }
+  }
+  double divTime = t.Stop();
+  std::cout << "Created and subdivided icosahedron in: " << divTime << " seconds\n";
 }
 
 void Planet::_createIcosahedron(std::vector<uint>& indices, std::vector<DM::Vec3f>& vertices)
@@ -291,8 +212,6 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
   uint numTriNew = numTri;
   triangles.resize(numTri + numTri * 3u);
 
-  //std::unordered_map<DM::Vec3f, uint> vertIdxMap;
-  //std::map<DM::Vec3f, uint> vertIdxMap;
   std::unordered_map<DM::Vec3f, uint> vertIdxMap;
 
   for (uint triIdx = 0; triIdx < numTri; triIdx++)
@@ -352,11 +271,27 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
   }
 }
 
-std::vector<uint> Planet::_detectWrappedUVCoords(std::vector<uint>&   indices,
-                                                 std::vector<Vertex>& vertices)
+void Planet::_createVertices(std::vector<Vertex>& verts, const std::vector<DM::Vec3f>& points)
 {
-  std::vector<uint> _ind;
-  uint              nrOfIndices = indices.size();
+  verts.resize(points.size());
+  Vertex defaultVert = {};
+  defaultVert.color  = DirectX::XMFLOAT4A(1, 1, 1, 1);
+  float PI           = DirectX::XM_PI;
+  for (uint i = 0; i < points.size(); i++)
+  {
+    verts[i]          = defaultVert;
+    verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
+    verts[i].normal   = points[i].Normalize().AsXmFloat4AVector();
+    verts[i].uv.x     = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
+    verts[i].uv.y     = 0.5f - (std::asin(verts[i].position.y) / PI);
+  }
+}
+
+void Planet::_detectWrappedUVCoords(std::vector<uint>&   indices,
+                                    std::vector<Vertex>& vertices,
+                                    std::vector<uint>&   wrappedIndices)
+{
+  uint nrOfIndices = indices.size();
 
   for (uint i = 0; i < nrOfIndices; i += 3)
   {
@@ -369,10 +304,8 @@ std::vector<uint> Planet::_detectWrappedUVCoords(std::vector<uint>&   indices,
     DM::Vec3f texC(vertices[c].uv.x, vertices[c].uv.y, 0.0f);
     DM::Vec3f texNormal = (texC - texA).Cross(texB - texA);
     if (texNormal.z < 0)
-      _ind.push_back(i);
+      wrappedIndices.push_back(i);
   }
-
-  return _ind;
 }
 
 void Planet::_fixWrappedUVCoords(std::vector<uint>&   wrapped,
@@ -493,41 +426,152 @@ void Planet::_fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vert
   }
 }
 
-int correctIdx(uint max, int i)
+void Planet::_scaleUVs(std::vector<Vertex>& vertices, float uvTiles)
 {
-  return i % max;
+  for (auto& v : vertices)
+  {
+    v.uv.x *= -uvTiles;
+    v.uv.y *= uvTiles;
+  }
 }
 
-float Planet::_sampleHeight(TextureLoader::Image* img, int x, int y, int steps)
+void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
+                                     std::vector<uint>&    indices,
+                                     std::vector<Vertex>&  verts)
 {
-  uint w           = img->width;
-  uint h           = img->height;
-  x                = correctIdx(w, x);
-  y                = correctIdx(h, y);
-  DM::Vec2i dir[8] = {DM::Vec2i(-1, -1),
-                      DM::Vec2i(0, -1),
-                      DM::Vec2i(1, -1),
-                      DM::Vec2i(-1, 0),
-                      DM::Vec2i(1, 0),
-                      DM::Vec2i(-1, 1),
-                      DM::Vec2i(0, 1),
-                      DM::Vec2i(1, 1)};
+  uint8 maxValue = 0;
+  uint8 minValue = UINT8_MAX;
 
-  float height = ((float)img->pixels[((uint)x * 4u) + (uint)y * w]) / 255.0f;
-
-  for (uint i = 0; i < 8; i++)
+  for (uint i = 0; i < heightMap->width * heightMap->height; i++)
   {
-    DM::Vec2i currIdx(x, y);
-    DM::Vec2i currDir = dir[i];
-    for (uint j = 0; j < steps; j++)
-    {
-      DM::Vec2i idx = currIdx + currDir;
-      idx.x         = correctIdx(w, idx.x);
-      idx.y         = correctIdx(h, idx.y);
-      float lh      = ((float)img->pixels[((uint)idx.x * 4u) + (uint)idx.y * w]) / 255.0f;
-      height += lh;
-    }
+    uint x = i % heightMap->width;
+    uint y = i / heightMap->width;
+
+    uint8 r = heightMap->GetPixel(x, y).r;
+
+    minValue = std::min(minValue, r);
+    maxValue = std::max(maxValue, r);
+  }
+  std::cout << "max: " << (int)maxValue << std::endl;
+  std::cout << "min: " << (int)minValue << std::endl;
+  float asd = 0.0f;
+
+  uint8 range = maxValue - minValue;
+
+  auto GetHeight = [&](uint x, uint y, uint sampleSize, float pw) {
+    uint8 hValue   = heightMap->GetAveragePixel(x, y, sampleSize).r;
+    float hV       = std::pow((float)hValue, pw);
+    float newValue = ((hV - (float)minValue)) / (float)range;
+    return newValue;
+  };
+
+  for (auto& v : verts)
+  {
+    float _x = (fmodf(v.uv.x, 1.0f));
+    float _y = (fmodf(v.uv.y, 1.0f));
+
+    if (v.uv.x < 0)
+      _x = 1.0f + _x;
+    if (v.uv.y < 0)
+      _y = 1.0f + _y;
+
+    uint x = heightMap->width * _x;
+    uint y = heightMap->height * _y;
+
+    float height = GetHeight(x, y, 10, 0.5f);
+
+    DM::Vec3f nor = v.normal;
+    DM::Vec3f pos = v.position;
+    pos           = pos + nor * height;
+    v.position    = pos.AsXmFloat4APoint();
   }
 
-  return height / (8.0f * (float)steps);
+  struct TempNor
+  {
+    DM::Vec3f allNormals  = DM::Vec3f(0.0f, 0.0f, 0.0f);
+    uint      nrOfNormals = 0;
+  };
+
+  std::vector<TempNor> tempNor(verts.size());
+
+  for (uint i = 0; i < indices.size(); i += 3)
+  {
+    uint i1 = indices[i];
+    uint i2 = indices[i + 1];
+    uint i3 = indices[i + 2];
+
+    DM::Vec3f v1 = verts[i1].position;
+    DM::Vec3f v2 = verts[i2].position;
+    DM::Vec3f v3 = verts[i3].position;
+    DM::Vec3f e0 = v2 - v1;
+    DM::Vec3f e1 = v3 - v1;
+    DM::Vec3f n  = e1.Cross(e0).Normalize();
+
+    tempNor[i1].allNormals = tempNor[i1].allNormals + n;
+    tempNor[i1].nrOfNormals++;
+    tempNor[i2].allNormals = tempNor[i2].allNormals + n;
+    tempNor[i2].nrOfNormals++;
+    tempNor[i3].allNormals = tempNor[i3].allNormals + n;
+    tempNor[i3].nrOfNormals++;
+  }
+
+  for (uint i = 0; i < verts.size(); i++)
+  {
+    DM::Vec3f n     = tempNor[i].allNormals / (float)tempNor[i].nrOfNormals;
+    n               = n.Normalize();
+    verts[i].normal = n.AsXmFloat4AVector();
+  }
+}
+
+void Planet::_generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
+                                          TextureLoader::Image*      diffuse,
+                                          uint                       width,
+                                          uint                       height,
+                                          const std::vector<Vertex>& vertices)
+{
+  heightMap->width  = width;
+  heightMap->height = height;
+  heightMap->pixels.resize(width * height * 4u);
+
+  diffuse->width  = width;
+  diffuse->height = height;
+  diffuse->pixels.resize(width * height * 4u);
+
+  PerlinNoise pn(1337);
+
+  double pi = DirectX::XM_PI;
+
+  for (uint y = 0; y < height; y++)
+  {
+    for (uint x = 0; x < width; x++)
+    {
+      double _x = (double)x / (double)width;
+      double _y = (double)y / (double)height;
+
+      double yCoord = sin(_y * pi - pi / 2);
+      double xCoord = cos(_x * 2.0 * pi) * cos(_y * pi - pi / 2.0);
+      double zCoord = sin(_x * 2.0 * pi) * cos(_y * pi - pi / 2.0);
+
+      double scl = 100;
+
+      double n = pn.Sample(scl * xCoord, scl * yCoord, scl * zCoord);
+      //double n = pn.Sample(xCoord,yCoord,zCoord);
+      double v = n * 255;
+
+      TextureLoader::Image::Pixel p {(uint8)floor(v), (uint8)floor(v), (uint8)floor(v), (uint8)255};
+      heightMap->SetPixel(x, y, p);
+
+      double  green[3] {0, 255, 0};
+      double  blue[3] {0, 0, 255};
+      double  white[3] {255, 255, 255};
+      double  rock[3] {175, 123, 150};
+      double* col = rock;
+
+      double h = std::pow(pn.Sample(20 * xCoord, 20 * yCoord, 20 * zCoord), 0.7);
+      p.r      = (uint8)(h * col[0]);
+      p.g      = (uint8)(h * col[1]);
+      p.b      = (uint8)(h * col[2]);
+      diffuse->SetPixel(x, y, p);
+    }
+  }
 }

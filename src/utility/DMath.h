@@ -1165,6 +1165,17 @@ namespace DM
     {
       return *this * DirectX::XMLoadFloat3x3(&_matrix);
     }
+
+    Vec3f operator*(const DM::Mat3x3& _matrix)
+    {
+      return *this * _matrix.Load();
+    }
+
+    Vec3f operator*(const DM::Mat4x4& _matrix)
+    {
+      return *this * _matrix.Load();
+    }
+
 #pragma endregion
 
 #pragma region Functions
@@ -1301,6 +1312,30 @@ namespace DM
       Vec3f val;
       val.Store(DirectX::XMVector3Cross(Load(), DirectX::XMLoadFloat3(&_xmFlt)));
       return val;
+    }
+
+    DM::Mat3x3 GetRotationFrom(const DM::Vec3f& _vec3f)
+    {
+      DM::Vec3f A = *this;
+      DM::Vec3f B = _vec3f;
+
+      DM::Vec3f axis = A.Cross(B);
+
+      const float cosA = A.Dot(B);
+      const float k    = 1.0f / (1.0f + cosA);
+
+      DM::Mat3x3 result;
+      result._11 = (axis.x * axis.x * k) + cosA;
+      result._12 = (axis.y * axis.x * k) - axis.z;
+      result._13 = (axis.z * axis.x * k) + axis.y;
+      result._21 = (axis.x * axis.y * k) + axis.z;
+      result._22 = (axis.y * axis.y * k) + cosA;
+      result._23 = (axis.z * axis.y * k) - axis.x;
+      result._31 = (axis.x * axis.z * k) - axis.y;
+      result._32 = (axis.y * axis.z * k) + axis.x;
+      result._33 = (axis.z * axis.z * k) + cosA;
+
+      return result;
     }
 
     float Dot(const DirectX::XMVECTOR& vector) const

@@ -44,7 +44,13 @@ public:
       p.a = pixels[(x + y * width) * 4 + 3];
       return p;
     }
-
+    void SetPixel(uint x, uint y, Pixel p)
+    {
+      pixels[(x + y * width) * 4 + 0] = p.r;
+      pixels[(x + y * width) * 4 + 1] = p.g;
+      pixels[(x + y * width) * 4 + 2] = p.b;
+      pixels[(x + y * width) * 4 + 3] = p.a;
+    }
     Pixel GetAveragePixel(uint x, uint y, int sampleSize = 0)
     {
       int _x = x;

@@ -156,6 +156,7 @@
     <ClCompile Include="src\events\Event.cpp" />
     <ClCompile Include="src\events\EventHandler.cpp" />
     <ClCompile Include="src\Input\KeyboardInput.cpp" />
+    <ClCompile Include="src\Noise\PerlinNoise.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
     <ClCompile Include="src\renderer\ConstantBuffer.cpp" />
     <ClCompile Include="src\renderer\FpsCamera.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="src\events\Event.h" />
     <ClInclude Include="src\events\EventHandler.h" />
     <ClInclude Include="src\Input\KeyboardInput.h" />
+    <ClInclude Include="src\Noise\PerlinNoise.h" />
     <ClInclude Include="src\renderer\FpsCamera.h" />
     <ClInclude Include="src\renderer\Camera.h" />
     <ClInclude Include="src\renderer\ConstantBuffer.h" />
