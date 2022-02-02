@@ -67,7 +67,12 @@ int main()
   skyboxPipelineState.CreatePipelineState();
 
   Planet planet;
-  planet.Create(1.0f, 8, 1.0f);
+  Planet::GenerationType genType;
+  genType.height.frequency  = 0.8;
+  genType.height.exponent = 2.3;
+  genType.moisture.exponent = 0.8;
+  genType.moisture.frequency = 6.3;
+  planet.Create(1.0f, 8, 1.0f, genType);
   planet.SetScale(10, 10, 10);
   planet.SetGraphicsPipelineState(&planetPipelineState);
   planet.Bind();

@@ -73,8 +73,13 @@ void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
   vec.push_back(c);
 }
 
-void Planet::Create(float size, uint div, float uvTiles)
+void Planet::Create(float size, uint div, float uvTiles, Planet::GenerationType genType)
 {
+  DM::Vec4f waterLevel(1.0f + genType.waterLevel);
+
+  myWaterLevel.Init(sizeof(waterLevel));
+  myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
+
   if (fabs(uvTiles) < FLT_EPSILON)
     uvTiles = 1.0f;
 
@@ -87,11 +92,11 @@ void Planet::Create(float size, uint div, float uvTiles)
 
   _createVertices(verts, points);
 
-  _detectWrappedUVCoords(indices, verts, wrappedIndices);
+  //_detectWrappedUVCoords(indices, verts, wrappedIndices);
 
-  _fixWrappedUVCoords(wrappedIndices, indices, verts);
+  //_fixWrappedUVCoords(wrappedIndices, indices, verts);
 
-  _fixSharedPoleVertices(indices, verts);
+  //_fixSharedPoleVertices(indices, verts);
 
   _scaleUVs(verts, uvTiles);
 
@@ -105,7 +110,7 @@ void Planet::Create(float size, uint div, float uvTiles)
 
   //TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
   TextureLoader::Image H, D;
-  _generateHeightMapAndTexture(&H, &D, 4080, 4080, verts);
+  _generateHeightMapAndTexture(&H, &D, 8000, 4000, verts, genType);
   _offsetBasedOnHeightMap(&H, indices, verts);
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
@@ -124,6 +129,13 @@ void Planet::Create(float size, uint div, float uvTiles)
 const Mesh& Planet::GetMesh() const
 {
   return myMesh;
+}
+
+void Planet::Bind()
+{
+  myResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer, &myWaterLevel},
+                            {myTextureBuffer_p});
+  myIsBinded = true;
 }
 
 void Planet::_createIcosahedronAndSubdivide(std::vector<uint>&      indices,
@@ -280,7 +292,7 @@ void Planet::_createVertices(std::vector<Vertex>& verts, const std::vector<DM::V
   for (uint i = 0; i < points.size(); i++)
   {
     verts[i]          = defaultVert;
-    verts[i].position = (points[i].Normalize()).AsXmFloat4APoint();
+    verts[i].position = points[i].Normalize().AsXmFloat4APoint();
     verts[i].normal   = points[i].Normalize().AsXmFloat4AVector();
     verts[i].uv.x     = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
     verts[i].uv.y     = 0.5f - (std::asin(verts[i].position.y) / PI);
@@ -460,9 +472,10 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
 
   auto GetHeight = [&](uint x, uint y, uint sampleSize, float pw) {
     uint8 hValue   = heightMap->GetAveragePixel(x, y, sampleSize).r;
-    float hV       = std::pow((float)hValue, pw);
-    float newValue = ((hV - (float)minValue)) / (float)range;
-    return newValue;
+    //float hV       = std::pow((float)hValue, pw);
+    //float newValue = ((hV - (float)minValue)) / (float)range;*/
+    //return newValue;
+    return (float)hValue / 255.0f;
   };
 
   for (auto& v : verts)
@@ -478,7 +491,7 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
     uint x = heightMap->width * _x;
     uint y = heightMap->height * _y;
 
-    float height = GetHeight(x, y, 10, 0.5f);
+    float height = GetHeight(x, y, 0, 0.5f);
 
     DM::Vec3f nor = v.normal;
     DM::Vec3f pos = v.position;
@@ -523,11 +536,125 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
   }
 }
 
+void Planet::_getBiomAndColor(double                       elevation,
+                              double                       moisture,
+                              TextureLoader::Image::Pixel& color,
+                              Planet::Biom&                biom,
+                              GenerationType genType)
+{
+  if (elevation < genType.waterLevel)
+    biom = Ocean;
+  else if (elevation < genType.waterLevel + 0.2)
+    biom = Beach;
+  else if (elevation > 0.8)
+  {
+    if (moisture < 0.1)
+      biom = Scorched;
+    if (moisture < 0.2)
+      biom = Bare;
+    if (moisture < 0.5)
+      biom = Tundra;
+    biom = Snow;
+  }
+  else if (elevation > 0.6)
+  {
+    if (moisture < 0.33)
+      biom = TemperateDesert;
+    else if (moisture < 0.66)
+      biom = Shrubland;
+    else
+      biom = Taiga;
+  }
+  else if (elevation > 0.3)
+  {
+    if (moisture < 0.16)
+      biom = TemperateDesert;
+    else if (moisture < 0.50)
+      biom = GrassLand;
+    else if (moisture < 0.83)
+      biom = TemperateDeciduousForest;
+    else
+      biom = TemperateRainForest;
+  }
+  else
+  {
+    if (moisture < 0.16)
+      biom = SubtropicalDesert;
+    else if (moisture < 0.33)
+      biom = GrassLand;
+    else if (moisture < 0.66)
+      biom = TropicalSeasonalFoest;
+    else
+      biom = TropicalRainForest;
+  }
+  color = _getColor(biom);
+}
+
+TextureLoader::Image::Pixel Planet::_getColor(Planet::Biom biom)
+{
+  TextureLoader::Image::Pixel color;
+
+  switch (biom)
+  {
+  case Planet::Ocean:
+    color.SetColor(18, 17, 84);
+    break;
+  case Planet::Beach:
+    color.SetColor(179, 162, 133);
+    break;
+  case Planet::Scorched:
+    color.SetColor(53, 31, 25);
+    break;
+  case Planet::Bare:
+    color.SetColor(142, 106, 80);
+    break;
+  case Planet::Tundra:
+    color.SetColor(213, 90, 59);
+    break;
+  case Planet::Snow:
+    color.SetColor(255, 255, 255);
+    break;
+  case Planet::TemperateDesert:
+    color.SetColor(213, 129, 82);
+    break;
+  case Planet::Shrubland:
+    color.SetColor(166, 165, 121);
+    break;
+  case Planet::Taiga:
+    color.SetColor(18, 47, 16);
+    break;
+  case Planet::GrassLand:
+    color.SetColor(82, 90, 14);
+    break;
+  case Planet::TemperateDeciduousForest:
+    color.SetColor(120, 173, 4);
+    break;
+  case Planet::TemperateRainForest:
+    color.SetColor(64, 80, 40);
+    break;
+  case Planet::SubtropicalDesert:
+    color.SetColor(208, 160, 113);
+    break;
+  case Planet::TropicalSeasonalFoest:
+    color.SetColor(75, 148, 94);
+    break;
+  case Planet::TropicalRainForest:
+    color.SetColor(72, 120, 80);
+    break;
+  default:
+    color.SetColor(0, 0, 0);
+    break;
+  }
+
+  return color;
+}
+
 void Planet::_generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
                                           TextureLoader::Image*      diffuse,
                                           uint                       width,
                                           uint                       height,
-                                          const std::vector<Vertex>& vertices)
+                                          const std::vector<Vertex>& vertices,
+                                          GenerationType             genType)
 {
   heightMap->width  = width;
   heightMap->height = height;
@@ -541,6 +668,9 @@ void Planet::_generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
 
   double pi = DirectX::XM_PI;
 
+  double highestE = 0.0;
+  double lowestE = 99999999.0;
+
   for (uint y = 0; y < height; y++)
   {
     for (uint x = 0; x < width; x++)
@@ -552,26 +682,49 @@ void Planet::_generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
       double xCoord = cos(_x * 2.0 * pi) * cos(_y * pi - pi / 2.0);
       double zCoord = sin(_x * 2.0 * pi) * cos(_y * pi - pi / 2.0);
 
-      double scl = 100;
+      double f   = genType.height.frequency;
+      double e   = 0.0;
+      double div = 0.0f;
+      for (uint i = 0; i < genType.height.iterations; i++)
+      {
+        double it = genType.height.frequency / f;
+        e         += it * pn.Sample(xCoord * f, yCoord * f, zCoord * f);
+        div += it;
+        f *= 2.0;
+      }
+      if (div > 0.0f)
+        e = e / div;
+      e = pow(e * genType.height.fudgeFactor, genType.height.exponent);
 
-      double n = pn.Sample(scl * xCoord, scl * yCoord, scl * zCoord);
-      //double n = pn.Sample(xCoord,yCoord,zCoord);
-      double v = n * 255;
+      highestE = std::max(e, highestE);
+      lowestE  = std::min(e, lowestE);
 
-      TextureLoader::Image::Pixel p {(uint8)floor(v), (uint8)floor(v), (uint8)floor(v), (uint8)255};
-      heightMap->SetPixel(x, y, p);
+      TextureLoader::Image::Pixel heightPixel(
+          (uint8)(e * 255), (uint8)(e * 255), (uint8)(e * 255), 255);
 
-      double  green[3] {0, 255, 0};
-      double  blue[3] {0, 0, 255};
-      double  white[3] {255, 255, 255};
-      double  rock[3] {175, 123, 150};
-      double* col = rock;
+      heightMap->SetPixel(x, y, heightPixel);
 
-      double h = std::pow(pn.Sample(20 * xCoord, 20 * yCoord, 20 * zCoord), 0.7);
-      p.r      = (uint8)(h * col[0]);
-      p.g      = (uint8)(h * col[1]);
-      p.b      = (uint8)(h * col[2]);
-      diffuse->SetPixel(x, y, p);
+      f        = genType.moisture.frequency;
+      double m = 0.0;
+      div      = 0.0f;
+      for (uint i = 0; i < genType.moisture.iterations; i++)
+      {
+        double it = genType.moisture.frequency / f;
+        m         += it * pn.Sample(xCoord * f, yCoord * f, zCoord * f);
+        div += it;
+        f *= 2.0;
+      }
+      if (div > 0.0f)
+        m = m / div;
+      m = pow(m * genType.moisture.fudgeFactor, genType.moisture.exponent);
+      Planet::Biom                biom;
+      TextureLoader::Image::Pixel color;
+      _getBiomAndColor(e, m, color, biom, genType);
+      diffuse->SetPixel(x, y, color);
     }
   }
+
+  std::cout << "Highest elevation: " << highestE << std::endl;
+  std::cout << "Lowest elevation: " << lowestE << std::endl;
+
 }

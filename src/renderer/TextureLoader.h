@@ -9,6 +9,17 @@ public:
   {
     struct Pixel
     {
+      Pixel(uint8 _r = 0, uint8 _g = 0, uint8 _b = 0, uint8 _a = 0)
+      {
+        SetColor(_r, _g, _b, _a);
+      }
+      void SetColor(uint8 _r, uint8 _g, uint8 _b, uint8 _a = 255)
+      {
+        r = _r;
+        g = _g;
+        b = _b;
+        a = _a;
+      }
       uint8 r, g, b, a;
     };
 
@@ -74,7 +85,7 @@ public:
       g = g / c;
       b = b / c;
       a = a / c;
-      Pixel p {r, g, b, a};
+      Pixel p(r, g, b, a);
 
       return p;
     }

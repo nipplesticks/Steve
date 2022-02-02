@@ -10,11 +10,61 @@ class TextureBuffer;
 class Planet : public Drawable
 {
 public:
+  enum Biom
+  {
+    Ocean = 0,
+    Beach,
+    Scorched,
+    Bare,
+    Tundra,
+    Snow,
+    TemperateDesert,
+    Shrubland,
+    Taiga,
+    GrassLand,
+    TemperateDeciduousForest,
+    TemperateRainForest,
+    SubtropicalDesert,
+    TropicalSeasonalFoest,
+    TropicalRainForest
+  };
+
+  struct GenerationType
+  {
+    struct GenOptions
+    {
+      double frequency;
+      double exponent;
+      double fudgeFactor;
+      uint   iterations;
+    };
+
+    GenerationType()
+    {
+      height.frequency   = 1.0f;
+      height.iterations  = 3;
+      height.exponent    = 1.0f;
+      height.fudgeFactor = 1.0f;
+
+      moisture.frequency   = 1.0f;
+      moisture.iterations  = 3;
+      moisture.exponent    = 0.60f;
+      moisture.fudgeFactor = 1.2f;
+      waterLevel           = 0.1;
+    }
+    GenOptions height;
+    GenOptions moisture;
+    double     waterLevel;
+  };
+
+public:
   Planet();
   ~Planet();
 
-  void        Create(float size, uint div, float uvTiles = 1.0f);
+  void
+  Create(float size, uint div, float uvTiles = 1.0f, GenerationType genType = GenerationType());
   const Mesh& GetMesh() const;
+  void        Bind() override;
 
 private:
   struct Triangle
@@ -49,9 +99,23 @@ private:
   void _offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
                                std::vector<uint>&    indices,
                                std::vector<Vertex>&  verts);
-  void _generateHeightMapAndTexture(TextureLoader::Image* heightMap, TextureLoader::Image* diffuse, uint width, uint height, const std::vector<Vertex>& vertices);
+  void _generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
+                                    TextureLoader::Image*      diffuse,
+                                    uint                       width,
+                                    uint                       height,
+                                    const std::vector<Vertex>& vertices,
+                                    GenerationType             genType);
+
+  void _getBiomAndColor(double                       elevation,
+                        double                       moisture,
+                        TextureLoader::Image::Pixel& color,
+                        Planet::Biom&                biom,
+                        GenerationType               genType);
+
+  TextureLoader::Image::Pixel _getColor(Planet::Biom biom);
 
 private:
   Mesh          myMesh;
   TextureBuffer myTextureBuffer;
+  ConstantBuffer myWaterLevel;
 };
