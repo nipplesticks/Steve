@@ -1,17 +1,17 @@
 #include "Renderer.h"
 #define NOMINMAX
+#include "../entity/Drawable.h"
 #include "../utility/RenderUtility.h"
 #include "ConstantBuffer.h"
+#include "GraphicsPipelineState.h"
 #include "IndexBuffer.h"
+#include "Mesh.h"
+#include "ResourceDescriptorHeap.h"
 #include "TextureBuffer.h"
 #include "VertexBuffer.h"
 #include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
-#include "ResourceDescriptorHeap.h"
-#include "GraphicsPipelineState.h"
-#include "../entity/Drawable.h"
-#include "Mesh.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "DXGI.lib")
@@ -260,6 +260,7 @@ void Renderer::Init(uint x, uint y, HWND hwnd)
   if (!gRenderer_p)
   {
     gRenderer_p = new Renderer(x, y, hwnd);
+    gRenderer_p->_InitImgui(hwnd);
   }
 }
 
@@ -328,8 +329,21 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
   srdDesc.RowPitch               = textureBuffer.GetWidth() * 4;
   srdDesc.SlicePitch             = srdDesc.RowPitch * textureBuffer.GetHeight();
 
+
+
   myTextureUploadAllocator_p->Reset();
   myTextureUploadCommandList4_p->Reset(myTextureUploadAllocator_p, nullptr);
+
+  if (textureBuffer.GetBeforeState() == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+  {
+    D3D12_RESOURCE_BARRIER barrier = {};
+    barrier.Transition.pResource   = textureBuffer.GetResource();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    myTextureUploadCommandList4_p->ResourceBarrier(1, &barrier);
+  }
 
   UpdateSubresources(myTextureUploadCommandList4_p,
                      textureBuffer.GetResource(),
@@ -391,6 +405,13 @@ void Renderer::Clear(const Vector4f& color)
   myCommandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)&color, 0, NULL);
 }
 
+void Renderer::DrawImgui()
+{
+  ImGui::Render();
+  myCommandList4_p->SetDescriptorHeaps(1, &myImguiDescHeap_p);
+  ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), myCommandList4_p);
+}
+
 void Renderer::Flush()
 {
   for (auto& gps : Drawable::DRAW_QUEUE)
@@ -399,9 +420,9 @@ void Renderer::Flush()
     uint                 nrOfDrawables = drawQueue->nrOfElements;
     for (uint i = 0; i < nrOfDrawables; i++)
     {
-      Drawable* d_p = drawQueue->queue[i];
-      Mesh*     mesh_p = d_p->GetMesh();
-      const ResourceDescriptorHeap& rdh  = d_p->GetResourceDescHeap();
+      Drawable*                         d_p         = drawQueue->queue[i];
+      Mesh*                             mesh_p      = d_p->GetMesh();
+      const ResourceDescriptorHeap&     rdh         = d_p->GetResourceDescHeap();
       const std::vector<Mesh::Buffers>& meshBuffers = mesh_p->GetBuffers();
 
       for (auto& buffer : meshBuffers)
@@ -416,7 +437,7 @@ void Renderer::Flush()
 void Renderer::EndFrame()
 {
   Flush();
-
+  DrawImgui();
   _SetResourceTransitionBarrier(myCommandList4_p,
                                 myRenderTargets_pp[myCurrentBackbufferIndex],
                                 D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -478,4 +499,26 @@ void Renderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandL
   barrierDesc.Transition.StateAfter  = StateAfter;
 
   commandList_p->ResourceBarrier(1, &barrierDesc);
+}
+
+void Renderer::_InitImgui(HWND hwnd)
+{
+  D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+  desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+  desc.NumDescriptors             = 1;
+  desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+  HR_ASSERT(gDevice5_p->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&myImguiDescHeap_p)));
+
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  ImGui::StyleColorsDark();
+  ImGui_ImplWin32_Init(hwnd);
+  ImGui_ImplDX12_Init(Renderer::GetDevice(),
+                      NUM_SWAP_BUFFERS,
+                      DXGI_FORMAT_R8G8B8A8_UNORM,
+                      myImguiDescHeap_p,
+                      myImguiDescHeap_p->GetCPUDescriptorHandleForHeapStart(),
+                      myImguiDescHeap_p->GetGPUDescriptorHandleForHeapStart());
 }

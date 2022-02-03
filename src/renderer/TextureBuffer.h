@@ -18,10 +18,12 @@ public:
 
   ID3D12Resource* GetResource() const;
   ID3D12DescriptorHeap* GetHeap() const;
+  D3D12_RESOURCE_STATES GetBeforeState() const;
 
 private:
   ID3D12Resource*       myTextureBuffer_p = nullptr;
   ID3D12DescriptorHeap* myHeap_p          = nullptr;
   uint                  myWidth = 0u;
   uint                  myHeight = 0u;
+  D3D12_RESOURCE_STATES myStateBefore     = D3D12_RESOURCE_STATE_COPY_DEST;
 };

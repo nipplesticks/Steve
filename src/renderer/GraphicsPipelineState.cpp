@@ -73,17 +73,80 @@ HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
 
 HRESULT GraphicsPipelineState::SetHullShader(const std::string& hullShader)
 {
-  return E_NOTIMPL;
+  std::cout << "shader: " << hullShader << std::endl;
+  std::wstring shaderLocation(hullShader.begin(), hullShader.end());
+  ID3DBlob*    errorBlob_p  = nullptr;
+  UINT         compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+  HRESULT      hr           = 0;
+  HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
+                                    nullptr,
+                                    nullptr,
+                                    "main",
+                                    "hs_5_0",
+                                    compileFlags,
+                                    0,
+                                    &myHullShader_p,
+                                    &errorBlob_p));
+
+  if (errorBlob_p != nullptr)
+    printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+
+  HS.pShaderBytecode = myHullShader_p->GetBufferPointer();
+  HS.BytecodeLength  = myHullShader_p->GetBufferSize();
+
+  return hr;
 }
 
 HRESULT GraphicsPipelineState::SetDomainShader(const std::string& domainShader)
 {
-  return E_NOTIMPL;
+  std::cout << "shader: " << domainShader << std::endl;
+  std::wstring shaderLocation(domainShader.begin(), domainShader.end());
+  ID3DBlob*    errorBlob_p  = nullptr;
+  UINT         compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+  HRESULT      hr           = 0;
+  HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
+                                    nullptr,
+                                    nullptr,
+                                    "main",
+                                    "ds_5_0",
+                                    compileFlags,
+                                    0,
+                                    &myDomainShader_p,
+                                    &errorBlob_p));
+
+  if (errorBlob_p != nullptr)
+    printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+
+  DS.pShaderBytecode = myDomainShader_p->GetBufferPointer();
+  DS.BytecodeLength  = myDomainShader_p->GetBufferSize();
+
+  return hr;
 }
 
 HRESULT GraphicsPipelineState::SetGeometryShader(const std::string& geometryShader)
 {
-  return E_NOTIMPL;
+  std::cout << "shader: " << geometryShader << std::endl;
+  std::wstring shaderLocation(geometryShader.begin(), geometryShader.end());
+  ID3DBlob*    errorBlob_p  = nullptr;
+  UINT         compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+  HRESULT      hr           = 0;
+  HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
+                                    nullptr,
+                                    nullptr,
+                                    "main",
+                                    "gs_5_0",
+                                    compileFlags,
+                                    0,
+                                    &myGeometryShader_p,
+                                    &errorBlob_p));
+
+  if (errorBlob_p != nullptr)
+    printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
+
+  GS.pShaderBytecode = myGeometryShader_p->GetBufferPointer();
+  GS.BytecodeLength  = myGeometryShader_p->GetBufferSize();
+
+  return hr;
 }
 
 HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
@@ -184,6 +247,9 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   enum ShaderType
   {
     VertexShader = 0,
+    HullShader,
+    DomainShader,
+    GeometryShader,
     PixelShader
   };
 
@@ -200,7 +266,7 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   };
 
   std::vector<ShaderObject> shaderObjects;
-  ID3DBlob*                 shaders_p[] = {myVertexShader_p, myPixelShader_p};
+  ID3DBlob*                 shaders_p[] = {myVertexShader_p, myHullShader_p, myDomainShader_p, myGeometryShader_p, myPixelShader_p};
 
   for (ID3DBlob* shader_p : shaders_p)
   {
@@ -219,6 +285,12 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
         ShaderObject shaderObj {};
         if (shader_p == myVertexShader_p)
           shaderObj.shaderType = ShaderType::VertexShader;
+        else if (shader_p == myHullShader_p)
+          shaderObj.shaderType = ShaderType::HullShader;
+        else if (shader_p == myDomainShader_p)
+          shaderObj.shaderType = ShaderType::DomainShader;
+        else if (shader_p == myGeometryShader_p)
+          shaderObj.shaderType = ShaderType::GeometryShader;
         else if (shader_p == myPixelShader_p)
           shaderObj.shaderType = ShaderType::PixelShader;
 

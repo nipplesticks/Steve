@@ -51,10 +51,16 @@ public:
       moisture.exponent    = 0.60f;
       moisture.fudgeFactor = 1.2f;
       waterLevel           = 0.1;
+      texWidth             = 512;
+      texHeight            = 512;
+      seed                 = 1337;
     }
     GenOptions height;
     GenOptions moisture;
     double     waterLevel;
+    uint       texWidth;
+    uint       texHeight;
+    uint       seed;
   };
 
 public:
@@ -63,8 +69,15 @@ public:
 
   void
   Create(float size, uint div, float uvTiles = 1.0f, GenerationType genType = GenerationType());
+  void CreateOffsetGpu(float          size,
+                       uint           div,
+                       float          uvTiles = 1.0f,
+                       GenerationType genType = GenerationType());
+  void UpdateGeneration(GenerationType genType = GenerationType());
+
   const Mesh& GetMesh() const;
   void        Bind() override;
+  void        BindForOffsetGpu();
 
 private:
   struct Triangle
@@ -101,9 +114,6 @@ private:
                                std::vector<Vertex>&  verts);
   void _generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
                                     TextureLoader::Image*      diffuse,
-                                    uint                       width,
-                                    uint                       height,
-                                    const std::vector<Vertex>& vertices,
                                     GenerationType             genType);
 
   void _getBiomAndColor(double                       elevation,
@@ -115,7 +125,8 @@ private:
   TextureLoader::Image::Pixel _getColor(Planet::Biom biom);
 
 private:
-  Mesh          myMesh;
-  TextureBuffer myTextureBuffer;
+  Mesh           myMesh;
+  TextureBuffer  myTextureBuffer;
   ConstantBuffer myWaterLevel;
+  TextureBuffer  myHeightMapBuffer;
 };

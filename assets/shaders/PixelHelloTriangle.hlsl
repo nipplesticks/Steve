@@ -3,10 +3,11 @@ Texture2D<float4> aTexture : register(t1);
 
 struct Vertex
 {
+  float4 worldPos : WORLD_POS;
   float4 pos : SV_POSITION;
   float4 col : COLOR;
-  float4 nor : NORMAL;
   float4 uv : TEXCOORD;
+  float4 nor : NORMAL;
 };
 
 float4 main(Vertex vertex)

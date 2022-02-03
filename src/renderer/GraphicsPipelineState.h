@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-
 class GraphicsPipelineState : public D3D12_GRAPHICS_PIPELINE_STATE_DESC
 {
 public:
@@ -30,9 +29,13 @@ public:
 private:
   void _defaultValues();
 
-  ID3DBlob*                             myVertexShader_p  = nullptr;
-  ID3DBlob*                             myPixelShader_p   = nullptr;
-  ID3D12PipelineState*                  myPipelineState_p = nullptr;
-  ID3D12RootSignature*                  myRootSignature_p = nullptr;
+  ID3DBlob*            myVertexShader_p   = nullptr;
+  ID3DBlob*            myHullShader_p     = nullptr;
+  ID3DBlob*            myDomainShader_p   = nullptr;
+  ID3DBlob*            myGeometryShader_p = nullptr;
+  ID3DBlob*            myPixelShader_p    = nullptr;
+  ID3D12PipelineState* myPipelineState_p  = nullptr;
+  ID3D12RootSignature* myRootSignature_p  = nullptr;
+
   std::vector<D3D12_INPUT_ELEMENT_DESC> myInputElementDescs;
 };

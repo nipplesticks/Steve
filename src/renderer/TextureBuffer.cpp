@@ -7,7 +7,7 @@ void TextureBuffer::Init(uint width, uint height, uint channels)
   myHeight                 = height;
   myWidth                  = width;
   ID3D12Device5* gDevice_p = Renderer::GetDevice();
-
+  
   D3D12_HEAP_PROPERTIES heapProp = {};
   heapProp.Type                  = D3D12_HEAP_TYPE_DEFAULT;
   heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -52,6 +52,7 @@ void TextureBuffer::Init(uint width, uint height, uint channels)
 void TextureBuffer::Update(Renderer* renderer_p, void* data_p)
 {
   renderer_p->UploadTexture(*this, data_p);
+  myStateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
 uint TextureBuffer::GetHeight() const
@@ -72,4 +73,9 @@ ID3D12Resource* TextureBuffer::GetResource() const
 ID3D12DescriptorHeap* TextureBuffer::GetHeap() const
 {
   return myHeap_p;
+}
+
+D3D12_RESOURCE_STATES TextureBuffer::GetBeforeState() const
+{
+  return myStateBefore;
 }

@@ -3,10 +3,10 @@
 #include "events/EventHandler.h"
 #include "renderer/ConstantBuffer.h"
 #include "renderer/FpsCamera.h"
-#include "renderer/OrbitCamera.h"
 #include "renderer/GraphicsPipelineState.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/Mesh.h"
+#include "renderer/OrbitCamera.h"
 #include "renderer/Renderer.h"
 #include "renderer/ResourceDescriptorHeap.h"
 #include "renderer/TextureBuffer.h"
@@ -38,10 +38,61 @@ DM::Mat3x3 FindRotationMatrix2(const DM::Vec3f& A, const DM::Vec3f& B)
   return result;
 }
 
+bool PlanetGenModifier(Planet::GenerationType& genType)
+{
+  static int   seed       = static_cast<int>(genType.seed);
+  static float waterLevel = static_cast<float>(genType.waterLevel);
+  static float hExp   = static_cast<float>(genType.height.exponent);
+  static float hFq    = static_cast<float>(genType.height.frequency);
+  static float hFudge = static_cast<float>(genType.height.fudgeFactor);
+  static int   hIt    = static_cast<int>(genType.height.iterations);
+  static float mExp   = static_cast<float>(genType.moisture.exponent);
+  static float mFq    = static_cast<float>(genType.moisture.frequency);
+  static float mFudge = static_cast<float>(genType.moisture.fudgeFactor);
+  static int   mIt    = static_cast<int>(genType.moisture.iterations);
+  bool update = false;
+
+  ImGui::Begin("Planet Generation Modifier");
+
+  ImGui::Text("Generic");
+  ImGui::SliderInt("Seed", &seed, 0, INT_MAX);
+  genType.seed = static_cast<uint>(seed);
+  ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 1.0f);
+  genType.waterLevel = static_cast<double>(waterLevel);
+
+  ImGui::Text("Height");
+  {
+    ImGui::SliderFloat("height_exponent", &hExp, 0.0f, 10.0f);
+    ImGui::SliderFloat("height_frequency", &hFq, 0.0f, 10.0f);
+    ImGui::SliderFloat("height_fudgeFactor", &hFudge, 0.0f, 2.0f);
+    ImGui::SliderInt("height_iterations", &hIt, 0, 100);
+  }
+  ImGui::Text("Moisture");
+  {
+    ImGui::SliderFloat("moisture_exponent", &mExp, 0.0f, 10.0f);
+    ImGui::SliderFloat("moisture_frequency", &mFq, 0.0f, 1000.0f);
+    ImGui::SliderFloat("moisture_fudgeFactor", &mFudge, 0.0f, 2.0f);
+    ImGui::SliderInt("moisture_iterations", &mIt, 0, 100);
+  }
+  if (ImGui::Button("Generate")) update = true;
+
+  genType.height.exponent    = static_cast<double>(hExp);
+  genType.height.frequency   = static_cast<double>(hFq);
+  genType.height.fudgeFactor = static_cast<double>(hFudge);
+  genType.height.iterations  = static_cast<uint>(hIt);
+  genType.moisture.exponent    = static_cast<double>(mExp);
+  genType.moisture.frequency   = static_cast<double>(mFq);
+  genType.moisture.fudgeFactor = static_cast<double>(mFudge);
+  genType.moisture.iterations  = static_cast<uint>(mIt);
+
+  ImGui::End();
+
+  return update;
+}
 
 int main()
 {
-  Window   wnd(1280, 720, "aTitle");
+  Window wnd(1280, 720, "aTitle");
   Renderer::Init(1280, 720, wnd.GetHwnd());
   Camera::InitViewProjectionCb();
 
@@ -53,7 +104,9 @@ int main()
 
   GraphicsPipelineState planetPipelineState;
   //planetPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-  planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
+  //planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
+  planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShaderWithOffset.hlsl");
+  planetPipelineState.SetGeometryShader("assets/shaders/GeometryShaderCalcNormal.hlsl");
   planetPipelineState.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
   planetPipelineState.GenerateInputElementDesc();
   planetPipelineState.GenerateRootSignature();
@@ -66,17 +119,19 @@ int main()
   skyboxPipelineState.GenerateRootSignature();
   skyboxPipelineState.CreatePipelineState();
 
-  Planet planet;
+  Planet                 planet;
   Planet::GenerationType genType;
-  genType.height.frequency  = 0.8;
-  genType.height.exponent = 2.3;
-  genType.moisture.exponent = 0.8;
+  genType.height.frequency   = 0.8;
+  genType.height.exponent    = 2.3;
+  genType.moisture.exponent  = 0.8;
   genType.moisture.frequency = 6.3;
-  planet.Create(1.0f, 8, 1.0f, genType);
+  //planet.Create(1.0f, 8, 1.0f, genType);
+  planet.CreateOffsetGpu(1.0f, 8, 1.0f, genType);
   planet.SetScale(10, 10, 10);
   planet.SetGraphicsPipelineState(&planetPipelineState);
-  planet.Bind();
-  
+  //planet.Bind();
+  planet.BindForOffsetGpu();
+
   Mesh skyboxMesh;
   skyboxMesh.LoadMesh("assets/models/Skybox/skybox.obj", false);
   TextureLoader::Image img = TextureLoader::LoadImageData("assets/models/Skybox/skybox.jpg");
@@ -113,12 +168,18 @@ int main()
   KeyboardInput::SetAnActionToKey("toggleLockMouse", (uint16)'F');
   KeyboardInput::SetAnActionToKey("close", (uint16)0x1B); // escape
   KeyboardInput::SetAnActionToKey("speed", (uint16)0x10); // shift
+  KeyboardInput::SetAnActionToKey("toggleCaptureMouse", (uint16)'M');
 
-  bool lockMouse = false;
+  bool      lockMouse           = false;
+  bool      disableMouseCapture = false;
   DM::Vec2i mpLast;
 
   while (wnd.IsOpen() && !KeyboardInput::IsKeyPressed("close"))
   {
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
     float dt = (float)t.Stop();
 
     wnd.PollEvents();
@@ -132,6 +193,12 @@ int main()
       else
         ShowCursor(true);
     }
+    if (KeyboardInput::IsKeyFirstPressedThisFrame("toggleCaptureMouse"))
+    {
+      ShowCursor(true);
+      lockMouse           = false;
+      disableMouseCapture = !disableMouseCapture;
+    }
 
     {
       {
@@ -139,30 +206,33 @@ int main()
         EventHandler::ClearEvents(Event::Type::MouseMoved);
         if (!events.empty())
         {
-          for (Event* event_p : events)
+          if (!disableMouseCapture)
           {
-            EventMouseMoved* mouseEvent_p = (EventMouseMoved*)event_p;
-            float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed;
-            float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed;
-            if (!lockMouse)
+            for (Event* event_p : events)
             {
-              mpLast                        = mouseEvent_p->MousePosition;
-              if (mouseEvent_p->MButtonPressed)
+              EventMouseMoved* mouseEvent_p = (EventMouseMoved*)event_p;
+              float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed;
+              float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed;
+              if (!lockMouse)
               {
-                camera.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
+                mpLast = mouseEvent_p->MousePosition;
+                if (mouseEvent_p->MButtonPressed)
+                {
+                  camera.Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
+                }
+                if (mouseEvent_p->LButtonPressed)
+                  camera.Rotate(dy, dx, 0.0f);
               }
-              if (mouseEvent_p->LButtonPressed)
-                camera.Rotate(dy, dx, 0.0f);
-            }
-            else
-            {
-              int x = mpLast.x;
-              int y = mpLast.y;
+              else
+              {
+                int x = mpLast.x;
+                int y = mpLast.y;
 
-              dx = ((float)mouseEvent_p->MousePosition.x - x) * -speed;
-              dy = ((float)mouseEvent_p->MousePosition.y - y) * -speed;
-              camera.Rotate(dy, dx, 0.0f);
-              wnd.SetMousePosition(mpLast.x, mpLast.y);
+                dx = ((float)mouseEvent_p->MousePosition.x - x) * -speed;
+                dy = ((float)mouseEvent_p->MousePosition.y - y) * -speed;
+                camera.Rotate(dy, dx, 0.0f);
+                wnd.SetMousePosition(mpLast.x, mpLast.y);
+              }
             }
           }
           for (uint i = 0; i < events.size(); i++)
@@ -170,6 +240,14 @@ int main()
         }
       }
     }
+    if (disableMouseCapture)
+    {
+      if (PlanetGenModifier(genType))
+      {
+        planet.UpdateGeneration(genType);
+      }
+    }
+
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
       EventHandler::ClearEvents(Event::Type::MouseWheel);
@@ -212,9 +290,9 @@ int main()
     if (KeyboardInput::IsKeyPressed("rollLeft"))
       camera.Rotate(0, 0, -dt);
 
-    planet.Rotate(0, rotationSpeed* dt* DirectX::XM_PI, 0);
+    planet.Rotate(0, rotationSpeed * dt * DirectX::XM_PI, 0);
     planet.UpdateConstantBuffer();
-    
+
     skybox.SetPosition(camera.GetPosition());
     skybox.UpdateConstantBuffer();
 

@@ -6,6 +6,9 @@
 #include "Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_dx12.h>
+#include <imgui/imgui_impl_win32.h>
 
 struct IDXGISwapChain4;
 
@@ -40,6 +43,8 @@ public:
 
   void Clear(const Vector4f& color = Vector4f());
 
+  void DrawImgui();
+
   void Flush();
 
   void EndFrame();
@@ -54,6 +59,7 @@ private:
                                      ID3D12Resource*            resource_p,
                                      D3D12_RESOURCE_STATES      StateBefore,
                                      D3D12_RESOURCE_STATES      StateAfter);
+  void _InitImgui(HWND hwnd);
 
 private:
   static const uint            NUM_SWAP_BUFFERS = 2u;
@@ -86,4 +92,7 @@ private:
   uint64           myFenceValue                         = 0u;
 
   uint mySrvUavCbvDescriptorSize = 0u;
+
+  ID3D12DescriptorHeap* myImguiDescHeap_p = nullptr;
+
 };

@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "../events/Event.h"
 #include <assert.h>
+#include <imgui/imgui.h>
 
 Window::Window(uint x, uint y, const std::string& title)
     : myTitle(title)
@@ -56,6 +57,7 @@ Window::~Window() { }
 
 bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {
+  ImGuiIO& io = ImGui::GetIO();
   switch (aMessage)
   {
   case WM_DESTROY:
@@ -99,6 +101,10 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
     ev_p->LButtonPressed = aWParam & MK_LBUTTON;
     ev_p->RButtonPressed = aWParam & MK_RBUTTON;
     ev_p->Signal();
+
+    if (ev_p->LButtonPressed)
+      io.AddMouseButtonEvent(0, true);
+
     return true;
   }
   case WM_RBUTTONUP:
@@ -115,6 +121,10 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
     ev_p->LButtonReleased = aMessage == WM_LBUTTONUP;
     ev_p->RButtonReleased = aMessage == WM_RBUTTONUP;
     ev_p->Signal();
+
+    if (ev_p->LButtonReleased)
+      io.AddMouseButtonEvent(0, false);
+
     return true;
   }
   case WM_MOUSEMOVE:
@@ -134,13 +144,13 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 
     return true;
   }
-  case WM_MOUSEWHEEL:
+ /* case WM_MOUSEWHEEL:
   {
     EventMouseWheel* ev_p = new EventMouseWheel();
     ev_p->Delta           = GET_WHEEL_DELTA_WPARAM(aWParam);
     ev_p->Signal();
     return true;
-  }
+  }*/
   }
 
   return false;
