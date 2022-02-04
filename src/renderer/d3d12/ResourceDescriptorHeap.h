@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ConstantBuffer.h"
+#include "../buffers/ConstantBuffer.h"
 #include <vector>
 
 struct ID3D12DescriptorHeap;

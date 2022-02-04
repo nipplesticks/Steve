@@ -1,7 +1,7 @@
 #include "ResourceDescriptorHeap.h"
-#include "../utility/RenderUtility.h"
+#include "../../utility/RenderUtility.h"
 #include "Renderer.h"
-#include "TextureBuffer.h"
+#include "../buffers/TextureBuffer.h"
 
 #include <d3d12.h>
 
@@ -9,11 +9,11 @@ void ResourceDescriptorHeap::Create(const std::vector<ConstantBuffer*>& constant
                                     const std::vector<TextureBuffer*>  textureBuffers)
 {
   ID3D12Device* gDevice_p             = Renderer::GetDevice();
-  myNumberOfConstantBuffers           = constantBuffers.size();
+  myNumberOfConstantBuffers           = (uint)constantBuffers.size();
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
   heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-  heapDesc.NumDescriptors             = constantBuffers.size() + textureBuffers.size();
+  heapDesc.NumDescriptors             = (UINT)constantBuffers.size() + (UINT)textureBuffers.size();
 
   HR_ASSERT(gDevice_p->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&myHeap_p)));
 

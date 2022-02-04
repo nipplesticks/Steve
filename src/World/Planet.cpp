@@ -1,8 +1,8 @@
 #include "Planet.h"
 #include "../Noise/PerlinNoise.h"
-#include "../renderer/Camera.h"
-#include "../renderer/Renderer.h"
-#include "../renderer/TextureLoader.h"
+#include "../renderer/camera/Camera.h"
+#include "../renderer/d3d12/Renderer.h"
+#include "../renderer/textureLoader/TextureLoader.h"
 #include "../utility/Timer.h"
 #include <iostream>
 #include <map>
@@ -75,7 +75,7 @@ void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
 
 void Planet::Create(float size, uint div, float uvTiles, Planet::GenerationType genType)
 {
-  DM::Vec4f waterLevel(1.0f + genType.waterLevel);
+  DM::Vec4f waterLevel(1.0f + (float)genType.waterLevel);
 
   myWaterLevel.Init(sizeof(waterLevel));
   myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
@@ -92,11 +92,11 @@ void Planet::Create(float size, uint div, float uvTiles, Planet::GenerationType 
 
   _createVertices(verts, points);
 
-  //_detectWrappedUVCoords(indices, verts, wrappedIndices);
+  _detectWrappedUVCoords(indices, verts, wrappedIndices);
 
-  //_fixWrappedUVCoords(wrappedIndices, indices, verts);
+  _fixWrappedUVCoords(wrappedIndices, indices, verts);
 
-  //_fixSharedPoleVertices(indices, verts);
+  _fixSharedPoleVertices(indices, verts);
 
   _scaleUVs(verts, uvTiles);
 
@@ -128,7 +128,7 @@ void Planet::Create(float size, uint div, float uvTiles, Planet::GenerationType 
 
 void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType genType)
 {
-  DM::Vec4f waterLevel(1.0f + genType.waterLevel);
+  DM::Vec4f waterLevel(1.0f + (float)genType.waterLevel);
 
   myWaterLevel.Init(sizeof(waterLevel));
   myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
@@ -149,7 +149,7 @@ void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType
 
   _fixWrappedUVCoords(wrappedIndices, indices, verts);
 
-  //_fixSharedPoleVertices(indices, verts);
+  _fixSharedPoleVertices(indices, verts);
 
   _scaleUVs(verts, uvTiles);
 
@@ -187,7 +187,7 @@ void Planet::UpdateGeneration(GenerationType genType)
   _generateHeightMapAndTexture(&H, &D, genType);
   myHeightMapBuffer.Update(Renderer::GetInstance(), H.pixels.data());
   myTextureBuffer.Update(Renderer::GetInstance(), D.pixels.data());
-  DM::Vec4f waterLevel(1.0f + genType.waterLevel);
+  DM::Vec4f waterLevel(1.0f + (float)genType.waterLevel);
   myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
 }
 
@@ -292,7 +292,7 @@ void Planet::_createIcosahedron(std::vector<uint>& indices, std::vector<DM::Vec3
 void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
                                    std::vector<DM::Vec3f>& vertices)
 {
-  uint numTri    = triangles.size();
+  uint numTri    = (uint)triangles.size();
   uint lastTri   = numTri;
   uint numTriNew = numTri;
   triangles.resize(numTri + numTri * 3u);
@@ -316,7 +316,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(ab) == vertIdxMap.end())
     {
       vertices.push_back(ab);
-      abIdx          = vertices.size() - 1;
+      abIdx          = (uint)vertices.size() - 1;
       vertIdxMap[ab] = abIdx;
     }
     else
@@ -326,7 +326,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(bc) == vertIdxMap.end())
     {
       vertices.push_back(bc);
-      bcIdx          = vertices.size() - 1;
+      bcIdx          = (uint)vertices.size() - 1;
       vertIdxMap[bc] = bcIdx;
     }
     else
@@ -336,7 +336,7 @@ void Planet::_subdivideIcosahedron(std::vector<Triangle>&  triangles,
     if (vertIdxMap.find(ca) == vertIdxMap.end())
     {
       vertices.push_back(ca);
-      caIdx          = vertices.size() - 1;
+      caIdx          = (uint)vertices.size() - 1;
       vertIdxMap[ca] = caIdx;
     }
     else
@@ -376,7 +376,7 @@ void Planet::_detectWrappedUVCoords(std::vector<uint>&   indices,
                                     std::vector<Vertex>& vertices,
                                     std::vector<uint>&   wrappedIndices)
 {
-  uint nrOfIndices = indices.size();
+  uint nrOfIndices = (uint)indices.size();
 
   for (uint i = 0; i < nrOfIndices; i += 3)
   {
@@ -397,7 +397,7 @@ void Planet::_fixWrappedUVCoords(std::vector<uint>&   wrapped,
                                  std::vector<uint>&   indices,
                                  std::vector<Vertex>& vertices)
 {
-  uint                           verticeIndex = vertices.size() - 1;
+  uint                           verticeIndex = (uint)vertices.size() - 1;
   std::unordered_map<uint, uint> visited;
 
   for (auto& i : wrapped)
@@ -470,7 +470,7 @@ void Planet::_fixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vert
 {
   uint northIdx  = UINT_MAX;
   uint southIdx  = UINT_MAX;
-  uint vertexIdx = vertices.size() - 1;
+  uint vertexIdx = (uint)vertices.size() - 1;
   for (uint i = 0; i < vertices.size(); i++)
   {
     if (northIdx != UINT_MAX && southIdx != UINT_MAX)
@@ -561,8 +561,8 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
     if (v.uv.y < 0)
       _y = 1.0f + _y;
 
-    uint x = heightMap->width * _x;
-    uint y = heightMap->height * _y;
+    uint x = (uint)(heightMap->width * _x);
+    uint y = (uint)(heightMap->height * _y);
 
     float height = GetHeight(x, y, 0, 0.5f);
 

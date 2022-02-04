@@ -1,13 +1,11 @@
-#include "VertexBuffer.h"
-#include "../utility/RenderUtility.h"
-#include "Renderer.h"
+#include "IndexBuffer.h"
+#include "../../utility/RenderUtility.h"
+#include "../d3d12/Renderer.h"
 
-void VertexBuffer::Init(uint size, uint stride)
+void IndexBuffer::Init(uint indexCount)
 {
-
-  assert((size % stride) == 0);
-  myNumVertices                   = size / stride;
-  size                            = AlignAs256(size);
+  myNumIndices                    = indexCount;
+  uint size                       = indexCount * sizeof(uint);
   ID3D12Device5*        gDevice_p = Renderer::GetDevice();
   D3D12_HEAP_PROPERTIES heapProp  = {};
   heapProp.Type                   = D3D12_HEAP_TYPE_UPLOAD;
@@ -31,32 +29,33 @@ void VertexBuffer::Init(uint size, uint stride)
                                                &desc,
                                                D3D12_RESOURCE_STATE_GENERIC_READ,
                                                nullptr,
-                                               IID_PPV_ARGS(&myVertexBuffer_p)));
+                                               IID_PPV_ARGS(&myIndexBuffer_p)));
 
-  myVertexBufferView.BufferLocation = myVertexBuffer_p->GetGPUVirtualAddress();
-  myVertexBufferView.SizeInBytes    = size;
-  myVertexBufferView.StrideInBytes  = stride;
+  myIndexBufferView.BufferLocation = myIndexBuffer_p->GetGPUVirtualAddress();
+  myIndexBufferView.SizeInBytes    = size;
+  myIndexBufferView.Format         = DXGI_FORMAT_R32_UINT;
 }
 
-void VertexBuffer::Update(void* data, uint size)
+void IndexBuffer::Update(void* data)
 {
+  uint  size     = myNumIndices * sizeof(uint);
   void* adress_p = nullptr;
-  HR_ASSERT(myVertexBuffer_p->Map(0, nullptr, &adress_p));
+  HR_ASSERT(myIndexBuffer_p->Map(0, nullptr, &adress_p));
   memcpy(adress_p, data, size);
-  myVertexBuffer_p->Unmap(0, nullptr);
+  myIndexBuffer_p->Unmap(0, nullptr);
 }
 
-ID3D12Resource* VertexBuffer::GetResource()
+ID3D12Resource* IndexBuffer::GetResource()
 {
-  return myVertexBuffer_p;
+  return myIndexBuffer_p;
 }
 
-const D3D12_VERTEX_BUFFER_VIEW& VertexBuffer::GetVBV() const
+const D3D12_INDEX_BUFFER_VIEW& IndexBuffer::GetIBV() const
 {
-  return myVertexBufferView;
+  return myIndexBufferView;
 }
 
-uint VertexBuffer::GetVertexCount() const
+uint IndexBuffer::GetIndexCount() const
 {
-  return myNumVertices;
+  return myNumIndices;
 }

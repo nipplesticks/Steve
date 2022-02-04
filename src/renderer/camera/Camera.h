@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../utility/DMath.h"
-#include "ConstantBuffer.h"
+#include "../../utility/DMath.h"
+#include "../buffers/ConstantBuffer.h"
 
 class Camera
 {

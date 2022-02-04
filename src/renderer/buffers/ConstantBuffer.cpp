@@ -1,11 +1,12 @@
-#include "IndexBuffer.h"
-#include "../utility/RenderUtility.h"
-#include "Renderer.h"
+#include "ConstantBuffer.h"
+#include "../../utility/RenderUtility.h"
+#include "../d3d12/Renderer.h"
+#include "../../utility/UtilityFuncs.h"
 
-void IndexBuffer::Init(uint indexCount)
+void ConstantBuffer::Init(uint dataByteSize)
 {
-  myNumIndices                    = indexCount;
-  uint size                       = indexCount * sizeof(uint);
+  myByteSize                      = dataByteSize;
+  dataByteSize                    = AlignAs256(dataByteSize);
   ID3D12Device5*        gDevice_p = Renderer::GetDevice();
   D3D12_HEAP_PROPERTIES heapProp  = {};
   heapProp.Type                   = D3D12_HEAP_TYPE_UPLOAD;
@@ -18,7 +19,7 @@ void IndexBuffer::Init(uint indexCount)
   desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
   desc.Format              = DXGI_FORMAT_UNKNOWN;
   desc.Height              = 1;
-  desc.Width               = size;
+  desc.Width               = dataByteSize;
   desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   desc.MipLevels           = 1;
   desc.SampleDesc.Count    = 1;
@@ -29,33 +30,24 @@ void IndexBuffer::Init(uint indexCount)
                                                &desc,
                                                D3D12_RESOURCE_STATE_GENERIC_READ,
                                                nullptr,
-                                               IID_PPV_ARGS(&myIndexBuffer_p)));
-
-  myIndexBufferView.BufferLocation = myIndexBuffer_p->GetGPUVirtualAddress();
-  myIndexBufferView.SizeInBytes    = size;
-  myIndexBufferView.Format         = DXGI_FORMAT_R32_UINT;
+                                               IID_PPV_ARGS(&myConstantBuffer_p)));
 }
 
-void IndexBuffer::Update(void* data)
+void ConstantBuffer::Update(void* data_p, uint dataByteSize)
 {
-  uint  size     = myNumIndices * sizeof(uint);
+  ASSERT_STR(dataByteSize <= myByteSize, "Passed size is greater than allocated resource");
   void* adress_p = nullptr;
-  HR_ASSERT(myIndexBuffer_p->Map(0, nullptr, &adress_p));
-  memcpy(adress_p, data, size);
-  myIndexBuffer_p->Unmap(0, nullptr);
+  HR_ASSERT(myConstantBuffer_p->Map(0, nullptr, &adress_p));
+  memcpy(adress_p, data_p, dataByteSize);
+  myConstantBuffer_p->Unmap(0, nullptr);
 }
 
-ID3D12Resource* IndexBuffer::GetResource()
+uint ConstantBuffer::GetByteSize() const
 {
-  return myIndexBuffer_p;
+  return myByteSize;
 }
 
-const D3D12_INDEX_BUFFER_VIEW& IndexBuffer::GetIBV() const
+ID3D12Resource* ConstantBuffer::GetResource() const
 {
-  return myIndexBufferView;
-}
-
-uint IndexBuffer::GetIndexCount() const
-{
-  return myNumIndices;
+  return myConstantBuffer_p;
 }

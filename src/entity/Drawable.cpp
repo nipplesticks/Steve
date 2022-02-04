@@ -1,8 +1,8 @@
 #include "Drawable.h"
-#include "../renderer/Mesh.h"
-#include "../renderer/TextureBuffer.h"
-#include "../renderer/GraphicsPipelineState.h"
-#include "../renderer/Camera.h"
+#include "../renderer/mesh/Mesh.h"
+#include "../renderer/buffers/TextureBuffer.h"
+#include "../renderer/d3d12/GraphicsPipelineState.h"
+#include "../renderer/camera/Camera.h"
 #include "../utility/UtilityFuncs.h"
 
 std::unordered_map<GraphicsPipelineState*, Drawable::DrawQueue> Drawable::DRAW_QUEUE;

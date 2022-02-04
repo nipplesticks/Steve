@@ -1,7 +1,7 @@
 #pragma once
 #define NOMINMAX
-#include "../renderer/ConstantBuffer.h"
-#include "../renderer/ResourceDescriptorHeap.h"
+#include "../renderer/buffers/ConstantBuffer.h"
+#include "../renderer/d3d12/ResourceDescriptorHeap.h"
 #include "Transform.h"
 #include <unordered_map>
 #include <vector>

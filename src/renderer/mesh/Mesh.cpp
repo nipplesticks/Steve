@@ -15,7 +15,7 @@ uint Mesh::GetTotalByteSizeOfVertices() const
 
 uint Mesh::GetByteSizeOfVertices(uint idx) const
 {
-  return sizeof(myMesh[0][0]) * myMesh[idx].size();
+  return sizeof(myMesh[0][0]) * (uint)myMesh[idx].size();
 }
 
 DirectX::XMFLOAT4A AssimpToXmFloat4A(const aiVector3D& vec, float w = 1.0f)
@@ -168,7 +168,7 @@ const std::vector<Mesh::Buffers>& Mesh::GetBuffers() const
 
 uint Mesh::GetMeshesCount() const
 {
-  return myMesh.size();
+  return (uint)myMesh.size();
 }
 
 Vertex* Mesh::GetRawVertices(uint idx)
@@ -183,14 +183,14 @@ const std::vector<Vertex>& Mesh::GetVertices(uint idx) const
 
 uint Mesh::GetNumberOfVertices(uint idx) const
 {
-  return myMesh[idx].size();
+  return (uint)myMesh[idx].size();
 }
 
 uint Mesh::GetTotalNumberOfVertices() const
 {
   uint nrVerts = 0;
   for (auto & vb : myMesh)
-    nrVerts += vb.size();
+    nrVerts += (uint)vb.size();
   return nrVerts;
 }
 
@@ -211,14 +211,14 @@ const std::vector<uint>& Mesh::GetIndices(uint idx) const
 
 uint Mesh::GetNumberOfIndices(uint idx) const
 {
-  return myIndices[idx].size();
+  return (uint)myIndices[idx].size();
 }
 
 uint Mesh::GetTotalNumberOfIndices() const
 {
   uint nrIndices = 0;
   for (auto& ib : myIndices)
-    nrIndices += ib.size();
+    nrIndices += (uint)ib.size();
   return nrIndices;
 }
 

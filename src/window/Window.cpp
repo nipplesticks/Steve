@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <imgui/imgui.h>
 
+bool Window::IMGUI_READY = false;
+
 Window::Window(uint x, uint y, const std::string& title)
     : myTitle(title)
 {
@@ -25,7 +27,7 @@ Window::Window(uint x, uint y, const std::string& title)
   DWORD style   = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
   DWORD exStyle = WS_EX_OVERLAPPEDWINDOW;
 
-  RECT rc = {0, 0, x, y};
+  RECT rc = {0, 0, (LONG)x, (LONG)y};
   AdjustWindowRectEx(&rc, style, FALSE, exStyle);
 
   std::wstring wndTitle(myTitle.begin(), myTitle.end());
@@ -57,7 +59,12 @@ Window::~Window() { }
 
 bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {
-  ImGuiIO& io = ImGui::GetIO();
+  ImGuiIO  temp;
+  ImGuiIO& io = temp;
+
+  if (Window::IMGUI_READY)
+    io = ImGui::GetIO();
+
   switch (aMessage)
   {
   case WM_DESTROY:

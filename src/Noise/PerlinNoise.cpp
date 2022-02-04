@@ -20,7 +20,6 @@ PerlinNoise::PerlinNoise(const std::string& seed)
   int         finalSeed = 0;
   uint        i         = 0;
   for (auto& c : seed)
-
   {
     _s[i++] = std::to_string(((int)c))[0];
   }

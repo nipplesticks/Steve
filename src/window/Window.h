@@ -8,6 +8,7 @@
 class Window
 {
 public:
+  static bool IMGUI_READY;
   Window(uint x, uint y, const std::string& title = "");
   ~Window();
 

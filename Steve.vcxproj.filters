@@ -21,22 +21,22 @@
     <ClCompile Include="src\window\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\Renderer.cpp">
+    <ClCompile Include="src\renderer\d3d12\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\Mesh.cpp">
+    <ClCompile Include="src\renderer\mesh\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\VertexBuffer.cpp">
+    <ClCompile Include="src\renderer\buffers\VertexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\IndexBuffer.cpp">
+    <ClCompile Include="src\renderer\buffers\IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\TextureLoader.cpp">
+    <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\TextureBuffer.cpp">
+    <ClCompile Include="src\renderer\buffers\TextureBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\World\Planet.cpp">
@@ -48,19 +48,19 @@
     <ClCompile Include="src\events\EventHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\ConstantBuffer.cpp">
+    <ClCompile Include="src\renderer\buffers\ConstantBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\GraphicsPipelineState.cpp">
+    <ClCompile Include="src\renderer\d3d12\GraphicsPipelineState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\ResourceDescriptorHeap.cpp">
+    <ClCompile Include="src\renderer\d3d12\ResourceDescriptorHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\Camera.cpp">
+    <ClCompile Include="src\renderer\camera\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\FpsCamera.cpp">
+    <ClCompile Include="src\renderer\camera\FpsCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Input\KeyboardInput.cpp">
@@ -72,7 +72,7 @@
     <ClCompile Include="src\entity\Drawable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\OrbitCamera.cpp">
+    <ClCompile Include="src\renderer\camera\OrbitCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Noise\PerlinNoise.cpp">
@@ -110,7 +110,7 @@
     <ClInclude Include="src\utility\Vector2u.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\Renderer.h">
+    <ClInclude Include="src\renderer\d3d12\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\Vector3f.h">
@@ -125,31 +125,31 @@
     <ClInclude Include="src\utility\DMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\Mesh.h">
+    <ClInclude Include="src\renderer\mesh\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\Vertex.h">
+    <ClInclude Include="src\renderer\mesh\Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\VertexBuffer.h">
+    <ClInclude Include="src\renderer\buffers\VertexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\IndexBuffer.h">
+    <ClInclude Include="src\renderer\buffers\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\TextureLoader.h">
+    <ClInclude Include="src\renderer\textureLoader\TextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\stb_image.h">
+    <ClInclude Include="src\renderer\textureLoader\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\TextureBuffer.h">
+    <ClInclude Include="src\renderer\buffers\TextureBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\d3dx12.h">
+    <ClInclude Include="src\renderer\d3d12\d3dx12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\World\Planet.h">
@@ -161,22 +161,22 @@
     <ClInclude Include="src\events\EventHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\ConstantBuffer.h">
+    <ClInclude Include="src\renderer\buffers\ConstantBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\UtilityFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\GraphicsPipelineState.h">
+    <ClInclude Include="src\renderer\d3d12\GraphicsPipelineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\ResourceDescriptorHeap.h">
+    <ClInclude Include="src\renderer\d3d12\ResourceDescriptorHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\Camera.h">
+    <ClInclude Include="src\renderer\camera\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\FpsCamera.h">
+    <ClInclude Include="src\renderer\camera\FpsCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Input\KeyboardInput.h">
@@ -188,7 +188,7 @@
     <ClInclude Include="src\entity\Drawable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\OrbitCamera.h">
+    <ClInclude Include="src\renderer\camera\OrbitCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Noise\PerlinNoise.h">
@@ -228,5 +228,11 @@
     <FxCompile Include="assets\shaders\PlanetVertexShaderWithOffset.hlsl" />
     <FxCompile Include="assets\shaders\GeometryShaderCalcNormal.hlsl" />
     <FxCompile Include="assets\shaders\GeometryShader.hlsl" />
+    <FxCompile Include="assets\shaders\GenerateHightmap.hlsl" />
+    <FxCompile Include="assets\shaders\GenerateDiffuse.hlsl" />
+    <FxCompile Include="assets\shaders\GenerateBump.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\PerlinNoise_cs.hlsli" />
   </ItemGroup>
 </Project>

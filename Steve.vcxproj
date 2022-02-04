@@ -164,18 +164,18 @@
     <ClCompile Include="src\events\EventHandler.cpp" />
     <ClCompile Include="src\Input\KeyboardInput.cpp" />
     <ClCompile Include="src\Noise\PerlinNoise.cpp" />
-    <ClCompile Include="src\renderer\Camera.cpp" />
-    <ClCompile Include="src\renderer\ConstantBuffer.cpp" />
-    <ClCompile Include="src\renderer\FpsCamera.cpp" />
-    <ClCompile Include="src\renderer\GraphicsPipelineState.cpp" />
-    <ClCompile Include="src\renderer\IndexBuffer.cpp" />
-    <ClCompile Include="src\renderer\Mesh.cpp" />
-    <ClCompile Include="src\renderer\OrbitCamera.cpp" />
-    <ClCompile Include="src\renderer\Renderer.cpp" />
-    <ClCompile Include="src\renderer\ResourceDescriptorHeap.cpp" />
-    <ClCompile Include="src\renderer\TextureBuffer.cpp" />
-    <ClCompile Include="src\renderer\TextureLoader.cpp" />
-    <ClCompile Include="src\renderer\VertexBuffer.cpp" />
+    <ClCompile Include="src\renderer\camera\Camera.cpp" />
+    <ClCompile Include="src\renderer\buffers\ConstantBuffer.cpp" />
+    <ClCompile Include="src\renderer\camera\FpsCamera.cpp" />
+    <ClCompile Include="src\renderer\d3d12\GraphicsPipelineState.cpp" />
+    <ClCompile Include="src\renderer\buffers\IndexBuffer.cpp" />
+    <ClCompile Include="src\renderer\mesh\Mesh.cpp" />
+    <ClCompile Include="src\renderer\camera\OrbitCamera.cpp" />
+    <ClCompile Include="src\renderer\d3d12\Renderer.cpp" />
+    <ClCompile Include="src\renderer\d3d12\ResourceDescriptorHeap.cpp" />
+    <ClCompile Include="src\renderer\buffers\TextureBuffer.cpp" />
+    <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp" />
+    <ClCompile Include="src\renderer\buffers\VertexBuffer.cpp" />
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
     <ClCompile Include="src\World\Planet.cpp" />
@@ -194,21 +194,21 @@
     <ClInclude Include="src\events\EventHandler.h" />
     <ClInclude Include="src\Input\KeyboardInput.h" />
     <ClInclude Include="src\Noise\PerlinNoise.h" />
-    <ClInclude Include="src\renderer\FpsCamera.h" />
-    <ClInclude Include="src\renderer\Camera.h" />
-    <ClInclude Include="src\renderer\ConstantBuffer.h" />
-    <ClInclude Include="src\renderer\d3dx12.h" />
-    <ClInclude Include="src\renderer\GraphicsPipelineState.h" />
-    <ClInclude Include="src\renderer\IndexBuffer.h" />
-    <ClInclude Include="src\renderer\Mesh.h" />
-    <ClInclude Include="src\renderer\OrbitCamera.h" />
-    <ClInclude Include="src\renderer\Renderer.h" />
-    <ClInclude Include="src\renderer\ResourceDescriptorHeap.h" />
-    <ClInclude Include="src\renderer\stb_image.h" />
-    <ClInclude Include="src\renderer\TextureBuffer.h" />
-    <ClInclude Include="src\renderer\TextureLoader.h" />
-    <ClInclude Include="src\renderer\Vertex.h" />
-    <ClInclude Include="src\renderer\VertexBuffer.h" />
+    <ClInclude Include="src\renderer\camera\FpsCamera.h" />
+    <ClInclude Include="src\renderer\camera\Camera.h" />
+    <ClInclude Include="src\renderer\buffers\ConstantBuffer.h" />
+    <ClInclude Include="src\renderer\d3d12\d3dx12.h" />
+    <ClInclude Include="src\renderer\d3d12\GraphicsPipelineState.h" />
+    <ClInclude Include="src\renderer\buffers\IndexBuffer.h" />
+    <ClInclude Include="src\renderer\mesh\Mesh.h" />
+    <ClInclude Include="src\renderer\camera\OrbitCamera.h" />
+    <ClInclude Include="src\renderer\d3d12\Renderer.h" />
+    <ClInclude Include="src\renderer\d3d12\ResourceDescriptorHeap.h" />
+    <ClInclude Include="src\renderer\textureLoader\stb_image.h" />
+    <ClInclude Include="src\renderer\buffers\TextureBuffer.h" />
+    <ClInclude Include="src\renderer\textureLoader\TextureLoader.h" />
+    <ClInclude Include="src\renderer\mesh\Vertex.h" />
+    <ClInclude Include="src\renderer\buffers\VertexBuffer.h" />
     <ClInclude Include="src\entity\Transform.h" />
     <ClInclude Include="src\utility\DMath.h" />
     <ClInclude Include="src\utility\RenderUtility.h" />
@@ -222,6 +222,36 @@
     <ClInclude Include="src\World\Planet.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="assets\shaders\GenerateBump.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="assets\shaders\GenerateDiffuse.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="assets\shaders\GenerateHightmap.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="assets\shaders\GeometryShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
@@ -298,6 +328,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\PerlinNoise_cs.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

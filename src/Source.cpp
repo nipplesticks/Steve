@@ -1,17 +1,17 @@
 #include "Input/KeyboardInput.h"
 #include "World/Planet.h"
 #include "events/EventHandler.h"
-#include "renderer/ConstantBuffer.h"
-#include "renderer/FpsCamera.h"
-#include "renderer/GraphicsPipelineState.h"
-#include "renderer/IndexBuffer.h"
-#include "renderer/Mesh.h"
-#include "renderer/OrbitCamera.h"
-#include "renderer/Renderer.h"
-#include "renderer/ResourceDescriptorHeap.h"
-#include "renderer/TextureBuffer.h"
-#include "renderer/TextureLoader.h"
-#include "renderer/VertexBuffer.h"
+#include "renderer/buffers/ConstantBuffer.h"
+#include "renderer/camera/FpsCamera.h"
+#include "renderer/d3d12/GraphicsPipelineState.h"
+#include "renderer/buffers/IndexBuffer.h"
+#include "renderer/mesh/Mesh.h"
+#include "renderer/camera/OrbitCamera.h"
+#include "renderer/d3d12/Renderer.h"
+#include "renderer/d3d12/ResourceDescriptorHeap.h"
+#include "renderer/buffers/TextureBuffer.h"
+#include "renderer/textureLoader/TextureLoader.h"
+#include "renderer/buffers/VertexBuffer.h"
 #include "utility/Timer.h"
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
@@ -55,7 +55,7 @@ bool PlanetGenModifier(Planet::GenerationType& genType)
   ImGui::Begin("Planet Generation Modifier");
 
   ImGui::Text("Generic");
-  ImGui::SliderInt("Seed", &seed, 0, INT_MAX);
+  ImGui::SliderInt("Seed", &seed, 0, INT_MAX / 2);
   genType.seed = static_cast<uint>(seed);
   ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 1.0f);
   genType.waterLevel = static_cast<double>(waterLevel);

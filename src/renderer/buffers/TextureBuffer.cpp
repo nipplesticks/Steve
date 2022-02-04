@@ -1,6 +1,6 @@
 #include "TextureBuffer.h"
-#include "../utility/RenderUtility.h"
-#include "Renderer.h"
+#include "../../utility/RenderUtility.h"
+#include "../d3d12/Renderer.h"
 
 void TextureBuffer::Init(uint width, uint height, uint channels)
 {

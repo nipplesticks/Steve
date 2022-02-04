@@ -1,12 +1,13 @@
-#include "ConstantBuffer.h"
-#include "../utility/RenderUtility.h"
-#include "Renderer.h"
-#include "../utility/UtilityFuncs.h"
+#include "VertexBuffer.h"
+#include "../../utility/RenderUtility.h"
+#include "../d3d12/Renderer.h"
 
-void ConstantBuffer::Init(uint dataByteSize)
+void VertexBuffer::Init(uint size, uint stride)
 {
-  myByteSize                      = dataByteSize;
-  dataByteSize                    = AlignAs256(dataByteSize);
+
+  assert((size % stride) == 0);
+  myNumVertices                   = size / stride;
+  size                            = AlignAs256(size);
   ID3D12Device5*        gDevice_p = Renderer::GetDevice();
   D3D12_HEAP_PROPERTIES heapProp  = {};
   heapProp.Type                   = D3D12_HEAP_TYPE_UPLOAD;
@@ -19,7 +20,7 @@ void ConstantBuffer::Init(uint dataByteSize)
   desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
   desc.Format              = DXGI_FORMAT_UNKNOWN;
   desc.Height              = 1;
-  desc.Width               = dataByteSize;
+  desc.Width               = size;
   desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   desc.MipLevels           = 1;
   desc.SampleDesc.Count    = 1;
@@ -30,24 +31,32 @@ void ConstantBuffer::Init(uint dataByteSize)
                                                &desc,
                                                D3D12_RESOURCE_STATE_GENERIC_READ,
                                                nullptr,
-                                               IID_PPV_ARGS(&myConstantBuffer_p)));
+                                               IID_PPV_ARGS(&myVertexBuffer_p)));
+
+  myVertexBufferView.BufferLocation = myVertexBuffer_p->GetGPUVirtualAddress();
+  myVertexBufferView.SizeInBytes    = size;
+  myVertexBufferView.StrideInBytes  = stride;
 }
 
-void ConstantBuffer::Update(void* data_p, uint dataByteSize)
+void VertexBuffer::Update(void* data, uint size)
 {
-  ASSERT_STR(dataByteSize <= myByteSize, "Passed size is greater than allocated resource");
   void* adress_p = nullptr;
-  HR_ASSERT(myConstantBuffer_p->Map(0, nullptr, &adress_p));
-  memcpy(adress_p, data_p, dataByteSize);
-  myConstantBuffer_p->Unmap(0, nullptr);
+  HR_ASSERT(myVertexBuffer_p->Map(0, nullptr, &adress_p));
+  memcpy(adress_p, data, size);
+  myVertexBuffer_p->Unmap(0, nullptr);
 }
 
-uint ConstantBuffer::GetByteSize() const
+ID3D12Resource* VertexBuffer::GetResource()
 {
-  return myByteSize;
+  return myVertexBuffer_p;
 }
 
-ID3D12Resource* ConstantBuffer::GetResource() const
+const D3D12_VERTEX_BUFFER_VIEW& VertexBuffer::GetVBV() const
 {
-  return myConstantBuffer_p;
+  return myVertexBufferView;
+}
+
+uint VertexBuffer::GetVertexCount() const
+{
+  return myNumVertices;
 }

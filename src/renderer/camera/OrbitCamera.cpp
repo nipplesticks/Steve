@@ -1,5 +1,5 @@
 #include "OrbitCamera.h"
-#include "../utility/UtilityFuncs.h"
+#include "../../utility/UtilityFuncs.h"
 OrbitCamera::OrbitCamera()
     : Camera()
 {

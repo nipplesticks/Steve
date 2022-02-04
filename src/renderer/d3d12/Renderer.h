@@ -1,9 +1,9 @@
 #pragma once
 #define NOMINMAX
-#include "../utility/DMath.h"
-#include "../utility/Typedef.h"
-#include "../utility/Vector4f.h"
-#include "Vertex.h"
+#include "../../utility/DMath.h"
+#include "../../utility/Typedef.h"
+#include "../../utility/Vector4f.h"
+#include "../mesh/Vertex.h"
 #include <d3d12.h>
 #include <windows.h>
 #include <imgui/imgui.h>
@@ -60,6 +60,13 @@ private:
                                      D3D12_RESOURCE_STATES      StateBefore,
                                      D3D12_RESOURCE_STATES      StateAfter);
   void _InitImgui(HWND hwnd);
+  void _createDevice();
+  void _createCommandInterfaceAndSwapChain(HWND aHwnd);
+  void _createViewport();
+  void _createFenceAndHandleEvent();
+  void _createRenderTargets();
+  void _createDepthBuffers();
+  void _setupComputeInterface();
 
 private:
   static const uint            NUM_SWAP_BUFFERS = 2u;
@@ -68,6 +75,13 @@ private:
   static uint                  gSrvUavCbvDescriptorSize;
 
   ID3D12CommandQueue* myCommandQueue_p = nullptr;
+  struct
+  {
+    ID3D12CommandQueue* commandQueue_p = nullptr;
+    ID3D12CommandAllocator* commandAllocator_p = nullptr;
+    ID3D12GraphicsCommandList4* commandList4_p     = nullptr;
+  } myComputeInterface;
+  
 
   IDXGISwapChain4* mySwapChain4_p           = nullptr;
   uint             myCurrentBackbufferIndex = 0u;

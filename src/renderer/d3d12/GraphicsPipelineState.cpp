@@ -1,6 +1,6 @@
 #include "GraphicsPipelineState.h"
-#include "../utility/RenderUtility.h"
-#include "../utility/UtilityFuncs.h"
+#include "../../utility/RenderUtility.h"
+#include "../../utility/UtilityFuncs.h"
 #include "Renderer.h"
 #include <d3dcompiler.h>
 
@@ -318,12 +318,12 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
     rangeDesc.BaseShaderRegister     = shaderObjects[i].shaderRegister;
     if (rangeDesc.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV)
     {
-      rangeDesc.OffsetInDescriptorsFromTableStart = cbvRanges.size();
+      rangeDesc.OffsetInDescriptorsFromTableStart = (UINT)cbvRanges.size();
       cbvRanges.push_back(rangeDesc);
     }
     else if (rangeDesc.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV)
     {
-      rangeDesc.OffsetInDescriptorsFromTableStart = srvRanges.size();
+      rangeDesc.OffsetInDescriptorsFromTableStart = (UINT)srvRanges.size();
       srvRanges.push_back(rangeDesc);
     }
   }
@@ -337,13 +337,13 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   // CBV
   rootParams[0].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
   rootParams[0].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
-  rootParams[0].DescriptorTable.NumDescriptorRanges = cbvRanges.size();
+  rootParams[0].DescriptorTable.NumDescriptorRanges = (UINT)cbvRanges.size();
   rootParams[0].DescriptorTable.pDescriptorRanges   = cbvRanges.data();
 
   // SRV
   rootParams[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
   rootParams[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
-  rootParams[1].DescriptorTable.NumDescriptorRanges = srvRanges.size();
+  rootParams[1].DescriptorTable.NumDescriptorRanges = (UINT)srvRanges.size();
   rootParams[1].DescriptorTable.pDescriptorRanges   = srvRanges.data();
 
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
@@ -396,7 +396,7 @@ void GraphicsPipelineState::SetInputElementDesc(
 HRESULT GraphicsPipelineState::CreatePipelineState()
 {
   InputLayout.pInputElementDescs = myInputElementDescs.data();
-  InputLayout.NumElements        = myInputElementDescs.size();
+  InputLayout.NumElements        = (UINT)myInputElementDescs.size();
   pRootSignature                 = myRootSignature_p;
   HRESULT hr                     = 0;
   HR_ASSERT(hr = Renderer::GetDevice()->CreateGraphicsPipelineState(

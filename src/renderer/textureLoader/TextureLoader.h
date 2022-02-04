@@ -1,5 +1,5 @@
 #pragma once
-#include "../utility/Typedef.h"
+#include "../../utility/Typedef.h"
 #include <vector>
 class TextureLoader
 {

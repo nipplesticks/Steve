@@ -1,5 +1,5 @@
 #include "Camera.h"
-#include "../utility/Typedef.h"
+#include "../../utility/Typedef.h"
 
 ConstantBuffer Camera::VIEW_PROJECTION_CB;
 

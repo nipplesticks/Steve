@@ -1,7 +1,7 @@
 #pragma once
 #include "../entity/Drawable.h"
-#include "../renderer/Mesh.h"
-#include "../renderer/TextureBuffer.h"
+#include "../renderer/mesh/Mesh.h"
+#include "../renderer/buffers/TextureBuffer.h"
 #include "../utility/DMath.h"
 
 struct TextureLoader::Image;

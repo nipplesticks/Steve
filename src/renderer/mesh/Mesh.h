@@ -1,12 +1,12 @@
 #pragma once
 #define NOMINMAX
-#include "../utility/Typedef.h"
-#include "TextureLoader.h"
+#include "../../utility/Typedef.h"
+#include "../textureLoader/TextureLoader.h"
 #include "Vertex.h"
 #include <string>
 #include <vector>
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
+#include "../buffers/VertexBuffer.h"
+#include "../buffers/IndexBuffer.h"
 
 class Mesh
 {

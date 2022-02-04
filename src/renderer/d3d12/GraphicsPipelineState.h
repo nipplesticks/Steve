@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/Typedef.h"
+#include "../../utility/Typedef.h"
 #include <d3d12.h>
 #include <string>
 #include <vector>
