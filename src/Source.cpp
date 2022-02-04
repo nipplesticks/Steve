@@ -242,10 +242,8 @@ int main()
     }
     if (disableMouseCapture)
     {
-      if (PlanetGenModifier(genType))
-      {
-        planet.UpdateGeneration(genType);
-      }
+      PlanetGenModifier(genType);
+      planet.UpdateGeneration(genType);
     }
 
     {
