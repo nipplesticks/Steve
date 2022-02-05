@@ -5,10 +5,10 @@
 #include "../../utility/Vector4f.h"
 #include "../mesh/Vertex.h"
 #include <d3d12.h>
-#include <windows.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui/imgui_impl_win32.h>
+#include <windows.h>
 
 struct IDXGISwapChain4;
 
@@ -18,6 +18,7 @@ class TextureBuffer;
 class ConstantBuffer;
 class GraphicsPipelineState;
 class ResourceDescriptorHeap;
+class ComputationalPipeline;
 
 class Renderer
 {
@@ -25,21 +26,33 @@ private:
   static Renderer* gRenderer_p;
   Renderer(uint x, uint y, HWND aHwnd);
   ~Renderer();
-public:
-  static void Init(uint x, uint y, HWND hwnd);
-  static void Release();
-  static Renderer* GetInstance();
 
+public:
+  static void      Init(uint x, uint y, HWND hwnd);
+  static void      Release();
+  static Renderer* GetInstance();
 
   void BeginFrame();
 
   void UploadTexture(const TextureBuffer& textureBuffer, void* data_p);
+  void ChangeResourceStateForCompute(ID3D12Resource*       resourse_p,
+                                     D3D12_RESOURCE_STATES before,
+                                     D3D12_RESOURCE_STATES after);
+
+  void ChangeResourceStateForGraphic(ID3D12Resource*       resourse_p,
+                                     D3D12_RESOURCE_STATES before,
+                                     D3D12_RESOURCE_STATES after);
 
   void Draw(const VertexBuffer&           vertexBuffer,
             const IndexBuffer&            indexBuffer,
             const ResourceDescriptorHeap& rh,
-            const GraphicsPipelineState& pipelineState);
+            const GraphicsPipelineState&  pipelineState);
 
+  void BeginCompute();
+  void Compute(const ComputationalPipeline&  pipeline,
+               const ResourceDescriptorHeap& rh,
+               const DM::Vec3i&              threads);
+  void EndCompute();
 
   void Clear(const Vector4f& color = Vector4f());
 
@@ -54,7 +67,11 @@ public:
   static uint                  GetSrvUavCbvDescriptorSize();
 
 private:
-  void _HardWait();
+  void _changeResourceState(ID3D12GraphicsCommandList4* commandList_p,
+                            ID3D12Resource*       resourse_p,
+                            D3D12_RESOURCE_STATES before,
+                            D3D12_RESOURCE_STATES after);
+  void _HardWait(ID3D12CommandQueue* commandQueue_p);
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
                                      ID3D12Resource*            resource_p,
                                      D3D12_RESOURCE_STATES      StateBefore,
@@ -77,11 +94,10 @@ private:
   ID3D12CommandQueue* myCommandQueue_p = nullptr;
   struct
   {
-    ID3D12CommandQueue* commandQueue_p = nullptr;
-    ID3D12CommandAllocator* commandAllocator_p = nullptr;
+    ID3D12CommandQueue*         commandQueue_p     = nullptr;
+    ID3D12CommandAllocator*     commandAllocator_p = nullptr;
     ID3D12GraphicsCommandList4* commandList4_p     = nullptr;
   } myComputeInterface;
-  
 
   IDXGISwapChain4* mySwapChain4_p           = nullptr;
   uint             myCurrentBackbufferIndex = 0u;
@@ -108,5 +124,4 @@ private:
   uint mySrvUavCbvDescriptorSize = 0u;
 
   ID3D12DescriptorHeap* myImguiDescHeap_p = nullptr;
-
 };

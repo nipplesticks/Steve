@@ -59,12 +59,6 @@ Window::~Window() { }
 
 bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {
-  ImGuiIO  temp;
-  ImGuiIO& io = temp;
-
-  if (Window::IMGUI_READY)
-    io = ImGui::GetIO();
-
   switch (aMessage)
   {
   case WM_DESTROY:
@@ -83,7 +77,7 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   case WM_KEYUP:
   {
     EventKeyUp* ev_p = new EventKeyUp();
-    ev_p->KeyCode      = static_cast<uint16>(aWParam);
+    ev_p->KeyCode    = static_cast<uint16>(aWParam);
     ev_p->Signal();
   }
   case WM_CHAR:
@@ -109,8 +103,13 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
     ev_p->RButtonPressed = aWParam & MK_RBUTTON;
     ev_p->Signal();
 
-    if (ev_p->LButtonPressed)
-      io.AddMouseButtonEvent(0, true);
+    if (Window::IMGUI_READY)
+    {
+      ImGuiIO& io = ImGui::GetIO();
+
+      if (ev_p->LButtonPressed)
+        io.AddMouseButtonEvent(0, true);
+    }
 
     return true;
   }
@@ -129,8 +128,13 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
     ev_p->RButtonReleased = aMessage == WM_RBUTTONUP;
     ev_p->Signal();
 
-    if (ev_p->LButtonReleased)
-      io.AddMouseButtonEvent(0, false);
+    if (Window::IMGUI_READY)
+    {
+      ImGuiIO& io = ImGui::GetIO();
+
+      if (ev_p->LButtonReleased)
+        io.AddMouseButtonEvent(0, false);
+    }
 
     return true;
   }
@@ -151,7 +155,7 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 
     return true;
   }
- /* case WM_MOUSEWHEEL:
+    /* case WM_MOUSEWHEEL:
   {
     EventMouseWheel* ev_p = new EventMouseWheel();
     ev_p->Delta           = GET_WHEEL_DELTA_WPARAM(aWParam);

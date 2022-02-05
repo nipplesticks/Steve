@@ -24,6 +24,7 @@ void ConstantBuffer::Init(uint dataByteSize)
   desc.MipLevels           = 1;
   desc.SampleDesc.Count    = 1;
   desc.SampleDesc.Quality  = 0;
+  
 
   HR_ASSERT(gDevice_p->CreateCommittedResource(&heapProp,
                                                D3D12_HEAP_FLAG_NONE,

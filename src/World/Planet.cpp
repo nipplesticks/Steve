@@ -162,8 +162,13 @@ void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType
   std::cout << "nrOfIdx: \t" << indices.size() << std::endl;
 
   //TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
-  TextureLoader::Image H, D;
-  _generateHeightMapAndTexture(&H, &D, genType);
+  TextureLoader::Image H, D, B;
+  H.width = D.width = B.width = genType.texWidth;
+  H.height = D.height = B.height = genType.texHeight;
+  H.pixels.resize(genType.texWidth * genType.texHeight * 4);
+  D.pixels.resize(genType.texWidth * genType.texHeight * 4);
+  B.pixels.resize(genType.texWidth * genType.texHeight * 4);
+  //_generateHeightMapAndTexture(&H, &D, genType);
   //_offsetBasedOnHeightMap(&H, indices, verts);
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
@@ -176,6 +181,9 @@ void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType
   myTextureBuffer.Update(Renderer::GetInstance(), img_p);
   myHeightMapBuffer.Init(H.width, H.height);
   myHeightMapBuffer.Update(Renderer::GetInstance(), H.pixels.data());
+  myBumpMapBuffer.Init(B.width, B.height, DXGI_FORMAT_R32G32B32A32_FLOAT);
+  std::vector<DM::Vec4f> dummy(w * h);
+  myBumpMapBuffer.Update(Renderer::GetInstance(), dummy.data());
 
   SetTexture(&myTextureBuffer);
   SetMesh(&myMesh);
@@ -191,6 +199,11 @@ void Planet::UpdateGeneration(GenerationType genType)
   myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
 }
 
+void Planet::SetWaterLevel(float wl) {
+  DM::Vec4f waterLevel(1.0f + wl);
+  myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
+}
+
 const Mesh& Planet::GetMesh() const
 {
   return myMesh;
@@ -199,16 +212,38 @@ const Mesh& Planet::GetMesh() const
 void Planet::Bind()
 {
   myResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer, &myWaterLevel},
-                            {myTextureBuffer_p});
+                            {myTextureBuffer_p},
+                            {});
   myIsBinded = true;
 }
 
 void Planet::BindForOffsetGpu()
 {
   myResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer, &myWaterLevel},
-                            {&myHeightMapBuffer, myTextureBuffer_p});
+                            {&myHeightMapBuffer, myTextureBuffer_p},
+                            {});
   
   myIsBinded = true;
+}
+
+TextureBuffer* Planet::GetHeightMap()
+{
+  return &myHeightMapBuffer;
+}
+
+TextureBuffer* Planet::GetDiffuse()
+{
+  return &myTextureBuffer;
+}
+
+TextureBuffer* Planet::GetBump()
+{
+  return &myBumpMapBuffer;
+}
+
+ConstantBuffer* Planet::GetWaterLevelCb()
+{
+  return &myWaterLevel;
 }
 
 void Planet::_createIcosahedronAndSubdivide(std::vector<uint>&      indices,

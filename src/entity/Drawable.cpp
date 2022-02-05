@@ -35,7 +35,8 @@ void Drawable::Bind()
   if (myIsBinded)
     ASSERT_STR(false, "Object is already binded...\n");
 
-  myResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer}, {myTextureBuffer_p});
+  myResourceDescHeap.Create(
+      {&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer}, {myTextureBuffer_p}, {});
   myIsBinded = true;
 }
 

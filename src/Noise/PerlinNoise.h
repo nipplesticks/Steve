@@ -11,6 +11,7 @@ public:
   PerlinNoise(uint seed);
   PerlinNoise(const std::string& seed);
   double Sample(double x, double y, double z);
+  std::vector<int> GetPermutaion();
 
 private:
   void  _init(uint seed);

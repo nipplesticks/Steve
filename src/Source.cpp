@@ -1,94 +1,29 @@
 #include "Input/KeyboardInput.h"
+#include "Noise/PerlinNoise.h"
+#include "World/Generation.h"
 #include "World/Planet.h"
 #include "events/EventHandler.h"
 #include "renderer/buffers/ConstantBuffer.h"
-#include "renderer/camera/FpsCamera.h"
-#include "renderer/d3d12/GraphicsPipelineState.h"
 #include "renderer/buffers/IndexBuffer.h"
-#include "renderer/mesh/Mesh.h"
+#include "renderer/buffers/TextureBuffer.h"
+#include "renderer/buffers/VertexBuffer.h"
+#include "renderer/camera/FpsCamera.h"
 #include "renderer/camera/OrbitCamera.h"
+#include "renderer/d3d12/ComputationalPipeline.h"
+#include "renderer/d3d12/GraphicsPipelineState.h"
 #include "renderer/d3d12/Renderer.h"
 #include "renderer/d3d12/ResourceDescriptorHeap.h"
-#include "renderer/buffers/TextureBuffer.h"
+#include "renderer/mesh/Mesh.h"
 #include "renderer/textureLoader/TextureLoader.h"
-#include "renderer/buffers/VertexBuffer.h"
 #include "utility/Timer.h"
 #include "utility/UtilityFuncs.h"
 #include "window/Window.h"
 #include <iostream>
 
-DM::Mat3x3 FindRotationMatrix2(const DM::Vec3f& A, const DM::Vec3f& B)
-{
-  DM::Vec3f axis = A.Cross(B);
-
-  const float cosA = A.Dot(B);
-  const float k    = 1.0f / (1.0f + cosA);
-
-  DM::Mat3x3 result;
-  result._11 = (axis.x * axis.x * k) + cosA;
-  result._12 = (axis.y * axis.x * k) - axis.z;
-  result._13 = (axis.z * axis.x * k) + axis.y;
-  result._21 = (axis.x * axis.y * k) + axis.z;
-  result._22 = (axis.y * axis.y * k) + cosA;
-  result._23 = (axis.z * axis.y * k) - axis.x;
-  result._31 = (axis.x * axis.z * k) - axis.y;
-  result._32 = (axis.y * axis.z * k) + axis.x;
-  result._33 = (axis.z * axis.z * k) + cosA;
-
-  return result;
-}
-
-bool PlanetGenModifier(Planet::GenerationType& genType)
-{
-  static int   seed       = static_cast<int>(genType.seed);
-  static float waterLevel = static_cast<float>(genType.waterLevel);
-  static float hExp   = static_cast<float>(genType.height.exponent);
-  static float hFq    = static_cast<float>(genType.height.frequency);
-  static float hFudge = static_cast<float>(genType.height.fudgeFactor);
-  static int   hIt    = static_cast<int>(genType.height.iterations);
-  static float mExp   = static_cast<float>(genType.moisture.exponent);
-  static float mFq    = static_cast<float>(genType.moisture.frequency);
-  static float mFudge = static_cast<float>(genType.moisture.fudgeFactor);
-  static int   mIt    = static_cast<int>(genType.moisture.iterations);
-  bool update = false;
-
-  ImGui::Begin("Planet Generation Modifier");
-
-  ImGui::Text("Generic");
-  ImGui::SliderInt("Seed", &seed, 0, INT_MAX / 2);
-  genType.seed = static_cast<uint>(seed);
-  ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 1.0f);
-  genType.waterLevel = static_cast<double>(waterLevel);
-
-  ImGui::Text("Height");
-  {
-    ImGui::SliderFloat("height_exponent", &hExp, 0.0f, 10.0f);
-    ImGui::SliderFloat("height_frequency", &hFq, 0.0f, 10.0f);
-    ImGui::SliderFloat("height_fudgeFactor", &hFudge, 0.0f, 2.0f);
-    ImGui::SliderInt("height_iterations", &hIt, 0, 100);
-  }
-  ImGui::Text("Moisture");
-  {
-    ImGui::SliderFloat("moisture_exponent", &mExp, 0.0f, 10.0f);
-    ImGui::SliderFloat("moisture_frequency", &mFq, 0.0f, 1000.0f);
-    ImGui::SliderFloat("moisture_fudgeFactor", &mFudge, 0.0f, 2.0f);
-    ImGui::SliderInt("moisture_iterations", &mIt, 0, 100);
-  }
-  if (ImGui::Button("Generate")) update = true;
-
-  genType.height.exponent    = static_cast<double>(hExp);
-  genType.height.frequency   = static_cast<double>(hFq);
-  genType.height.fudgeFactor = static_cast<double>(hFudge);
-  genType.height.iterations  = static_cast<uint>(hIt);
-  genType.moisture.exponent    = static_cast<double>(mExp);
-  genType.moisture.frequency   = static_cast<double>(mFq);
-  genType.moisture.fudgeFactor = static_cast<double>(mFudge);
-  genType.moisture.iterations  = static_cast<uint>(mIt);
-
-  ImGui::End();
-
-  return update;
-}
+void PlanetGenModifier(GenerationGPU& heightGeneration,
+                       GenerationGPU& diffuseGeneration,
+                       uint&          seed,
+                       float&         waterLevel);
 
 int main()
 {
@@ -99,8 +34,8 @@ int main()
   Renderer* ren_p = Renderer::GetInstance();
 
   FpsCamera camera;
-  camera.SetLookTo(0.0f, 0.0f, -20.0f);
-  camera.SetPosition(0, 0, 11);
+  camera.SetLookTo(0.0f, 0.0f, -1.0f);
+  camera.SetPosition(0, 0, 101);
 
   GraphicsPipelineState planetPipelineState;
   //planetPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
@@ -119,18 +54,60 @@ int main()
   skyboxPipelineState.GenerateRootSignature();
   skyboxPipelineState.CreatePipelineState();
 
-  Planet                 planet;
   Planet::GenerationType genType;
-  genType.height.frequency   = 0.8;
-  genType.height.exponent    = 2.3;
-  genType.moisture.exponent  = 0.8;
-  genType.moisture.frequency = 6.3;
-  //planet.Create(1.0f, 8, 1.0f, genType);
+  genType.texWidth  = 512;
+  genType.texHeight = 512;
+  ASSERT(genType.texWidth % 32 == 0 && genType.texHeight % 32 == 0);
+
+  Planet planet;
   planet.CreateOffsetGpu(1.0f, 8, 1.0f, genType);
   planet.SetScale(10, 10, 10);
   planet.SetGraphicsPipelineState(&planetPipelineState);
-  //planet.Bind();
   planet.BindForOffsetGpu();
+
+  uint          planetGenSeed       = 1337;
+  float         planetGenWaterLevel = 0.1f;
+  GenerationGPU planetHeightGeneration;
+  planetHeightGeneration.generation.textureSize.x = genType.texWidth;
+  planetHeightGeneration.generation.textureSize.y = genType.texHeight;
+  planetHeightGeneration.GeneratePermutation(planetGenSeed);
+  planetHeightGeneration.Upload();
+
+  ResourceDescriptorHeap heightMapDescHeap;
+  heightMapDescHeap.Create(
+      {&planetHeightGeneration.generationCB, &planetHeightGeneration.permutationCB},
+      {},
+      {planet.GetHeightMap()});
+
+  ComputationalPipeline heightMapCp;
+  heightMapCp.SetComputeShader("assets/shaders/GenerateHightmap.hlsl");
+  heightMapCp.GenerateRootSignature();
+  heightMapCp.CreatePipelineState();
+
+  GenerationGPU planetDiffuseGeneration;
+  planetDiffuseGeneration.generation.textureSize.x = genType.texWidth;
+  planetDiffuseGeneration.generation.textureSize.y = genType.texHeight;
+  planetDiffuseGeneration.GeneratePermutation(planetGenSeed);
+  planetDiffuseGeneration.Upload();
+
+  ResourceDescriptorHeap diffuseDescHeap;
+  diffuseDescHeap.Create({planet.GetWaterLevelCb(),
+                          &planetDiffuseGeneration.generationCB,
+                          &planetDiffuseGeneration.permutationCB},
+                         {},
+                         {planet.GetHeightMap(), planet.GetDiffuse()});
+
+  ComputationalPipeline diffuseCp;
+  diffuseCp.SetComputeShader("assets/shaders/GenerateDiffuse.hlsl");
+  diffuseCp.GenerateRootSignature();
+  diffuseCp.CreatePipelineState();
+
+  ResourceDescriptorHeap bumpMapDescHeap;
+  bumpMapDescHeap.Create({}, {}, {planet.GetHeightMap(), planet.GetBump()});
+  ComputationalPipeline bumpMapCp;
+  bumpMapCp.SetComputeShader("assets/shaders/GenerateBump.hlsl");
+  bumpMapCp.GenerateRootSignature();
+  bumpMapCp.CreatePipelineState();
 
   Mesh skyboxMesh;
   skyboxMesh.LoadMesh("assets/models/Skybox/skybox.obj", false);
@@ -242,10 +219,46 @@ int main()
     }
     if (disableMouseCapture)
     {
-      PlanetGenModifier(genType);
-      planet.UpdateGeneration(genType);
+      PlanetGenModifier(
+          planetHeightGeneration, planetDiffuseGeneration, planetGenSeed, planetGenWaterLevel);
     }
+    planet.SetWaterLevel(planetGenWaterLevel);
+    planetHeightGeneration.GeneratePermutation(planetGenSeed);
+    planetHeightGeneration.Upload();
+    planetDiffuseGeneration.GeneratePermutation(planetGenSeed);
+    planetDiffuseGeneration.Upload();
+    ren_p->ChangeResourceStateForCompute(planet.GetHeightMap()->GetResource(),
+                                         D3D12_RESOURCE_STATE_GENERIC_READ,
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    ren_p->ChangeResourceStateForCompute(planet.GetDiffuse()->GetResource(),
+                                         D3D12_RESOURCE_STATE_GENERIC_READ,
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
+    ren_p->ChangeResourceStateForCompute(planet.GetBump()->GetResource(),
+                                         D3D12_RESOURCE_STATE_GENERIC_READ,
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    ren_p->BeginCompute();
+    ren_p->Compute(heightMapCp,
+                   heightMapDescHeap,
+                   DM::Vec3i(genType.texWidth / 32, genType.texHeight / 32, 1));
+    ren_p->EndCompute();
+
+    ren_p->BeginCompute();
+    ren_p->Compute(
+        diffuseCp, diffuseDescHeap, DM::Vec3i(genType.texWidth / 32, genType.texHeight / 32, 1));
+    ren_p->Compute(
+        bumpMapCp, bumpMapDescHeap, DM::Vec3i(genType.texWidth, genType.texHeight, 1));
+    ren_p->EndCompute();
+
+    ren_p->ChangeResourceStateForCompute(planet.GetHeightMap()->GetResource(),
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                         D3D12_RESOURCE_STATE_GENERIC_READ);
+    ren_p->ChangeResourceStateForCompute(planet.GetDiffuse()->GetResource(),
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                         D3D12_RESOURCE_STATE_GENERIC_READ);
+    ren_p->ChangeResourceStateForCompute(planet.GetBump()->GetResource(),
+                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                         D3D12_RESOURCE_STATE_GENERIC_READ);
     {
       std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
       EventHandler::ClearEvents(Event::Type::MouseWheel);
@@ -307,4 +320,42 @@ int main()
   }
 
   return 0;
+}
+
+void PlanetGenModifier(GenerationGPU& heightGeneration,
+                       GenerationGPU& diffuseGeneration,
+                       uint&          seed,
+                       float&         waterLevel)
+{
+  int _seed = static_cast<int>(seed);
+
+  ImGui::Begin("Planet Generation Modifier");
+
+  ImGui::Text("Generic");
+  ImGui::SliderInt("Seed", &_seed, 0, INT_MAX / 2);
+
+  seed = static_cast<uint>(_seed);
+  ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 1.0f);
+
+  ImGui::Text("Height");
+  {
+    int _it = static_cast<int>(heightGeneration.generation.iterations);
+    ImGui::SliderFloat("height_exponent", &heightGeneration.generation.exponent, 0.0f, 10.0f);
+    ImGui::SliderFloat("height_frequency", &heightGeneration.generation.frequency, 0.0f, 10.0f);
+    ImGui::SliderFloat("height_fudgeFactor", &heightGeneration.generation.fudgeFactor, 0.0f, 2.0f);
+    ImGui::SliderInt("height_iterations", &_it, 0, 100);
+    heightGeneration.generation.iterations = static_cast<uint>(_it);
+  }
+  ImGui::Text("Diffuse");
+  {
+    int _it = static_cast<int>(diffuseGeneration.generation.iterations);
+    ImGui::SliderFloat("diffuse_exponent", &diffuseGeneration.generation.exponent, 0.0f, 10.0f);
+    ImGui::SliderFloat("diffuse_frequency", &diffuseGeneration.generation.frequency, 0.0f, 10.0f);
+    ImGui::SliderFloat(
+        "diffuse_fudgeFactor", &diffuseGeneration.generation.fudgeFactor, 0.0f, 2.0f);
+    ImGui::SliderInt("diffuse_iterations", &_it, 0, 100);
+    diffuseGeneration.generation.iterations = static_cast<uint>(_it);
+  }
+
+  ImGui::End();
 }

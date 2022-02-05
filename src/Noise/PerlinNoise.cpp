@@ -44,29 +44,35 @@ double PerlinNoise::Sample(double x, double y, double z)
   double v = _fade(y);
   double w = _fade(z);
 
-  int A  = myPermutation[_x] + _y;
-  int AA = myPermutation[A] + _z;
-  int AB = myPermutation[A + 1] + _z;
-  int B  = myPermutation[_x + 1] + _y;
-  int BA = myPermutation[B] + _z;
-  int BB = myPermutation[B + 1] + _z;
+  int A  = myPermutation[(uint)(_x) % 256] + _y;
+  int AA = myPermutation[(uint)(A) % 256] + _z;
+  int AB = myPermutation[(uint)(A + 1) % 256] + _z;
+  int B  = myPermutation[(uint)(_x + 1) % 256] + _y;
+  int BA = myPermutation[(uint)(B) % 256] + _z;
+  int BB = myPermutation[(uint)(B + 1) % 256] + _z;
 
-  double res = _lerp(
-      w,
-      _lerp(v,
-            _lerp(u, _grad(myPermutation[AA], x, y, z), _grad(myPermutation[BA], x - 1, y, z)),
-            _lerp(u,
-                  _grad(myPermutation[AB], x, y - 1, z),
-                  _grad(myPermutation[BB], x - 1, y - 1, z))),
-      _lerp(v,
-            _lerp(u,
-                  _grad(myPermutation[AA + 1], x, y, z - 1),
-                  _grad(myPermutation[BA + 1], x - 1, y, z - 1)),
-            _lerp(u,
-                  _grad(myPermutation[AB + 1], x, y - 1, z - 1),
-                  _grad(myPermutation[BB + 1], x - 1, y - 1, z - 1))));
+  double res = _lerp(w,
+                     _lerp(v,
+                           _lerp(u,
+                                 _grad(myPermutation[(uint)(AA) % 256], x, y, z),
+                                 _grad(myPermutation[(uint)(BA) % 256], x - 1, y, z)),
+                           _lerp(u,
+                                 _grad(myPermutation[(uint)(AB) % 256], x, y - 1, z),
+                                 _grad(myPermutation[(uint)(BB) % 256], x - 1, y - 1, z))),
+                     _lerp(v,
+                           _lerp(u,
+                                 _grad(myPermutation[(uint)(AA + 1) % 256], x, y, z - 1),
+                                 _grad(myPermutation[(uint)(BA + 1) % 256], x - 1, y, z - 1)),
+                           _lerp(u,
+                                 _grad(myPermutation[(uint)(AB + 1) % 256], x, y - 1, z - 1),
+                                 _grad(myPermutation[(uint)(BB + 1) % 256], x - 1, y - 1, z - 1))));
 
   return (res + 1.0f) / 2.0f;
+}
+
+std::vector<int> PerlinNoise::GetPermutaion()
+{
+  return myPermutation;
 }
 
 void PerlinNoise::_init(uint seed)
@@ -75,8 +81,6 @@ void PerlinNoise::_init(uint seed)
   std::iota(myPermutation.begin(), myPermutation.end(), 0);
   std::default_random_engine engine(seed);
   std::shuffle(myPermutation.begin(), myPermutation.end(), engine);
-
-  myPermutation.insert(myPermutation.end(), myPermutation.begin(), myPermutation.end());
 }
 
 double PerlinNoise::_fade(double t)

@@ -167,6 +167,7 @@
     <ClCompile Include="src\renderer\camera\Camera.cpp" />
     <ClCompile Include="src\renderer\buffers\ConstantBuffer.cpp" />
     <ClCompile Include="src\renderer\camera\FpsCamera.cpp" />
+    <ClCompile Include="src\renderer\d3d12\ComputationalPipeline.cpp" />
     <ClCompile Include="src\renderer\d3d12\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\renderer\buffers\IndexBuffer.cpp" />
     <ClCompile Include="src\renderer\mesh\Mesh.cpp" />
@@ -197,6 +198,7 @@
     <ClInclude Include="src\renderer\camera\FpsCamera.h" />
     <ClInclude Include="src\renderer\camera\Camera.h" />
     <ClInclude Include="src\renderer\buffers\ConstantBuffer.h" />
+    <ClInclude Include="src\renderer\d3d12\ComputationalPipeline.h" />
     <ClInclude Include="src\renderer\d3d12\d3dx12.h" />
     <ClInclude Include="src\renderer\d3d12\GraphicsPipelineState.h" />
     <ClInclude Include="src\renderer\buffers\IndexBuffer.h" />
@@ -219,6 +221,7 @@
     <ClInclude Include="src\utility\Vector3f.h" />
     <ClInclude Include="src\utility\Vector4f.h" />
     <ClInclude Include="src\window\Window.h" />
+    <ClInclude Include="src\World\Generation.h" />
     <ClInclude Include="src\World\Planet.h" />
   </ItemGroup>
   <ItemGroup>

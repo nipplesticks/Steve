@@ -1,7 +1,7 @@
 #pragma once
 #include "../entity/Drawable.h"
-#include "../renderer/mesh/Mesh.h"
 #include "../renderer/buffers/TextureBuffer.h"
+#include "../renderer/mesh/Mesh.h"
 #include "../utility/DMath.h"
 
 struct TextureLoader::Image;
@@ -29,38 +29,38 @@ public:
     TropicalRainForest
   };
 
-  struct GenerationType
+  struct alignas(16) GenerationType
   {
     struct GenOptions
     {
-      double frequency;
-      double exponent;
-      double fudgeFactor;
-      uint   iterations;
+      float frequency;
+      float exponent;
+      float fudgeFactor;
+      int iterations;
     };
 
     GenerationType()
     {
       height.frequency   = 1.0f;
-      height.iterations  = 3;
+      height.iterations  = 1;
       height.exponent    = 1.0f;
       height.fudgeFactor = 1.0f;
 
       moisture.frequency   = 1.0f;
-      moisture.iterations  = 3;
-      moisture.exponent    = 0.60f;
-      moisture.fudgeFactor = 1.2f;
-      waterLevel           = 0.1;
+      moisture.iterations  = 1;
+      moisture.exponent    = 1.0f;
+      moisture.fudgeFactor = 1.0f;
+      waterLevel           = 0.1f;
       texWidth             = 512;
       texHeight            = 512;
       seed                 = 1337;
     }
     GenOptions height;
     GenOptions moisture;
-    double     waterLevel;
-    uint       texWidth;
-    uint       texHeight;
-    uint       seed;
+    float      waterLevel;
+    int      texWidth;
+    int      texHeight;
+    int      seed;
   };
 
 public:
@@ -74,10 +74,16 @@ public:
                        float          uvTiles = 1.0f,
                        GenerationType genType = GenerationType());
   void UpdateGeneration(GenerationType genType = GenerationType());
+  void SetWaterLevel(float wl);
 
-  const Mesh& GetMesh() const;
-  void        Bind() override;
-  void        BindForOffsetGpu();
+
+  const Mesh&    GetMesh() const;
+  void           Bind() override;
+  void           BindForOffsetGpu();
+  TextureBuffer* GetHeightMap();
+  TextureBuffer* GetDiffuse();
+  TextureBuffer* GetBump();
+  ConstantBuffer* GetWaterLevelCb();
 
 private:
   struct Triangle
@@ -112,9 +118,9 @@ private:
   void _offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
                                std::vector<uint>&    indices,
                                std::vector<Vertex>&  verts);
-  void _generateHeightMapAndTexture(TextureLoader::Image*      heightMap,
-                                    TextureLoader::Image*      diffuse,
-                                    GenerationType             genType);
+  void _generateHeightMapAndTexture(TextureLoader::Image* heightMap,
+                                    TextureLoader::Image* diffuse,
+                                    GenerationType        genType);
 
   void _getBiomAndColor(double                       elevation,
                         double                       moisture,
@@ -129,4 +135,5 @@ private:
   TextureBuffer  myTextureBuffer;
   ConstantBuffer myWaterLevel;
   TextureBuffer  myHeightMapBuffer;
+  TextureBuffer  myBumpMapBuffer;
 };

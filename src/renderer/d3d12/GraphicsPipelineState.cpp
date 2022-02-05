@@ -4,38 +4,6 @@
 #include "Renderer.h"
 #include <d3dcompiler.h>
 
-D3D12_ROOT_PARAMETER_TYPE ConvertToParameterType(D3D_SHADER_INPUT_TYPE inputType)
-{
-  switch (inputType)
-  {
-  case D3D_SIT_CBUFFER: // CBV
-    return D3D12_ROOT_PARAMETER_TYPE_CBV;
-  case D3D_SIT_TEXTURE: // Texture
-    return D3D12_ROOT_PARAMETER_TYPE_SRV;
-  }
-
-  ASSERT_STR(false, "Passed input not defined (%d), eat ass\n", inputType);
-
-  return D3D12_ROOT_PARAMETER_TYPE_CBV;
-}
-
-D3D12_DESCRIPTOR_RANGE_TYPE ConvertToRangeType(D3D12_ROOT_PARAMETER_TYPE inputType)
-{
-  switch (inputType)
-  {
-  case D3D12_ROOT_PARAMETER_TYPE_CBV:
-    return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-  case D3D12_ROOT_PARAMETER_TYPE_SRV:
-    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  case D3D12_ROOT_PARAMETER_TYPE_UAV:
-    return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-  }
-
-  ASSERT_STR(false, "Passed input not defined (%d), eat ass\n", inputType);
-
-  return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-}
-
 GraphicsPipelineState::GraphicsPipelineState()
     : D3D12_GRAPHICS_PIPELINE_STATE_DESC {}
 
@@ -54,7 +22,7 @@ HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
   HRESULT      hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
-                                    nullptr,
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,
                                     "main",
                                     "vs_5_0",
                                     compileFlags,
@@ -80,7 +48,7 @@ HRESULT GraphicsPipelineState::SetHullShader(const std::string& hullShader)
   HRESULT      hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
-                                    nullptr,
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,
                                     "main",
                                     "hs_5_0",
                                     compileFlags,
@@ -106,7 +74,7 @@ HRESULT GraphicsPipelineState::SetDomainShader(const std::string& domainShader)
   HRESULT      hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
-                                    nullptr,
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,
                                     "main",
                                     "ds_5_0",
                                     compileFlags,
@@ -132,7 +100,7 @@ HRESULT GraphicsPipelineState::SetGeometryShader(const std::string& geometryShad
   HRESULT      hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
-                                    nullptr,
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,
                                     "main",
                                     "gs_5_0",
                                     compileFlags,
@@ -158,7 +126,7 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
   HRESULT   hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
-                                    nullptr,
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,
                                     "main",
                                     "ps_5_0",
                                     compileFlags,
@@ -259,10 +227,6 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
     uint                      shaderRegister;
     uint                      registerSpace;
     D3D12_ROOT_PARAMETER_TYPE parameterType;
-    bool                      operator==(const ShaderObject& other)
-    {
-      return shaderRegister == other.shaderRegister && parameterType == other.parameterType;
-    }
   };
 
   std::vector<ShaderObject> shaderObjects;
@@ -308,6 +272,7 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
 
   std::vector<D3D12_DESCRIPTOR_RANGE> cbvRanges;
   std::vector<D3D12_DESCRIPTOR_RANGE> srvRanges;
+  std::vector<D3D12_DESCRIPTOR_RANGE> uavRanges;
 
   for (uint i = 0; i < shaderObjects.size(); i++)
   {
@@ -326,13 +291,18 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
       rangeDesc.OffsetInDescriptorsFromTableStart = (UINT)srvRanges.size();
       srvRanges.push_back(rangeDesc);
     }
+    else if (rangeDesc.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_UAV)
+    {
+      rangeDesc.OffsetInDescriptorsFromTableStart = (UINT)uavRanges.size();
+      uavRanges.push_back(rangeDesc);
+    }
   }
 
   std::cout << "cbvRanges=" << cbvRanges.size() << std::endl;
   std::cout << "srvRanges=" << srvRanges.size() << std::endl;
 
 
-  D3D12_ROOT_PARAMETER rootParams[2] = {};
+  D3D12_ROOT_PARAMETER rootParams[3] = {};
 
   // CBV
   rootParams[0].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -346,10 +316,17 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   rootParams[1].DescriptorTable.NumDescriptorRanges = (UINT)srvRanges.size();
   rootParams[1].DescriptorTable.pDescriptorRanges   = srvRanges.data();
 
+  // UAV
+  rootParams[2].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+  rootParams[2].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
+  rootParams[2].DescriptorTable.NumDescriptorRanges = (UINT)uavRanges.size();
+  rootParams[2].DescriptorTable.pDescriptorRanges   = uavRanges.data();
+
+
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
   rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
   rootSigDesc.Desc_1_0.Flags         = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-  rootSigDesc.Desc_1_0.NumParameters = 2;
+  rootSigDesc.Desc_1_0.NumParameters = 3;
   rootSigDesc.Desc_1_0.pParameters   = &rootParams[0];
 
   D3D12_STATIC_SAMPLER_DESC samplerDesc = {};

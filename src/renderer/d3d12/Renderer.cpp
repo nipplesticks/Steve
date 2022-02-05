@@ -2,17 +2,18 @@
 #define NOMINMAX
 #include "../../entity/Drawable.h"
 #include "../../utility/RenderUtility.h"
+#include "../../window/Window.h"
 #include "../buffers/ConstantBuffer.h"
-#include "GraphicsPipelineState.h"
 #include "../buffers/IndexBuffer.h"
-#include "../mesh/Mesh.h"
-#include "ResourceDescriptorHeap.h"
 #include "../buffers/TextureBuffer.h"
 #include "../buffers/VertexBuffer.h"
+#include "../mesh/Mesh.h"
+#include "ComputationalPipeline.h"
+#include "GraphicsPipelineState.h"
+#include "ResourceDescriptorHeap.h"
 #include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h> //Only used for initialization of the device and swap chain.
-#include "../../window/Window.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "DXGI.lib")
@@ -42,7 +43,7 @@ Renderer::Renderer(uint x, uint y, HWND aHwnd)
   _createFenceAndHandleEvent();
   _createRenderTargets();
   _createDepthBuffers();
-  //_setupComputeInterface();
+  _setupComputeInterface();
 }
 
 Renderer::~Renderer() { }
@@ -118,13 +119,12 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
 
   D3D12_SUBRESOURCE_DATA srdDesc = {};
   srdDesc.pData                  = data_p;
-  srdDesc.RowPitch               = textureBuffer.GetWidth() * 4;
+  srdDesc.RowPitch               = textureBuffer.GetRowPitch();
   srdDesc.SlicePitch             = srdDesc.RowPitch * textureBuffer.GetHeight();
 
   myTextureUploadAllocator_p->Reset();
   myTextureUploadCommandList4_p->Reset(myTextureUploadAllocator_p, nullptr);
 
-  if (textureBuffer.GetBeforeState() == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
   {
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Transition.pResource   = textureBuffer.GetResource();
@@ -143,19 +143,54 @@ void Renderer::UploadTexture(const TextureBuffer& textureBuffer, void* data_p)
                      1,
                      &srdDesc);
 
-  D3D12_RESOURCE_BARRIER barrier = {};
-  barrier.Transition.pResource   = textureBuffer.GetResource();
-  barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-  barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-  barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-  barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-
-  myTextureUploadCommandList4_p->ResourceBarrier(1, &barrier);
+  {
+    D3D12_RESOURCE_BARRIER barrier = {};
+    barrier.Transition.pResource   = textureBuffer.GetResource();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_GENERIC_READ;
+    barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    myTextureUploadCommandList4_p->ResourceBarrier(1, &barrier);
+  }
   myTextureUploadCommandList4_p->Close();
   myCommandQueue_p->ExecuteCommandLists(
       1, reinterpret_cast<ID3D12CommandList**>(&myTextureUploadCommandList4_p));
 
-  _HardWait();
+  _HardWait(myCommandQueue_p);
+}
+
+void Renderer::ChangeResourceStateForCompute(ID3D12Resource*       resource_p,
+                                             D3D12_RESOURCE_STATES before,
+                                             D3D12_RESOURCE_STATES after)
+{
+  myTextureUploadAllocator_p->Reset();
+  myTextureUploadCommandList4_p->Reset(myTextureUploadAllocator_p, nullptr);
+
+  D3D12_RESOURCE_BARRIER barrier = {};
+  barrier.Transition.pResource   = resource_p;
+  barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  barrier.Transition.StateBefore = before;
+  barrier.Transition.StateAfter  = after;;
+  barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  myTextureUploadCommandList4_p->ResourceBarrier(1, &barrier);
+
+  myTextureUploadCommandList4_p->Close();
+  myCommandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myTextureUploadCommandList4_p));
+  _HardWait(myCommandQueue_p);
+}
+
+void Renderer::ChangeResourceStateForGraphic(ID3D12Resource*       resourse_p,
+                                             D3D12_RESOURCE_STATES before,
+                                             D3D12_RESOURCE_STATES after)
+{
+  D3D12_RESOURCE_BARRIER barrier = {};
+  barrier.Transition.pResource   = resourse_p;
+  barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  barrier.Transition.StateBefore = before;
+  barrier.Transition.StateAfter  = after;
+  barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  myCommandList4_p->ResourceBarrier(1, &barrier);
 }
 
 void Renderer::Draw(const VertexBuffer&           vertexBuffer,
@@ -176,10 +211,52 @@ void Renderer::Draw(const VertexBuffer&           vertexBuffer,
   ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
-  myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetConstantBufferHeapLocationStart());
-  myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetTextureHeapLocationStart());
+  if (rh.HasConstantBuffers())
+    myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetConstantBufferHeapLocationStart());
+  if (rh.HasTextures())
+    myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetTextureHeapLocationStart());
+  if (rh.HasUavs())
+    myCommandList4_p->SetGraphicsRootDescriptorTable(2, rh.GetUAVBufferHeapLocationStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
+}
+
+void Renderer::BeginCompute()
+{
+  myComputeInterface.commandAllocator_p->Reset();
+  myComputeInterface.commandList4_p->Reset(myComputeInterface.commandAllocator_p, nullptr);
+}
+
+void Renderer::Compute(const ComputationalPipeline&  pipeline,
+                       const ResourceDescriptorHeap& rh,
+                       const DM::Vec3i&              threads)
+{
+  myComputeInterface.commandList4_p->SetPipelineState(pipeline.GetPipelineState());
+  myComputeInterface.commandList4_p->SetComputeRootSignature(pipeline.GetRootSignature());
+  ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
+  myComputeInterface.commandList4_p->SetDescriptorHeaps(1, arr);
+  if (rh.HasConstantBuffers())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        0, rh.GetConstantBufferHeapLocationStart());
+  if (rh.HasTextures())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        1, rh.GetTextureHeapLocationStart());
+  if (rh.HasUavs())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        2, rh.GetUAVBufferHeapLocationStart());
+
+  myComputeInterface.commandList4_p->Dispatch(threads.x, threads.y, threads.z);
+}
+
+void Renderer::EndCompute()
+{
+  HR_ASSERT(myComputeInterface.commandList4_p->Close());
+
+  // Send to queue
+
+  myComputeInterface.commandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myComputeInterface.commandList4_p));
+  _HardWait(myComputeInterface.commandQueue_p);
 }
 
 void Renderer::Clear(const Vector4f& color)
@@ -242,7 +319,7 @@ void Renderer::EndFrame()
   // Present
   HR_ASSERT(mySwapChain4_p->Present(0, 0));
 
-  _HardWait();
+  _HardWait(myCommandQueue_p);
 
   myCurrentBackbufferIndex = mySwapChain4_p->GetCurrentBackBufferIndex();
 }
@@ -262,9 +339,9 @@ uint Renderer::GetSrvUavCbvDescriptorSize()
   return gSrvUavCbvDescriptorSize;
 }
 
-void Renderer::_HardWait()
+void Renderer::_HardWait(ID3D12CommandQueue* commandQueue_p)
 { // Hard wait
-  myCommandQueue_p->Signal(myFence_p, myFenceValue);
+  commandQueue_p->Signal(myFence_p, myFenceValue);
 
   if (myFenceValue > myFence_p->GetCompletedValue())
   {
@@ -322,7 +399,10 @@ void Renderer::_createDevice()
 
   if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController_p))))
   {
-    debugController_p->EnableDebugLayer();
+    debugController_p->EnableDebugLayer();/*
+    ID3D12Debug1* debugcontroller1_p;
+    debugController_p->QueryInterface(IID_PPV_ARGS(&debugcontroller1_p));
+    debugcontroller1_p->SetEnableGPUBasedValidation(true);*/
   }
 
   SafeRelease(&debugController_p);
