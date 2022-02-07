@@ -1,5 +1,7 @@
 SamplerState aSampler : register(s0);
-Texture2D<float4> aTexture : register(t0);
+Texture2D<float4> heightMap : register(t0);
+Texture2D<float4> bumpMap : register(t1);
+//Texture2D<float4> diffuseTexture : register(t2);
 
 cbuffer cbv0 : register(b0)
 {
@@ -38,19 +40,22 @@ VS_OUT main(VS_IN vIn)
 {
   VS_OUT vOut;
   
-  float r = aTexture.SampleLevel(aSampler, vIn.uv.xy, 0).r;
+  float r = heightMap.SampleLevel(aSampler, vIn.uv.xy, 0).r;
+  float3 normal = bumpMap.SampleLevel(aSampler, vIn.uv.xy, 0).rgb;
   vIn.pos = float4(vIn.pos.xyz + vIn.nor.xyz * r, 1);
   float h = length(vIn.pos.xyz);
   if (h <= waterLevel.x)
   {
     vIn.pos = float4(normalize(vIn.pos.xyz) * waterLevel.x, 1.0f);
-    vIn.nor = float4(normalize(vIn.pos.xyz), 0.0f);
+    normal = float3(normalize(vIn.pos.xyz));
   }
   
   vIn.pos = mul(vIn.pos, transpose(worldMat));
   vOut.worldPos = vIn.pos;
   
-  vIn.nor = normalize(mul(vIn.nor, transpose(worldMat)));
+  vIn.nor = (normalize(mul(float4(normal, 0.0f), transpose(worldMat))));
+  
+  vIn.nor.w = 0.0f;
   vIn.pos = mul(vIn.pos, transpose(mul(proj, view)));
   
   vOut.pos = vIn.pos;

@@ -41,8 +41,8 @@ int main()
   //planetPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
   //planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
   planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShaderWithOffset.hlsl");
-  planetPipelineState.SetGeometryShader("assets/shaders/GeometryShaderCalcNormal.hlsl");
-  planetPipelineState.SetPixelShader("assets/shaders/PixelHelloTriangle.hlsl");
+  //planetPipelineState.SetGeometryShader("assets/shaders/GeometryShaderCalcNormal.hlsl");
+  planetPipelineState.SetPixelShader("assets/shaders/PlanetPixelShader.hlsl");
   planetPipelineState.GenerateInputElementDesc();
   planetPipelineState.GenerateRootSignature();
   planetPipelineState.CreatePipelineState();
@@ -55,8 +55,8 @@ int main()
   skyboxPipelineState.CreatePipelineState();
 
   Planet::GenerationType genType;
-  genType.texWidth  = 512;
-  genType.texHeight = 512;
+  genType.texWidth  = 1024;
+  genType.texHeight = 1024;
   ASSERT(genType.texWidth % 32 == 0 && genType.texHeight % 32 == 0);
 
   Planet planet;
@@ -68,8 +68,8 @@ int main()
   uint          planetGenSeed       = 1337;
   float         planetGenWaterLevel = 0.1f;
   GenerationGPU planetHeightGeneration;
-  planetHeightGeneration.generation.textureSize.x = genType.texWidth;
-  planetHeightGeneration.generation.textureSize.y = genType.texHeight;
+  planetHeightGeneration.generation.textureSize.x = (float)genType.texWidth;
+  planetHeightGeneration.generation.textureSize.y = (float)genType.texHeight;
   planetHeightGeneration.GeneratePermutation(planetGenSeed);
   planetHeightGeneration.Upload();
 
@@ -85,8 +85,8 @@ int main()
   heightMapCp.CreatePipelineState();
 
   GenerationGPU planetDiffuseGeneration;
-  planetDiffuseGeneration.generation.textureSize.x = genType.texWidth;
-  planetDiffuseGeneration.generation.textureSize.y = genType.texHeight;
+  planetDiffuseGeneration.generation.textureSize.x = (float)genType.texWidth;
+  planetDiffuseGeneration.generation.textureSize.y = (float)genType.texHeight;
   planetDiffuseGeneration.GeneratePermutation(planetGenSeed);
   planetDiffuseGeneration.Upload();
 
@@ -146,6 +146,8 @@ int main()
   KeyboardInput::SetAnActionToKey("close", (uint16)0x1B); // escape
   KeyboardInput::SetAnActionToKey("speed", (uint16)0x10); // shift
   KeyboardInput::SetAnActionToKey("toggleCaptureMouse", (uint16)'M');
+  KeyboardInput::SetAnActionToKey("rotatePlanetRight", (uint16)'H');
+  KeyboardInput::SetAnActionToKey("rotatePlanetLeft", (uint16)'G');
 
   bool      lockMouse           = false;
   bool      disableMouseCapture = false;
@@ -301,7 +303,14 @@ int main()
     if (KeyboardInput::IsKeyPressed("rollLeft"))
       camera.Rotate(0, 0, -dt);
 
-    planet.Rotate(0, rotationSpeed * dt * DirectX::XM_PI, 0);
+    if (KeyboardInput::IsKeyPressed("rotatePlanetRight"))
+    {
+      planet.Rotate(0, rotationSpeed * dt * DirectX::XM_PI * 10, 0);
+    }
+    if (KeyboardInput::IsKeyPressed("rotatePlanetLeft"))
+    {
+      planet.Rotate(0, rotationSpeed * dt * DirectX::XM_PI * -10, 0);
+    }
     planet.UpdateConstantBuffer();
 
     skybox.SetPosition(camera.GetPosition());
@@ -335,7 +344,7 @@ void PlanetGenModifier(GenerationGPU& heightGeneration,
   ImGui::SliderInt("Seed", &_seed, 0, INT_MAX / 2);
 
   seed = static_cast<uint>(_seed);
-  ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 1.0f);
+  ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 2.0f);
 
   ImGui::Text("Height");
   {

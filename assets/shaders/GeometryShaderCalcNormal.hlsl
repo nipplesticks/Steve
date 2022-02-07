@@ -26,6 +26,7 @@ void main(
     element.pos = input[i].pos;
     element.col = input[i].col;
     element.uv = input[i].uv;
+    //element.nor = input[i].nor;
     element.nor = normal;
     element.worldPos = input[i].worldPos;
     output.Append(element);

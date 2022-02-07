@@ -10,11 +10,7 @@ cbuffer Generation : register(b0)
   float4 textureSize;
 };
 
-cbuffer Permutation : register(b1)
-{
-  int permutation[256];
-};
-
+int permutation[256] : register(b1);
 
 [numthreads(32, 32, 1)]
 void main(

@@ -15,57 +15,6 @@ Planet::Planet()
 
 Planet::~Planet() { }
 
-//Bitmap CreateTexture(int width, int height)
-//{
-//  Bitmap       image        = new Bitmap(width, height);
-//  double       widthFactor  = 1.0 / width;
-//  double       heightFactor = 1.0 / height;
-//  Color        baseColor    = Color.FromArgb(255, 127, 35, 7);
-//  SimplexNoise generator    = new SimplexNoise(seed : -5000);
-//  for (int x = 0; x < width; ++x)
-//  {
-//    for (int y = 0; y < height; ++y)
-//    {
-//      double dX = x / (double)width;
-//      double dY = y / (double)height;
-//      /* noise range is clamped -1 to 1 */
-//      double noise =
-//          generator.PerlinNoise(dX, dY, octaves : 3, persistence : 3.0f / 4.0f, lacunarity : 3f);
-//      int   blueHue  = (int)(baseColor.B * noise) + baseColor.B;
-//      int   redHue   = (int)(baseColor.R * noise) + baseColor.R;
-//      int   greenHue = (int)(baseColor.G * noise) + baseColor.G;
-//      Color col      = Color.FromArgb(baseColor.A, redHue, greenHue, blueHue);
-//      image.SetPixel(x, y, col);
-//    }
-//  }
-//  return image;
-//}
-
-/*
-* 
-
-If you don't want any seams and warping on your sphere texture, you will need to generate the texture from a 3D perlin noise.
-
-The Sphere is mapped in a longitude/latitude way, so you can deduce the 3D coordinates from the UV (or 2d coords) and some trigonometry :
-
-    y = sin( UVy * pi - pi/2 )
-
-    x = cos( UVx 2 pi ) cos( UVy pi - pi/2 )
-
-    z = sin( UVx 2 pi ) cos( UVy pi - pi/2 )
-
-    x, y and z are now values in the range [-1;1]. You need to remap them to [0;1] by doing : value = value * 0.5 + 0.5.
-
-    Now you can get a 3D perlin noise value by chaining 2 2D perlin noise :
-
-    float sample = Mathf.PerlinNoise( Mathf.PerlinNoise(x, y),z);
-
-
-
-I haven't tried, but this should work.
-
-*/
-
 void pushIndices(uint a, uint b, uint c, std::vector<uint>& vec)
 {
   vec.push_back(a);
@@ -128,7 +77,7 @@ void Planet::Create(float size, uint div, float uvTiles, Planet::GenerationType 
 
 void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType genType)
 {
-  DM::Vec4f waterLevel(1.0f + (float)genType.waterLevel);
+  DM::Vec4f waterLevel(1.0f + genType.waterLevel);
 
   myWaterLevel.Init(sizeof(waterLevel));
   myWaterLevel.Update(&waterLevel, sizeof(waterLevel));
@@ -153,23 +102,16 @@ void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType
 
   _scaleUVs(verts, uvTiles);
 
-  //TextureLoader::Image heightMap =
-  //    TextureLoader::LoadImageData("assets/textures/earthHeightMap.jpg"); // Use generated heightMap
-  //_offsetBasedOnHeightMap(&heightMap, indices, verts);
-
   std::cout << "nrOfVerts: \t" << verts.size() << std::endl;
   std::cout << "nrOfTris: \t" << indices.size() / 3 << std::endl;
   std::cout << "nrOfIdx: \t" << indices.size() << std::endl;
 
-  //TextureLoader::Image shrek2 = TextureLoader::LoadImageData("assets/textures/testingFesting.jpg");
   TextureLoader::Image H, D, B;
   H.width = D.width = B.width = genType.texWidth;
   H.height = D.height = B.height = genType.texHeight;
   H.pixels.resize(genType.texWidth * genType.texHeight * 4);
   D.pixels.resize(genType.texWidth * genType.texHeight * 4);
-  B.pixels.resize(genType.texWidth * genType.texHeight * 4);
-  //_generateHeightMapAndTexture(&H, &D, genType);
-  //_offsetBasedOnHeightMap(&H, indices, verts);
+
   myMesh.SetMesh(std::move(verts));
   myMesh.SetIndices(std::move(indices));
   myMesh.CreateBuffers();
@@ -177,12 +119,12 @@ void Planet::CreateOffsetGpu(float size, uint div, float uvTiles, GenerationType
   uint w, h;
   myMesh.SetImages(std::move(D));
   uint8* img_p = myMesh.GetRawImage(0, &w, &h);
+  std::vector<DM::Vec4f> dummy(w * h);
   myTextureBuffer.Init(w, h);
   myTextureBuffer.Update(Renderer::GetInstance(), img_p);
-  myHeightMapBuffer.Init(H.width, H.height);
-  myHeightMapBuffer.Update(Renderer::GetInstance(), H.pixels.data());
+  myHeightMapBuffer.Init(H.width, H.height, DXGI_FORMAT_R32G32B32A32_FLOAT);
+  myHeightMapBuffer.Update(Renderer::GetInstance(), dummy.data());
   myBumpMapBuffer.Init(B.width, B.height, DXGI_FORMAT_R32G32B32A32_FLOAT);
-  std::vector<DM::Vec4f> dummy(w * h);
   myBumpMapBuffer.Update(Renderer::GetInstance(), dummy.data());
 
   SetTexture(&myTextureBuffer);
@@ -220,7 +162,7 @@ void Planet::Bind()
 void Planet::BindForOffsetGpu()
 {
   myResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer, &myWaterLevel},
-                            {&myHeightMapBuffer, myTextureBuffer_p},
+                            {&myHeightMapBuffer, &myBumpMapBuffer, &myTextureBuffer},
                             {});
   
   myIsBinded = true;
@@ -550,7 +492,7 @@ void Planet::_scaleUVs(std::vector<Vertex>& vertices, float uvTiles)
 {
   for (auto& v : vertices)
   {
-    v.uv.x *= -uvTiles;
+    v.uv.x *= uvTiles;
     v.uv.y *= uvTiles;
   }
 }

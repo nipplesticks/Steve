@@ -1,5 +1,7 @@
 SamplerState aSampler : register(s0);
-Texture2D<float4> aTexture : register(t1);
+//Texture2D<float4> heightMap : register(t0);
+//Texture2D<float4> bumpMap : register(t1);
+Texture2D<float4> diffuseTexture : register(t2);
 
 struct Vertex
 {
@@ -15,7 +17,7 @@ float4 main(Vertex vertex)
 {
   // X: 0.917060, Y: -0.398749, Z: 0.000000
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
-  float3 color = aTexture.Sample(aSampler, vertex.uv.xy).rgb * vertex.col.rgb;
+  float3 color = diffuseTexture.Sample(aSampler, vertex.uv.xy).rgb * vertex.col.rgb;
   float4 pos = vertex.pos;
   float3 ambient = float3(0.05f, 0.05f, 0.05f);
   float3 finalColor = max(dot(normalize(vertex.nor.xyz), -lightDir), ambient) * color;
