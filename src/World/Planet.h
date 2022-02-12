@@ -36,7 +36,7 @@ public:
       float frequency;
       float exponent;
       float fudgeFactor;
-      int iterations;
+      int   iterations;
     };
 
     GenerationType()
@@ -58,9 +58,9 @@ public:
     GenOptions height;
     GenOptions moisture;
     float      waterLevel;
-    int      texWidth;
-    int      texHeight;
-    int      seed;
+    int        texWidth;
+    int        texHeight;
+    int        seed;
   };
 
 public:
@@ -69,20 +69,15 @@ public:
 
   void
   Create(float size, uint div, float uvTiles = 1.0f, GenerationType genType = GenerationType());
-  void CreateOffsetGpu(float          size,
-                       uint           div,
-                       float          uvTiles = 1.0f,
-                       GenerationType genType = GenerationType());
   void UpdateGeneration(GenerationType genType = GenerationType());
   void SetWaterLevel(float wl);
 
-
-  const Mesh&    GetMesh() const;
-  void           Bind() override;
-  void           BindForOffsetGpu();
-  TextureBuffer* GetHeightMap();
-  TextureBuffer* GetDiffuse();
-  TextureBuffer* GetBump();
+  const Mesh&     GetMesh() const;
+  void            Bind() override;
+  void            BindForOffsetGpu();
+  TextureBuffer*  GetHeightMap();
+  TextureBuffer*  GetDiffuse();
+  TextureBuffer*  GetBump();
   ConstantBuffer* GetWaterLevelCb();
 
 private:
@@ -128,10 +123,13 @@ private:
                         Planet::Biom&                biom,
                         GenerationType               genType);
 
+  void _calcTangent(const std::vector<uint>& indices, std::vector<Vertex>& verts);
+
   TextureLoader::Image::Pixel _getColor(Planet::Biom biom);
 
 private:
   Mesh           myMesh;
+  Mesh           myWaterMesh;
   TextureBuffer  myTextureBuffer;
   ConstantBuffer myWaterLevel;
   TextureBuffer  myHeightMapBuffer;

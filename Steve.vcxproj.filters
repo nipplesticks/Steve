@@ -102,6 +102,9 @@
     <ClCompile Include="src\renderer\d3d12\ComputationalPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Source_new.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
@@ -227,19 +230,26 @@
     <ClInclude Include="src\World\Generation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\utility\Global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\DMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\Vec2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="assets\shaders\VertexHelloTriangle.hlsl" />
     <FxCompile Include="assets\shaders\PlanetPixelShader.hlsl" />
     <FxCompile Include="assets\shaders\VertexSkybox.hlsl" />
     <FxCompile Include="assets\shaders\PixelSkybox.hlsl" />
     <FxCompile Include="assets\shaders\PlanetVertexShader.hlsl" />
-    <FxCompile Include="assets\shaders\PlanetVertexShaderWithOffset.hlsl" />
-    <FxCompile Include="assets\shaders\GeometryShaderCalcNormal.hlsl" />
-    <FxCompile Include="assets\shaders\GeometryShader.hlsl" />
     <FxCompile Include="assets\shaders\GenerateHightmap.hlsl" />
     <FxCompile Include="assets\shaders\GenerateDiffuse.hlsl" />
     <FxCompile Include="assets\shaders\GenerateBump.hlsl" />
+    <FxCompile Include="assets\shaders\WaterVertexShader.hlsl" />
+    <FxCompile Include="assets\shaders\WaterPixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\PerlinNoise_cs.hlsli" />

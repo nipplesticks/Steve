@@ -8,6 +8,7 @@
 class GraphicsPipelineState : public D3D12_GRAPHICS_PIPELINE_STATE_DESC
 {
 public:
+  static bool WIRE_FRAME;
   GraphicsPipelineState();
   ~GraphicsPipelineState();
 
@@ -16,6 +17,7 @@ public:
   HRESULT SetDomainShader(const std::string& domainShader);
   HRESULT SetGeometryShader(const std::string& geometryShader);
   HRESULT SetPixelShader(const std::string& pixelShader);
+  void    EnableBlending();
   void    GenerateInputElementDesc();
   void    SetRootSignature(ID3D12RootSignature* rootSignature_p);
   HRESULT GenerateRootSignature();
@@ -35,6 +37,7 @@ private:
   ID3DBlob*            myGeometryShader_p = nullptr;
   ID3DBlob*            myPixelShader_p    = nullptr;
   ID3D12PipelineState* myPipelineState_p  = nullptr;
+  ID3D12PipelineState* myPipelineStateWireframe_p  = nullptr;
   ID3D12RootSignature* myRootSignature_p  = nullptr;
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> myInputElementDescs;

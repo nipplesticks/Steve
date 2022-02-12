@@ -4,6 +4,8 @@
 #include "Renderer.h"
 #include <d3dcompiler.h>
 
+bool GraphicsPipelineState::WIRE_FRAME = false;
+
 GraphicsPipelineState::GraphicsPipelineState()
     : D3D12_GRAPHICS_PIPELINE_STATE_DESC {}
 
@@ -11,7 +13,10 @@ GraphicsPipelineState::GraphicsPipelineState()
   _defaultValues();
 }
 
-GraphicsPipelineState::~GraphicsPipelineState() { }
+GraphicsPipelineState::~GraphicsPipelineState()
+{
+  
+}
 
 HRESULT GraphicsPipelineState::SetVertexShader(const std::string& vertexShader)
 {
@@ -121,9 +126,9 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
 {
   std::cout << "shader: " << pixelShader << std::endl;
   std::wstring shaderLocation(pixelShader.begin(), pixelShader.end());
-  ID3DBlob* errorBlob_p  = nullptr;
-  UINT      compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-  HRESULT   hr           = 0;
+  ID3DBlob*    errorBlob_p  = nullptr;
+  UINT         compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+  HRESULT      hr           = 0;
   HR_ASSERT(hr = D3DCompileFromFile(shaderLocation.c_str(),
                                     nullptr,
                                     D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -141,6 +146,22 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
   PS.BytecodeLength  = myPixelShader_p->GetBufferSize();
 
   return hr;
+}
+
+void GraphicsPipelineState::EnableBlending()
+{
+  BlendState.AlphaToCoverageEnable                 = FALSE;
+  BlendState.IndependentBlendEnable                = FALSE;
+  BlendState.RenderTarget[0].BlendEnable           = TRUE;
+  BlendState.RenderTarget[0].LogicOpEnable         = FALSE;
+  BlendState.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
+  BlendState.RenderTarget[0].DestBlend             = D3D12_BLEND_SRC_ALPHA;
+  BlendState.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
+  BlendState.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
+  BlendState.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;
+  BlendState.RenderTarget[0].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+  BlendState.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
+  BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 }
 
 void GraphicsPipelineState::GenerateInputElementDesc()
@@ -230,7 +251,8 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   };
 
   std::vector<ShaderObject> shaderObjects;
-  ID3DBlob*                 shaders_p[] = {myVertexShader_p, myHullShader_p, myDomainShader_p, myGeometryShader_p, myPixelShader_p};
+  ID3DBlob*                 shaders_p[] = {
+      myVertexShader_p, myHullShader_p, myDomainShader_p, myGeometryShader_p, myPixelShader_p};
 
   for (ID3DBlob* shader_p : shaders_p)
   {
@@ -262,9 +284,9 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
         shaderReflection_p->GetResourceBindingDesc(i, &desc);
         if (desc.Type == D3D_SIT_SAMPLER)
           continue;
-        shaderObj.parameterType   = ConvertToParameterType(desc.Type);
-        shaderObj.shaderRegister  = desc.BindPoint;
-        shaderObj.registerSpace   = desc.Space;
+        shaderObj.parameterType  = ConvertToParameterType(desc.Type);
+        shaderObj.shaderRegister = desc.BindPoint;
+        shaderObj.registerSpace  = desc.Space;
         shaderObjects.push_back(shaderObj);
       }
     }
@@ -301,7 +323,6 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   std::cout << "cbvRanges=" << cbvRanges.size() << std::endl;
   std::cout << "srvRanges=" << srvRanges.size() << std::endl;
 
-
   D3D12_ROOT_PARAMETER rootParams[3] = {};
 
   // CBV
@@ -321,7 +342,6 @@ HRESULT GraphicsPipelineState::GenerateRootSignature()
   rootParams[2].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
   rootParams[2].DescriptorTable.NumDescriptorRanges = (UINT)uavRanges.size();
   rootParams[2].DescriptorTable.pDescriptorRanges   = uavRanges.data();
-
 
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc = {};
   rootSigDesc.Version                             = D3D_ROOT_SIGNATURE_VERSION_1_0;
@@ -372,6 +392,7 @@ void GraphicsPipelineState::SetInputElementDesc(
 
 HRESULT GraphicsPipelineState::CreatePipelineState()
 {
+  auto before                    = RasterizerState.FillMode;
   InputLayout.pInputElementDescs = myInputElementDescs.data();
   InputLayout.NumElements        = (UINT)myInputElementDescs.size();
   pRootSignature                 = myRootSignature_p;
@@ -379,11 +400,19 @@ HRESULT GraphicsPipelineState::CreatePipelineState()
   HR_ASSERT(hr = Renderer::GetDevice()->CreateGraphicsPipelineState(
                 this, IID_PPV_ARGS(&myPipelineState_p)));
 
+  RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+  HR_ASSERT(hr = Renderer::GetDevice()->CreateGraphicsPipelineState(
+                this, IID_PPV_ARGS(&myPipelineStateWireframe_p)));
+
+  RasterizerState.FillMode = before;
+
   return hr;
 }
 
 ID3D12PipelineState* GraphicsPipelineState::GetPipelineState() const
 {
+  if (WIRE_FRAME)
+    return myPipelineStateWireframe_p;
   return myPipelineState_p;
 }
 
@@ -401,7 +430,6 @@ void GraphicsPipelineState::_defaultValues()
   RTVFormats[0]                                    = DXGI_FORMAT_R8G8B8A8_UNORM;
   SampleDesc.Count                                 = 1;
   SampleMask                                       = UINT_MAX;
-  GS.BytecodeLength                                = 0;
   BlendState.AlphaToCoverageEnable                 = FALSE;
   BlendState.IndependentBlendEnable                = FALSE;
   BlendState.RenderTarget[0].BlendEnable           = FALSE;

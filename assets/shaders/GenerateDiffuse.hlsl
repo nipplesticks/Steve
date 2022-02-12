@@ -25,9 +25,9 @@ cbuffer Permutation : register(b2)
 void SetPixel(uint2 texCoord, float elevation, float moisture)
 {
   float3 color;
-  if (elevation < (waterLevel.x - 1.0f))
-    color = float3(18, 17, 84) / 255.0f;
-  else if (elevation < (waterLevel.x - 1.0f)
+  //if (elevation < (waterLevel.x))
+  //  color = float3(18, 17, 84) / 255.0f;
+  if (elevation < (waterLevel.x)
     + 0.02)
     color = float3(179, 162, 133) / 255.0f;
   else if (elevation > 0.8)

@@ -302,6 +302,12 @@ namespace DM
       m_vec = _xmFlt;
     }
 
+    Vec2f(const DirectX::XMFLOAT4A& _xmFlt)
+    {
+      x = _xmFlt.x;
+      y = _xmFlt.y;
+    }
+
     Vec2f(const Vec2f& _vec2)
     {
       m_vec = _vec2.m_vec;

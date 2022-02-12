@@ -39,13 +39,20 @@ int main()
 
   GraphicsPipelineState planetPipelineState;
   //planetPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-  //planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
-  planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShaderWithOffset.hlsl");
-  //planetPipelineState.SetGeometryShader("assets/shaders/GeometryShaderCalcNormal.hlsl");
+  planetPipelineState.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
   planetPipelineState.SetPixelShader("assets/shaders/PlanetPixelShader.hlsl");
   planetPipelineState.GenerateInputElementDesc();
   planetPipelineState.GenerateRootSignature();
   planetPipelineState.CreatePipelineState();
+
+
+  GraphicsPipelineState waterPipelineState;
+  waterPipelineState.SetVertexShader("assets/shaders/WaterVertexShader.hlsl");
+  waterPipelineState.SetPixelShader("assets/shaders/WaterPixelShader.hlsl");
+  //waterPipelineState.EnableBlending();
+  waterPipelineState.GenerateInputElementDesc();
+  waterPipelineState.GenerateRootSignature();
+  waterPipelineState.CreatePipelineState();
 
   GraphicsPipelineState skyboxPipelineState;
   skyboxPipelineState.SetVertexShader("assets/shaders/VertexSkybox.hlsl");
@@ -54,16 +61,34 @@ int main()
   skyboxPipelineState.GenerateRootSignature();
   skyboxPipelineState.CreatePipelineState();
 
+  TextureBuffer waterBumpMap;
+  {
+    TextureLoader::Image waterNormalMap =
+        TextureLoader::LoadImageData("assets/textures/brick_normalMap.png");
+    waterBumpMap.Init(waterNormalMap.width, waterNormalMap.height);
+    waterBumpMap.Update(ren_p, waterNormalMap.pixels.data());
+  }
+
+
+
   Planet::GenerationType genType;
   genType.texWidth  = 1024;
   genType.texHeight = 1024;
   ASSERT(genType.texWidth % 32 == 0 && genType.texHeight % 32 == 0);
 
   Planet planet;
-  planet.CreateOffsetGpu(1.0f, 8, 1.0f, genType);
+  Planet water;
+  planet.Create(1.0f, 8, 1.0f, genType);
   planet.SetScale(10, 10, 10);
   planet.SetGraphicsPipelineState(&planetPipelineState);
   planet.BindForOffsetGpu();
+
+  water.Create(1.0f, 0, 200.0f, genType);
+  water.SetScale(10, 10, 10);
+  water.SetGraphicsPipelineState(&waterPipelineState);
+  water.SetTexture(&waterBumpMap);
+  water.Bind();
+
 
   uint          planetGenSeed       = 1337;
   float         planetGenWaterLevel = 0.1f;
@@ -225,6 +250,7 @@ int main()
           planetHeightGeneration, planetDiffuseGeneration, planetGenSeed, planetGenWaterLevel);
     }
     planet.SetWaterLevel(planetGenWaterLevel);
+    water.SetWaterLevel(planetGenWaterLevel);
     planetHeightGeneration.GeneratePermutation(planetGenSeed);
     planetHeightGeneration.Upload();
     planetDiffuseGeneration.GeneratePermutation(planetGenSeed);
@@ -312,6 +338,7 @@ int main()
       planet.Rotate(0, rotationSpeed * dt * DirectX::XM_PI * -10, 0);
     }
     planet.UpdateConstantBuffer();
+    water.UpdateConstantBuffer();
 
     skybox.SetPosition(camera.GetPosition());
     skybox.UpdateConstantBuffer();
@@ -322,6 +349,7 @@ int main()
     ren_p->Clear(Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
     camera.SetAsMainCameraAndUpdate();
     planet.Draw();
+    water.Draw();
     skybox.Draw();
 
     // Must be last
@@ -345,6 +373,7 @@ void PlanetGenModifier(GenerationGPU& heightGeneration,
 
   seed = static_cast<uint>(_seed);
   ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 2.0f);
+  ImGui::Checkbox("WireFrame: ", &GraphicsPipelineState::WIRE_FRAME);
 
   ImGui::Text("Height");
   {
