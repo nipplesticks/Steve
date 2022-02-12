@@ -105,6 +105,9 @@
     <ClCompile Include="src\Source_new.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\dmath\vec2\Vec2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
@@ -236,7 +239,16 @@
     <ClInclude Include="src\dmath\DMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\dmath\Vec2.h">
+    <ClInclude Include="src\dmath\vec2\Vec2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\vec2\Vec2f.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\vec2\Vec2i.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\vec2\Vec2u.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
