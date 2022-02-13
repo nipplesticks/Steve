@@ -45,9 +45,9 @@ public:
   virtual DM::Vec3f        GetUp() const      = 0;
   virtual const DM::Vec4f& GetRotation() const;
 
-  virtual DM::Mat4x4        GetViewMatrix() const = 0;
-  virtual const DM::Mat4x4& GetProjectionMatrix() const;
-  virtual DM::Mat4x4        GetViewProjectionMatrix() const;
+  virtual DM::Mat4x4f        GetViewMatrix() const = 0;
+  virtual const DM::Mat4x4f& GetProjectionMatrix() const;
+  virtual DM::Mat4x4f        GetViewProjectionMatrix() const;
   static Camera::View       GetDefaultView();
 
   virtual void          SetAsMainCameraAndUpdate() const;
@@ -60,7 +60,7 @@ private:
 
 protected:
   View       myView;
-  DM::Mat4x4 myProjectionMatrix;
+  DM::Mat4x4f myProjectionMatrix;
   DM::Vec3f  myPosition;
   DM::Vec3f  myCustomUp;
   DM::Vec4f  myRotationQuat;

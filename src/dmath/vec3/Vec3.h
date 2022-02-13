@@ -22,8 +22,8 @@ public:
   Vec3();
   template <class U>
   Vec3(U v);
-  template <class U>
-  Vec3(U _x, U _y, U _z);
+  template <class U, class V, class M>
+  Vec3(U _x, V _y, M _z);
   template <class U>
   Vec3(const Vec2<U>& vec2);
   template <class U>
@@ -269,9 +269,6 @@ public:
   bool operator==(const DirectX::XMFLOAT4A& xm) const;
   bool operator==(const DirectX::XMVECTOR& xm) const;
 
-  // Hash operator
-  size_t operator()(const Vec3<T>& vec) const;
-
   // Bracket operator
   T& operator[](unsigned int i);
   T  operator[](unsigned int i) const;
@@ -297,6 +294,8 @@ public:
 
 #pragma endregion
 #pragma region Functions
+  template <class U>
+  DirectX::XMVECTOR  Load(U w) const;
   DirectX::XMVECTOR  Load() const;
   void               Store(const DirectX::XMVECTOR& xm);
   T                  Length() const;
@@ -366,8 +365,8 @@ inline Vec3<T>::Vec3(U v)
   z = static_cast<T>(v);
 }
 template <class T>
-template <class U>
-inline Vec3<T>::Vec3(U _x, U _y, U _z)
+template <class U, class V, class M>
+inline Vec3<T>::Vec3(U _x, V _y, M _z)
 {
   x = static_cast<T>(_x);
   y = static_cast<T>(_y);
@@ -1786,13 +1785,6 @@ inline bool Vec3<T>::operator==(const DirectX::XMVECTOR& xm) const
          z == static_cast<T>(DirectX ::XMVectorGetZ(xm));
 }
 
-template <class T>
-inline size_t Vec3<T>::operator()(const Vec3<T>& vec) const
-{
-  size_t h = std::hash<T>()(vec.x) ^ std::hash<T>()(vec.y) ^ std::hash<T>()(vec.z);
-  return h;
-}
-
 // Bracket operator
 template <class T>
 inline T& Vec3<T>::operator[](unsigned int i)
@@ -1887,19 +1879,30 @@ inline Vec3<T>& Vec3<T>::operator*=(const Mat4x4<U>& mat)
 template <class T>
 inline DirectX::XMVECTOR Vec3<T>::Load() const
 {
-  DirectX::XMVECTOR v;
+  DirectX::XMVECTOR v = DirectX::XMVectorZero();
   v = DirectX::XMVectorSetX(v, static_cast<float>(x));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(y));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(z));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(0));
+  v = DirectX::XMVectorSetY(v, static_cast<float>(y));
+  v = DirectX::XMVectorSetZ(v, static_cast<float>(z));
+  v = DirectX::XMVectorSetW(v, static_cast<float>(0));
+  return v;
+}
+template <class T>
+template <class U>
+inline DirectX::XMVECTOR Vec3<T>::Load(U w) const
+{
+  DirectX::XMVECTOR v = DirectX::XMVectorZero();
+  v                   = DirectX::XMVectorSetX(v, static_cast<float>(x));
+  v                   = DirectX::XMVectorSetY(v, static_cast<float>(y));
+  v                   = DirectX::XMVectorSetZ(v, static_cast<float>(z));
+  v                   = DirectX::XMVectorSetW(v, static_cast<float>(w));
   return v;
 }
 template <class T>
 inline void Vec3<T>::Store(const DirectX::XMVECTOR& xm)
 {
   x = static_cast<T>(DirectX::XMVectorGetX(xm));
-  y = static_cast<T>(DirectX::XMVectorGetX(xm));
-  z = static_cast<T>(DirectX::XMVectorGetX(xm));
+  y = static_cast<T>(DirectX::XMVectorGetY(xm));
+  z = static_cast<T>(DirectX::XMVectorGetZ(xm));
 }
 
 template <class T>
@@ -2119,4 +2122,17 @@ inline std::string Vec3<T>::ToString() const
   ss << "[" << x << " " << y << " " << z << "]";
   return ss.str();
 }
+
+namespace std
+{
+  template <class T>
+  struct hash<Vec3<T>>
+  {
+    size_t operator()(const Vec3<T>& p) const
+    {
+      size_t h = std::hash<T>()(p.x) ^ std::hash<T>()(p.y) ^ std::hash<T>()(p.z);
+      return h;
+    }
+  };
+} // namespace std
 #pragma endregion

@@ -22,8 +22,8 @@ public:
   Vec4();
   template <class U>
   Vec4(U v);
-  template <class U>
-  Vec4(U _x, U _y, U _z, U _w);
+  template <class U, class V, class M, class P>
+  Vec4(U _x, V _y, M _z, P _w);
   template <class U>
   Vec4(const Vec2<U>& vec2);
   template <class U>
@@ -269,9 +269,6 @@ public:
   bool operator==(const DirectX::XMFLOAT4A& xm) const;
   bool operator==(const DirectX::XMVECTOR& xm) const;
 
-  // Hash operator
-  size_t operator()(const Vec4<T>& vec) const;
-
   // Bracket operator
   T& operator[](unsigned int i) const;
 #pragma endregion
@@ -361,8 +358,8 @@ inline Vec4<T>::Vec4(U v)
   w = static_cast<T>(v);
 }
 template <class T>
-template <class U>
-inline Vec4<T>::Vec4(U _x, U _y, U _z, U _w)
+template <class U, class V, class M, class P>
+inline Vec4<T>::Vec4(U _x, V _y, M _z, P _w)
 {
   x = static_cast<T>(_x);
   y = static_cast<T>(_y);
@@ -1879,14 +1876,6 @@ inline bool Vec4<T>::operator==(const DirectX::XMVECTOR& xm) const
 }
 
 template <class T>
-inline size_t Vec4<T>::operator()(const Vec4<T>& vec) const
-{
-  size_t h =
-      std::hash<T>()(vec.x) ^ std::hash<T>()(vec.y) ^ std::hash<T>()(vec.z) ^ std::hash<T>()(vec.w);
-  return h;
-}
-
-template <class T>
 inline T& Vec4<T>::operator[](unsigned int i) const
 {
   return data[i];
@@ -1975,11 +1964,12 @@ inline Vec4<T>& Vec4<T>::operator*=(const Mat4x4<U>& mat)
 template <class T>
 inline DirectX::XMVECTOR Vec4<T>::Load() const
 {
-  DirectX::XMVECTOR v;
+  DirectX::XMVECTOR v = DirectX::XMVectorZero();
   v = DirectX::XMVectorSetX(v, static_cast<float>(x));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(y));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(z));
-  v = DirectX::XMVectorSetX(v, static_cast<float>(w));
+  v = DirectX::XMVectorSetY(v, static_cast<float>(y));
+  v = DirectX::XMVectorSetZ(v, static_cast<float>(z));
+  v = DirectX::XMVectorSetW(v, static_cast<float>(w));
+  return v;
 }
 template <class T>
 inline void Vec4<T>::Store(const DirectX::XMVECTOR& xm)
@@ -2154,4 +2144,19 @@ inline std::string Vec4<T>::ToString() const
   ss << "[" << x << " " << y << " " << z << " " << w << "]";
   return ss.str();
 }
+
+namespace std
+{
+  template <class T>
+  struct hash<Vec4<T>>
+  {
+    size_t operator()(const Vec4<T>& p) const
+    {
+      size_t h =
+          std::hash<T>()(p.x) ^ std::hash<T>()(p.y) ^ std::hash<T>()(p.z) ^ std::hash<T>()(p.w);
+      return h;
+    }
+  };
+}
+
 #pragma endregion

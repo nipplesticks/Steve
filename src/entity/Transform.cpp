@@ -87,9 +87,9 @@ const DM::Vec4f& Transform::GetRotation() const
   return myRotation;
 }
 
-DM::Mat4x4 Transform::GetWorldMatrix() const
+DM::Mat4x4f Transform::GetWorldMatrix() const
 {
-  DM::Mat4x4 s, r, t;
+  DM::Mat4x4f s, r, t;
 
   r.Store(DirectX::XMMatrixRotationQuaternion(myRotation.Load()));
   s.Store(DirectX::XMMatrixScaling(myScale.x, myScale.y, myScale.z));

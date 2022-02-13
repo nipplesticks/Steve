@@ -22,8 +22,8 @@ public:
   Vec2();
   template <class U>
   Vec2(U v);
-  template <class U>
-  Vec2(U _x, U _y);
+  template <class U, class V>
+  Vec2(U _x, V _y);
   template <class U>
   Vec2(const Vec2<U>& vec2);
   template <class U>
@@ -269,8 +269,6 @@ public:
   bool operator==(const DirectX::XMFLOAT4A& xm) const;
   bool operator==(const DirectX::XMVECTOR& xm) const;
 
-  // Hash operator
-  size_t operator()(const Vec2<T>& vec) const;
   // Bracket operator
   T& operator[](unsigned int i);
   T  operator[](unsigned int i) const;
@@ -337,8 +335,8 @@ inline Vec2<T>::Vec2(U v)
   y = static_cast<T>(v);
 }
 template <class T>
-template <class U>
-inline Vec2<T>::Vec2(U _x, U _y)
+template <class U, class V>
+inline Vec2<T>::Vec2(U _x, V _y)
 {
   x = static_cast<T>(_x);
   y = static_cast<T>(_y);
@@ -1662,12 +1660,6 @@ inline bool Vec2<T>::operator==(const DirectX::XMVECTOR& xm) const
 }
 
 template <class T>
-inline size_t Vec2<T>::operator()(const Vec2<T>& vec) const
-{
-  size_t h = std::hash<T>()(vec.x) ^ std::hash<T>()(vec.y);
-  return h;
-}
-template <class T>
 inline T& Vec2<T>::operator[](unsigned int i)
 {
   return data[i];
@@ -1682,7 +1674,7 @@ inline T Vec2<T>::operator[](unsigned int i) const
 template <class T>
 inline DirectX::XMVECTOR Vec2<T>::Load() const
 {
-  DirectX::XMVECTOR v;
+  DirectX::XMVECTOR v = DirectX::XMVectorZero();
   v = DirectX::XMVectorSetX(v, static_cast<float>(x));
   v = DirectX::XMVectorSetY(v, static_cast<float>(y));
   v = DirectX::XMVectorSetZ(v, static_cast<float>(0));
@@ -1861,4 +1853,17 @@ inline std::string Vec2<T>::ToString() const
     return ss.str();
   return "";
 }
+namespace std
+{
+  template <class T>
+  struct hash<Vec2<T>>
+  {
+    size_t operator()(const Vec2<T>& p) const
+    {
+      size_t h =
+          std::hash<T>()(p.x) ^ std::hash<T>()(p.y);
+      return h;
+    }
+  };
+} // namespace std
 #pragma endregion

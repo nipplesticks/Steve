@@ -58,10 +58,10 @@ DM::Vec3f OrbitCamera::GetUp() const
   }
 }
 
-DM::Mat4x4 OrbitCamera::GetViewMatrix() const
+DM::Mat4x4f OrbitCamera::GetViewMatrix() const
 {
-  DM::Mat4x4 viewMat;
-  viewMat.Store(DirectX::XMMatrixLookAtRH(myPosition.LoadAsVec4(1.0f), myLookAt.Load(), GetRelativeUp().Load()));
+  DM::Mat4x4f viewMat;
+  viewMat.Store(DirectX::XMMatrixLookAtRH(myPosition.Load(), myLookAt.Load(), GetRelativeUp().Load()));
   return viewMat;
 }
 

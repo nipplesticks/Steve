@@ -25,7 +25,7 @@ public:
   virtual const DM::Vec3f& GetPosition() const;
   virtual const DM::Vec3f& GetScale() const;
   virtual const DM::Vec4f& GetRotation() const;
-  virtual DM::Mat4x4       GetWorldMatrix() const;
+  virtual DM::Mat4x4f       GetWorldMatrix() const;
 
 private:
   DM::Vec3f myPosition;

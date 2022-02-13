@@ -51,9 +51,9 @@ void Camera::Rotate(const DM::Vec3f& axis)
   DM::Vec4f xq;
   DM::Vec4f yq;
   DM::Vec4f zq;
-  xq = GetRelativeRight().AsXmFloat4AVector();
-  yq = GetRelativeUp().AsXmFloat4AVector();
-  zq = GetRelativeForward().AsXmFloat4AVector();
+  xq = GetRelativeRight().AsXmAsXmFloat4A(0.0f);
+  yq = GetRelativeUp().AsXmAsXmFloat4A(0.0f);
+  zq = GetRelativeForward().AsXmAsXmFloat4A(0.0f);
 
   xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
   yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));
@@ -105,12 +105,12 @@ const DM::Vec4f& Camera::GetRotation() const
   return myRotationQuat;
 }
 
-const DM::Mat4x4& Camera::GetProjectionMatrix() const
+const DM::Mat4x4f& Camera::GetProjectionMatrix() const
 {
   return myProjectionMatrix;
 }
 
-DM::Mat4x4 Camera::GetViewProjectionMatrix() const
+DM::Mat4x4f Camera::GetViewProjectionMatrix() const
 {
   return GetViewMatrix() * myProjectionMatrix;
 }
@@ -131,8 +131,8 @@ void Camera::SetAsMainCameraAndUpdate() const
 {
   struct
   {
-    DM::Mat4x4 view;
-    DM::Mat4x4 projection;
+    DM::Mat4x4f view;
+    DM::Mat4x4f projection;
   } viewProjection;
 
   viewProjection.view = GetViewMatrix();
@@ -145,7 +145,7 @@ void Camera::SetAsMainCameraAndUpdate() const
 
 void Camera::InitViewProjectionCb()
 {
-  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4) * 2);
+  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4f) * 2);
 }
 
 void Camera::_buildProjection()

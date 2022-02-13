@@ -182,18 +182,18 @@ void Planet::_createIcosahedron(std::vector<uint>& indices, std::vector<DM::Vec3
   indices.clear();
 
   uint idx        = 0;
-  vertices[idx++] = DM::Vec3f(0, b, -a);
-  vertices[idx++] = DM::Vec3f(b, a, 0);
-  vertices[idx++] = DM::Vec3f(-b, a, 0);
-  vertices[idx++] = DM::Vec3f(0, b, a);
-  vertices[idx++] = DM::Vec3f(0, -b, a);
-  vertices[idx++] = DM::Vec3f(-a, 0, b);
-  vertices[idx++] = DM::Vec3f(0, -b, -a);
-  vertices[idx++] = DM::Vec3f(a, 0, -b);
-  vertices[idx++] = DM::Vec3f(a, 0, b);
-  vertices[idx++] = DM::Vec3f(-a, 0, -b);
-  vertices[idx++] = DM::Vec3f(b, -a, 0);
-  vertices[idx++] = DM::Vec3f(-b, -a, 0);
+  vertices[idx++] = DM::Vec3f(0.0f, b, -a);
+  vertices[idx++] = DM::Vec3f(b, a, 0.0f);
+  vertices[idx++] = DM::Vec3f(-b, a, 0.0f);
+  vertices[idx++] = DM::Vec3f(0.0f, b, a);
+  vertices[idx++] = DM::Vec3f(0.0f, -b, a);
+  vertices[idx++] = DM::Vec3f(-a, 0.0f, b);
+  vertices[idx++] = DM::Vec3f(0.0f, -b, -a);
+  vertices[idx++] = DM::Vec3f(a, 0.0f, -b);
+  vertices[idx++] = DM::Vec3f(a, 0.0f, b);
+  vertices[idx++] = DM::Vec3f(-a, 0.0f, -b);
+  vertices[idx++] = DM::Vec3f(b, -a, 0.0f);
+  vertices[idx++] = DM::Vec3f(-b, -a, 0.0f);
 
   pushIndices(1, 2, 0, indices);
   pushIndices(2, 1, 3, indices);
@@ -293,8 +293,8 @@ void Planet::_createVertices(std::vector<Vertex>& verts, const std::vector<DM::V
   for (uint i = 0; i < points.size(); i++)
   {
     verts[i]          = defaultVert;
-    verts[i].position = points[i].Normalize().AsXmFloat4APoint();
-    verts[i].normal   = points[i].Normalize().AsXmFloat4AVector();
+    verts[i].position = points[i].Normalize().AsXmAsXmFloat4A(1.0f);
+    verts[i].normal   = points[i].Normalize().AsXmAsXmFloat4A(0.0f);
     verts[i].uv.x     = 0.5f + (std::atan2(verts[i].position.z, verts[i].position.x) / (2.0f * PI));
     verts[i].uv.y     = 0.5f - (std::asin(verts[i].position.y) / PI);
   }
@@ -494,7 +494,7 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
     DM::Vec3f nor = v.normal;
     DM::Vec3f pos = v.position;
     pos           = pos + nor * height;
-    v.position    = pos.AsXmFloat4APoint();
+    v.position    = pos.AsXmAsXmFloat4A(1.0f);
   }
 
   struct TempNor
@@ -530,7 +530,7 @@ void Planet::_offsetBasedOnHeightMap(TextureLoader::Image* heightMap,
   {
     DM::Vec3f n     = tempNor[i].allNormals / (float)tempNor[i].nrOfNormals;
     n               = n.Normalize();
-    verts[i].normal = n.AsXmFloat4AVector();
+    verts[i].normal = n.AsXmAsXmFloat4A(0.0f);
   }
 }
 
@@ -617,12 +617,12 @@ void Planet::_calcTangent(const std::vector<uint>& indices, std::vector<Vertex>&
 
     bitangent = bitangent.Normalize();
 
-    verts[indices[i + 0]].tangent   = (tangent).AsXmFloat4AVector();
-    verts[indices[i + 1]].tangent   = (tangent).AsXmFloat4AVector();
-    verts[indices[i + 2]].tangent   = (tangent).AsXmFloat4AVector();
-    verts[indices[i + 0]].bitangent = (bitangent).AsXmFloat4AVector();
-    verts[indices[i + 1]].bitangent = (bitangent).AsXmFloat4AVector();
-    verts[indices[i + 2]].bitangent = (bitangent).AsXmFloat4AVector();
+    verts[indices[i + 0]].tangent   = tangent.AsXmAsXmFloat4A(0.0f);
+    verts[indices[i + 1]].tangent   = tangent.AsXmAsXmFloat4A(0.0f);
+    verts[indices[i + 2]].tangent   = tangent.AsXmAsXmFloat4A(0.0f);
+    verts[indices[i + 0]].bitangent = bitangent.AsXmAsXmFloat4A(0.0f);
+    verts[indices[i + 1]].bitangent = bitangent.AsXmAsXmFloat4A(0.0f);
+    verts[indices[i + 2]].bitangent = bitangent.AsXmAsXmFloat4A(0.0f);
   }
 }
 
@@ -717,7 +717,7 @@ void Planet::_generateHeightMapAndTexture(TextureLoader::Image* heightMap,
       double f   = genType.height.frequency;
       double e   = 0.0;
       double div = 0.0f;
-      for (uint i = 0; i < genType.height.iterations; i++)
+      for (uint i = 0; i < (uint)genType.height.iterations; i++)
       {
         double it = genType.height.frequency / f;
         e += it * pn.Sample(xCoord * f, yCoord * f, zCoord * f);
@@ -736,7 +736,7 @@ void Planet::_generateHeightMapAndTexture(TextureLoader::Image* heightMap,
       f        = genType.moisture.frequency;
       double m = 0.0;
       div      = 0.0f;
-      for (uint i = 0; i < genType.moisture.iterations; i++)
+      for (uint i = 0; i < (uint)genType.moisture.iterations; i++)
       {
         double it = genType.moisture.frequency / f;
         m += it * pn.Sample(xCoord * f, yCoord * f, zCoord * f);

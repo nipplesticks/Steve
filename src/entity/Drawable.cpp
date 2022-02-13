@@ -10,9 +10,9 @@ std::unordered_map<GraphicsPipelineState*, Drawable::DrawQueue> Drawable::DRAW_Q
 Drawable::Drawable(const DM::Vec3f& position)
     : Transform(position)
 {
-  myWorldConstantBuffer.Init(sizeof(DM::Mat4x4));
-  DM::Mat4x4 world = GetWorldMatrix();
-  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4));
+  myWorldConstantBuffer.Init(sizeof(DM::Mat4x4f));
+  DM::Mat4x4f world = GetWorldMatrix();
+  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4f));
 }
 
 void Drawable::SetMesh(Mesh* mesh_p)
@@ -42,8 +42,8 @@ void Drawable::Bind()
 
 void Drawable::UpdateConstantBuffer()
 {
-  DM::Mat4x4 world = GetWorldMatrix();
-  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4));
+  DM::Mat4x4f world = GetWorldMatrix();
+  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4f));
 }
 
 void Drawable::Draw()

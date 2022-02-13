@@ -35,10 +35,10 @@ DM::Vec3f FpsCamera::GetUp() const
   }
 }
 
-DM::Mat4x4 FpsCamera::GetViewMatrix() const
+DM::Mat4x4f FpsCamera::GetViewMatrix() const
 {
-  DM::Mat4x4 viewMat;
-  viewMat.Store(DirectX::XMMatrixLookToRH(myPosition.LoadAsVec4(1.0f), GetRelativeForward().Load(), GetRelativeUp().Load()));
+  DM::Mat4x4f viewMat;
+  viewMat.Store(DirectX::XMMatrixLookToRH(myPosition.Load(1), GetRelativeForward().Load(), GetRelativeUp().Load()));
   return viewMat;
 }
 
