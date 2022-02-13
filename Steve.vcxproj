@@ -158,8 +158,6 @@
     <ClCompile Include="external\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\imgui_tables.cpp" />
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\dmath\vec2\Vec2.cpp" />
-    <ClCompile Include="src\Source_new.cpp" />
     <ClCompile Include="src\entity\Drawable.cpp" />
     <ClCompile Include="src\entity\Transform.cpp" />
     <ClCompile Include="src\events\Event.cpp" />
@@ -193,10 +191,11 @@
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="src\dmath\DMath.h" />
+    <ClInclude Include="src\dmath\mat3x3\Mat3x3.h" />
+    <ClInclude Include="src\dmath\mat4x4\Mat4x4.h" />
     <ClInclude Include="src\dmath\vec2\Vec2.h" />
-    <ClInclude Include="src\dmath\vec2\Vec2f.h" />
-    <ClInclude Include="src\dmath\vec2\Vec2i.h" />
-    <ClInclude Include="src\dmath\vec2\Vec2u.h" />
+    <ClInclude Include="src\dmath\vec3\Vec3.h" />
+    <ClInclude Include="src\dmath\vec4\Vec4.h" />
     <ClInclude Include="src\entity\Drawable.h" />
     <ClInclude Include="src\events\Event.h" />
     <ClInclude Include="src\events\EventHandler.h" />

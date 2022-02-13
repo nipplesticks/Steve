@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\window\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -102,10 +99,7 @@
     <ClCompile Include="src\renderer\d3d12\ComputationalPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Source_new.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\dmath\vec2\Vec2.cpp">
+    <ClCompile Include="src\Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -242,13 +236,16 @@
     <ClInclude Include="src\dmath\vec2\Vec2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\dmath\vec2\Vec2f.h">
+    <ClInclude Include="src\dmath\vec3\Vec3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\dmath\vec2\Vec2i.h">
+    <ClInclude Include="src\dmath\vec4\Vec4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\dmath\vec2\Vec2u.h">
+    <ClInclude Include="src\dmath\mat4x4\Mat4x4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dmath\mat3x3\Mat3x3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

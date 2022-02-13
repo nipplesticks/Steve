@@ -1,11 +1,8 @@
-//#include "window/Window.h"
-
 #include "dmath/DMath.h"
+#include <iostream>
 
-
-int testingFesting()
+int main()
 {
-  DM::Vec2f vec;
-
+  
   return 0;
 }
