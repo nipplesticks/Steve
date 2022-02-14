@@ -2,6 +2,7 @@
 #define NOMINMAX
 #include "../../utility/RenderUtility.h"
 #include "../../window/Window.h"
+#include "../buffers/Resource.h"
 #include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
@@ -54,10 +55,11 @@ void MyRenderer::BeginFrame(const DM::Vec4f& color)
   cpuDescHnd2.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
   myGraphicalInterface.commandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);
-  
+
   myGraphicalInterface.commandList4_p->ClearDepthStencilView(
       cpuDescHnd2, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-  myGraphicalInterface.commandList4_p->ClearRenderTargetView(cpuDescHndl, (FLOAT*)color.data, 0, NULL);
+  myGraphicalInterface.commandList4_p->ClearRenderTargetView(
+      cpuDescHndl, (FLOAT*)color.data, 0, NULL);
   myGraphicalInterface.commandList4_p->SetGraphicsRootSignature(
       myGraphicalInterface.rootSignature_p);
 }
@@ -127,7 +129,6 @@ void MyRenderer::SetResolution(uint resX, uint resY)
     cdh.ptr += myGraphicalInterface.renderTargetDescriptorSize;
   }
 
-
   D3D12_HEAP_PROPERTIES heapProp = {};
   heapProp.Type                  = D3D12_HEAP_TYPE_DEFAULT;
   heapProp.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -148,8 +149,7 @@ void MyRenderer::SetResolution(uint resX, uint resY)
   dsvDesc.Format                        = DXGI_FORMAT_D32_FLOAT;
   dsvDesc.ViewDimension                 = D3D12_DSV_DIMENSION_TEXTURE2D;
 
-  D3D12_CPU_DESCRIPTOR_HANDLE cdh =
-      myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cdh = myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
 
   D3D12_CLEAR_VALUE clearVal  = {};
   clearVal.Format             = DXGI_FORMAT_D32_FLOAT;
@@ -170,6 +170,63 @@ void MyRenderer::SetResolution(uint resX, uint resY)
   }
 }
 
+void MyRenderer::ResourceUpdate(void*                 data_p,
+                                Resource*             resource_p,
+                                D3D12_RESOURCE_STATES stateAfter)
+{
+  ID3D12Resource*       tempResource_p = nullptr;
+  D3D12_HEAP_PROPERTIES heapProp       = {};
+  heapProp.Type                        = D3D12_HEAP_TYPE_UPLOAD;
+  heapProp.CPUPageProperty             = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+  heapProp.MemoryPoolPreference        = D3D12_MEMORY_POOL_UNKNOWN;
+
+  D3D12_RESOURCE_DESC resDesc  = resource_p->GetResource()->GetDesc();
+  uint64              byteSize = resource_p->GetBufferSize();
+  D3D12_RESOURCE_DESC desc     = {};
+  desc.DepthOrArraySize        = 1;
+  desc.Dimension               = D3D12_RESOURCE_DIMENSION_BUFFER;
+  desc.Flags                   = D3D12_RESOURCE_FLAG_NONE;
+  desc.Format                  = DXGI_FORMAT_UNKNOWN;
+  desc.Height                  = 1;
+  desc.Width                   = byteSize;
+  desc.Layout                  = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  desc.MipLevels               = 1;
+  desc.SampleDesc.Count        = 1;
+  desc.SampleDesc.Quality      = 0;
+
+  HR_ASSERT(myDevice_p->CreateCommittedResource(&heapProp,
+                                                D3D12_HEAP_FLAG_NONE,
+                                                &desc,
+                                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                nullptr,
+                                                IID_PPV_ARGS(&tempResource_p)));
+
+  D3D12_SUBRESOURCE_DATA srdDesc = {};
+  srdDesc.pData                  = data_p;
+  srdDesc.RowPitch               = resource_p->GetRowPitch();
+  srdDesc.SlicePitch             = srdDesc.RowPitch * resource_p->GetDimention().y;
+  myResourceUpdateAllocator_p->Reset();
+  myResourceUpdateCommandList4_p->Reset(myResourceUpdateAllocator_p, nullptr);
+
+  _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
+                                resource_p->GetResource(),
+                                resource_p->GetState(),
+                                D3D12_RESOURCE_STATE_COPY_DEST);
+
+  UpdateSubresources(
+      myResourceUpdateCommandList4_p, resource_p->GetResource(), tempResource_p, 0, 0, 1, &srdDesc);
+  
+  _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
+                                resource_p->GetResource(),
+                                D3D12_RESOURCE_STATE_COPY_DEST,
+                                stateAfter);
+
+  myResourceUpdateCommandList4_p->Close();
+  myResourceUpdateCommandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
+  _HardWait(myResourceUpdateCommandQueue_p);
+}
+
 ID3D12Device5* MyRenderer::GetDevice() const
 {
   return myDevice_p;
@@ -183,6 +240,38 @@ ID3D12DescriptorHeap* MyRenderer::GetUploadHeap() const
 uint MyRenderer::GetSrvUavCbvDescritorSize() const
 {
   return mySrvUavCbvDescriptorSize;
+}
+
+void MyRenderer::ChangeResourceStateGraphic(ID3D12Resource*       resource_p,
+                                            D3D12_RESOURCE_STATES StateBefore,
+                                            D3D12_RESOURCE_STATES StateAfter)
+{
+  _SetResourceTransitionBarrier(
+      myGraphicalInterface.commandList4_p, resource_p, StateBefore, StateAfter);
+}
+
+void MyRenderer::ChangeResourceStateCompute(ID3D12Resource*       resource_p,
+                                            D3D12_RESOURCE_STATES StateBefore,
+                                            D3D12_RESOURCE_STATES StateAfter)
+{
+  _SetResourceTransitionBarrier(
+      myComputeInterface.commandList4_p, resource_p, StateBefore, StateAfter);
+}
+
+void MyRenderer::ChangeResourceStateNow(ID3D12Resource*       resource_p,
+                                        D3D12_RESOURCE_STATES StateBefore,
+                                        D3D12_RESOURCE_STATES StateAfter)
+{
+  if (StateBefore == StateAfter)
+    return;
+  myResourceUpdateAllocator_p->Reset();
+  myResourceUpdateCommandList4_p->Reset(myResourceUpdateAllocator_p, nullptr);
+
+  _SetResourceTransitionBarrier(
+      myResourceUpdateCommandList4_p, resource_p, StateBefore, StateAfter);
+  myResourceUpdateCommandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
+  _HardWait(myResourceUpdateCommandQueue_p);
 }
 
 void MyRenderer::_Init(uint resX, uint resY, HWND hwnd)
@@ -273,21 +362,25 @@ void MyRenderer::_CreateCommandInterfaceAndSwapChain()
   D3D12_COMMAND_QUEUE_DESC commandQueueDesc = {};
   HR_ASSERT(myDevice_p->CreateCommandQueue(&commandQueueDesc,
                                            IID_PPV_ARGS(&myGraphicalInterface.commandQueue_p)));
+  HR_ASSERT(myDevice_p->CreateCommandQueue(&commandQueueDesc,
+                                           IID_PPV_ARGS(&myResourceUpdateCommandQueue_p)));
   HR_ASSERT(myDevice_p->CreateCommandAllocator(
       D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&myGraphicalInterface.commandAllocator_p)));
+
+  HR_ASSERT(myDevice_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                               IID_PPV_ARGS(&myResourceUpdateAllocator_p)));
   HR_ASSERT(myDevice_p->CreateCommandList(0,
                                           D3D12_COMMAND_LIST_TYPE_DIRECT,
                                           myGraphicalInterface.commandAllocator_p,
                                           nullptr,
                                           IID_PPV_ARGS(&myGraphicalInterface.commandList4_p)));
-  HR_ASSERT(myDevice_p->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                               IID_PPV_ARGS(&myResourceUploadAllocator_p)));
+
   HR_ASSERT(myDevice_p->CreateCommandList(0,
                                           D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                          myResourceUploadAllocator_p,
+                                          myResourceUpdateAllocator_p,
                                           nullptr,
-                                          IID_PPV_ARGS(&myResourceUploadCommandList4_p)));
-  HR_ASSERT(myResourceUploadCommandList4_p->Close());
+                                          IID_PPV_ARGS(&myResourceUpdateCommandList4_p)));
+  HR_ASSERT(myResourceUpdateCommandList4_p->Close());
   HR_ASSERT(myGraphicalInterface.commandList4_p->Close());
 
   IDXGIFactory5* factory_p = nullptr;
@@ -309,7 +402,7 @@ void MyRenderer::_CreateCommandInterfaceAndSwapChain()
 
   IDXGISwapChain1* swapChain1_p = nullptr;
   HR_ASSERT(factory_p->CreateSwapChainForHwnd(
-      myGraphicalInterface.commandList4_p, myHwnd, &scDesc, nullptr, nullptr, &swapChain1_p));
+      myGraphicalInterface.commandQueue_p, myHwnd, &scDesc, nullptr, nullptr, &swapChain1_p));
   HR_ASSERT(swapChain1_p->QueryInterface(IID_PPV_ARGS(&myGraphicalInterface.swapChain_p)));
   SafeRelease(&swapChain1_p);
   myGraphicalInterface.currentBackbufferIndex =
@@ -364,8 +457,6 @@ void MyRenderer::_CreateRenderTargets()
 
 void MyRenderer::_CreateDepthBuffers()
 {
-  // Create Depth buffers
-
   D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
   dhd.NumDescriptors             = NUM_SWAP_BUFFERS;
   dhd.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
@@ -452,10 +543,8 @@ void MyRenderer::_CreateRootsignatures()
     rangeDesc.RegisterSpace                     = 0;
     rangeDesc.BaseShaderRegister                = i;
     rangeDesc.OffsetInDescriptorsFromTableStart = i;
-    srvRanges[i]                                = rangeDesc;
+    uavRanges[i]                                = rangeDesc;
   }
-
-  D3D12_ROOT_PARAMETER rootParams[3] = {};
 
   rootParams[0].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
   rootParams[0].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
@@ -560,6 +649,9 @@ void MyRenderer::_SetResourceTransitionBarrier(ID3D12GraphicsCommandList* comman
                                                D3D12_RESOURCE_STATES      StateBefore,
                                                D3D12_RESOURCE_STATES      StateAfter)
 {
+  if (StateBefore == StateAfter)
+    return;
+
   D3D12_RESOURCE_BARRIER barrierDesc = {};
 
   barrierDesc.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

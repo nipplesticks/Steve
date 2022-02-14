@@ -7,6 +7,7 @@
 struct ID3D12DescriptorHeap;
 class TextureBuffer;
 class ConstantBuffer;
+class Resource;
 
 class ResourceDescriptorHeap
 {
@@ -14,6 +15,10 @@ public:
   void Create(const std::vector<ConstantBuffer*>& constantBuffers,
               const std::vector<TextureBuffer*>&  textureBuffers,
               const std::vector<TextureBuffer*>&  uavBuffers);
+
+  void CreateNew(const std::vector<Resource*>& constantBuffers,
+              const std::vector<Resource*>& textureBuffers,
+              const std::vector<Resource*>& uavBuffers);
 
   void CreateWithConstantBuffers(const std::vector<ConstantBuffer*>& constantBuffers);
 

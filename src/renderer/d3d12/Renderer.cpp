@@ -24,17 +24,6 @@ ID3D12DescriptorHeap* Renderer::gUploadHeap_p            = nullptr;
 uint                  Renderer::gSrvUavCbvDescriptorSize = 0u;
 Renderer*             Renderer::gRenderer_p              = nullptr;
 
-template <class Interface>
-inline void SafeRelease(Interface** ppInterfaceToRelease)
-{
-  if (*ppInterfaceToRelease != NULL)
-  {
-    (*ppInterfaceToRelease)->Release();
-
-    (*ppInterfaceToRelease) = NULL;
-  }
-}
-
 Renderer::Renderer(uint x, uint y, HWND aHwnd)
 {
   _createDevice();

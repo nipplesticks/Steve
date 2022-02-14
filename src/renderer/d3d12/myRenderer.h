@@ -9,6 +9,7 @@
 #include <windows.h>
 
 struct IDXGISwapChain4;
+class Resource;
 
 class MyRenderer
 {
@@ -34,10 +35,20 @@ public:
   void DrawImgui();
 
   void SetResolution(uint resX, uint resY);
+  void ResourceUpdate(void* data_p, Resource* resource_p, D3D12_RESOURCE_STATES stateAfter);
 
   ID3D12Device5*        GetDevice() const;
   ID3D12DescriptorHeap* GetUploadHeap() const;
   uint                  GetSrvUavCbvDescritorSize() const;
+  void                  ChangeResourceStateGraphic(ID3D12Resource*       resource_p,
+                                            D3D12_RESOURCE_STATES StateBefore,
+                                            D3D12_RESOURCE_STATES StateAfter);
+  void                  ChangeResourceStateCompute(ID3D12Resource*       resource_p,
+                                                   D3D12_RESOURCE_STATES StateBefore,
+                                                   D3D12_RESOURCE_STATES StateAfter);
+  void                  ChangeResourceStateNow(ID3D12Resource*       resource_p,
+                                               D3D12_RESOURCE_STATES StateBefore,
+                                               D3D12_RESOURCE_STATES StateAfter);
 
 private:
   void _Init(uint resX, uint resY, HWND hwnd);
@@ -53,9 +64,9 @@ private:
   void _Cleanup();
   void _HardWait(ID3D12CommandQueue* commandQueue_p);
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
-                                     ID3D12Resource*       resource_p,
-                                     D3D12_RESOURCE_STATES StateBefore,
-                                     D3D12_RESOURCE_STATES StateAfter);
+                                     ID3D12Resource*            resource_p,
+                                     D3D12_RESOURCE_STATES      StateBefore,
+                                     D3D12_RESOURCE_STATES      StateAfter);
 
 private:
   static const uint           NUM_SWAP_BUFFERS               = 2u;
@@ -64,8 +75,9 @@ private:
   uint                        mySrvUavCbvDescriptorSize      = 0u;
   ID3D12Fence1*               myFence_p                      = nullptr;
   HANDLE                      myEventHandle                  = nullptr;
-  ID3D12CommandAllocator*     myResourceUploadAllocator_p    = nullptr;
-  ID3D12GraphicsCommandList4* myResourceUploadCommandList4_p = nullptr;
+  ID3D12CommandAllocator*     myResourceUpdateAllocator_p    = nullptr;
+  ID3D12GraphicsCommandList4* myResourceUpdateCommandList4_p = nullptr;
+  ID3D12CommandQueue*         myResourceUpdateCommandQueue_p = nullptr;
   uint64                      myFenceValue                   = 0u;
   HWND                        myHwnd                         = 0;
   DM::Vec2u                   myResulotion;

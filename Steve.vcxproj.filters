@@ -99,10 +99,13 @@
     <ClCompile Include="src\renderer\d3d12\ComputationalPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Source.cpp">
+    <ClCompile Include="src\renderer\d3d12\myRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\d3d12\myRenderer.cpp">
+    <ClCompile Include="src\renderer\buffers\Resource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Source_new.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
