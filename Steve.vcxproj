@@ -170,6 +170,7 @@
     <ClCompile Include="src\renderer\d3d12\ComputationalPipeline.cpp" />
     <ClCompile Include="src\renderer\d3d12\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\renderer\buffers\IndexBuffer.cpp" />
+    <ClCompile Include="src\renderer\d3d12\myRenderer.cpp" />
     <ClCompile Include="src\renderer\mesh\Mesh.cpp" />
     <ClCompile Include="src\renderer\camera\OrbitCamera.cpp" />
     <ClCompile Include="src\renderer\d3d12\Renderer.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="src\renderer\d3d12\d3dx12.h" />
     <ClInclude Include="src\renderer\d3d12\GraphicsPipelineState.h" />
     <ClInclude Include="src\renderer\buffers\IndexBuffer.h" />
+    <ClInclude Include="src\renderer\d3d12\myRenderer.h" />
     <ClInclude Include="src\renderer\mesh\Mesh.h" />
     <ClInclude Include="src\renderer\camera\OrbitCamera.h" />
     <ClInclude Include="src\renderer\d3d12\Renderer.h" />

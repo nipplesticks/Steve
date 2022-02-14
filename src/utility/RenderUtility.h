@@ -30,6 +30,17 @@
     (n) + ((a) - 1) & ~((a) - 1)                                                                               \
   }
 
+template <class Interface>
+static inline void SafeRelease(Interface** ppInterfaceToRelease)
+{
+  if (*ppInterfaceToRelease != NULL)
+  {
+    (*ppInterfaceToRelease)->Release();
+
+    (*ppInterfaceToRelease) = NULL;
+  }
+}
+
 static D3D12_ROOT_PARAMETER_TYPE ConvertToParameterType(D3D_SHADER_INPUT_TYPE inputType)
 {
   switch (inputType)
