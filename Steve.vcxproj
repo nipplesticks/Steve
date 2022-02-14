@@ -201,6 +201,7 @@
     <ClInclude Include="src\events\EventHandler.h" />
     <ClInclude Include="src\Input\KeyboardInput.h" />
     <ClInclude Include="src\Noise\PerlinNoise.h" />
+    <ClInclude Include="src\renderer\buffers\Resource.h" />
     <ClInclude Include="src\renderer\camera\FpsCamera.h" />
     <ClInclude Include="src\renderer\camera\Camera.h" />
     <ClInclude Include="src\renderer\buffers\ConstantBuffer.h" />
