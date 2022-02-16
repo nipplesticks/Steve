@@ -7,7 +7,7 @@
 #include <vector>
 
 class Mesh;
-class TextureBuffer;
+class Texture2D;
 class GraphicsPipelineState;
 
 class Drawable : public Transform
@@ -40,18 +40,20 @@ public:
   Drawable(const DM::Vec3f& position = DM::Vec3f());
   virtual ~Drawable() = default;
 
-  void SetMesh(Mesh* mesh_p);
-  void SetTexture(TextureBuffer* textureBuffer_p);
-  void SetGraphicsPipelineState(GraphicsPipelineState* state_p);
-  virtual void Bind();
-  void UpdateConstantBuffer();
+  void            SetMesh(Mesh* mesh_p);
+  void            SetTexture(Texture2D* textureBuffer_p);
+  void            SetGraphicsPipelineState(GraphicsPipelineState* state_p);
+  virtual void    BindWithDefaultResourceDescHeap();
+  void            SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHeap_p);
+  void            UpdateWorldMatrixConstantBuffer();
+  ConstantBuffer* GetWorldMatrixConstantBuffer() const;
 
   void Draw();
 
-  Mesh*                         GetMesh() const;
-  TextureBuffer*                GetTextureBuffer() const;
-  GraphicsPipelineState*        GetGraphicsPipelineState() const;
-  const ResourceDescriptorHeap& GetResourceDescHeap() const;
+  Mesh*                   GetMesh() const;
+  Texture2D*              GetTextureBuffer() const;
+  GraphicsPipelineState*  GetGraphicsPipelineState() const;
+  ResourceDescriptorHeap* GetResourceDescHeap() const;
 
   static std::unordered_map<GraphicsPipelineState*, DrawQueue> DRAW_QUEUE;
 
@@ -59,10 +61,10 @@ private:
   static void PushDrawableToDrawQueue(Drawable* drawable);
 
 protected:
-  bool                   myIsBinded        = false;
-  Mesh*                  myMesh_p          = nullptr;
-  TextureBuffer*         myTextureBuffer_p = nullptr;
-  GraphicsPipelineState* myGraphicsState_p = nullptr;
-  ConstantBuffer         myWorldConstantBuffer;
-  ResourceDescriptorHeap myResourceDescHeap;
+  bool                    myIsBinded           = false;
+  Mesh*                   myMesh_p             = nullptr;
+  Texture2D*              myTextureBuffer_p    = nullptr;
+  GraphicsPipelineState*  myGraphicsState_p    = nullptr;
+  ResourceDescriptorHeap* myResourceDescHeap_p = nullptr;
+  ConstantBuffer          myWorldConstantBuffer;
 };

@@ -1,22 +1,19 @@
 #pragma once
-#include "../../utility/Typedef.h"
-#include <d3d12.h>
 
-class VertexBuffer
+#include "Resource.h"
+
+class VertexBuffer : public Resource
 {
 public:
-  VertexBuffer()  = default;
+  VertexBuffer() = default;
   ~VertexBuffer() = default;
-
-  void Init(uint size, uint stride);
-  void Update(void* data, uint size);
-
-  ID3D12Resource*                 GetResource();
-  const D3D12_VERTEX_BUFFER_VIEW& GetVBV() const;
-  uint                            GetVertexCount() const;
-
-private:
-  ID3D12Resource*          myVertexBuffer_p   = nullptr;
-  D3D12_VERTEX_BUFFER_VIEW myVertexBufferView = {};
-  uint                     myNumVertices      = 0u;
+  void Create(uint sizeOfVertex, uint numberOfVertices)
+  {
+    Init(Resource_Type::VertexBuffer,
+         sizeOfVertex * numberOfVertices,
+         DXGI_FORMAT_UNKNOWN,
+         1,
+         1,
+         numberOfVertices);
+  }
 };

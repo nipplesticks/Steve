@@ -19,14 +19,11 @@ public:
   HRESULT SetPixelShader(const std::string& pixelShader);
   void    EnableBlending();
   void    GenerateInputElementDesc();
-  void    SetRootSignature(ID3D12RootSignature* rootSignature_p);
-  HRESULT GenerateRootSignature();
   void    SetInputElementDesc(const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs);
 
   HRESULT CreatePipelineState();
 
   ID3D12PipelineState* GetPipelineState() const;
-  ID3D12RootSignature* GetRootSignature() const;
 
 private:
   void _defaultValues();
@@ -38,7 +35,6 @@ private:
   ID3DBlob*            myPixelShader_p    = nullptr;
   ID3D12PipelineState* myPipelineState_p  = nullptr;
   ID3D12PipelineState* myPipelineStateWireframe_p  = nullptr;
-  ID3D12RootSignature* myRootSignature_p  = nullptr;
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> myInputElementDescs;
 };

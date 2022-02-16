@@ -24,8 +24,6 @@ struct VS_IN
   float4 pos : SV_POSITION;
   float4 col : COLOR;
   float4 nor : NORMAL;
-  float4 tangent : TANGENT;
-  float4 bitangent : BITANGENT;
   float4 uv : TEXCOORD;
 };
 
@@ -45,21 +43,11 @@ VS_OUT main(VS_IN vIn)
   float r = heightMap.SampleLevel(aSampler, vIn.uv.xy, 0).r;
   float3 normal = bumpMap.SampleLevel(aSampler, vIn.uv.xy, 0).rgb;
   vIn.pos = float4(vIn.pos.xyz + vIn.nor.xyz * r, 1);
-  //float h = length(vIn.pos.xyz);
-  //if (h <= waterLevel.x)
-  //{
-  //  vIn.pos = float4(normalize(vIn.pos.xyz) * waterLevel.x, 1.0f);
-  //  normal = float3(normalize(vIn.pos.xyz));
-  //}
-  
   vIn.pos = mul(vIn.pos, transpose(worldMat));
   vOut.worldPos = vIn.pos;
-  
   vIn.nor = (normalize(mul(float4(normal, 0.0f), transpose(worldMat))));
-  
   vIn.nor.w = 0.0f;
   vIn.pos = mul(vIn.pos, transpose(mul(proj, view)));
-  
   vOut.pos = vIn.pos;
   vOut.col = vIn.col;
   vOut.uv = vIn.uv;

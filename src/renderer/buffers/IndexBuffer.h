@@ -1,22 +1,19 @@
 #pragma once
-#include "../../utility/Typedef.h"
-#include <d3d12.h>
 
-class IndexBuffer
+#include "Resource.h"
+
+class IndexBuffer : public Resource
 {
 public:
-  IndexBuffer()  = default;
+  IndexBuffer()   = default;
   ~IndexBuffer() = default;
-
-  void Init(uint indexCount);
-  void Update(void* data);
-
-  ID3D12Resource*                GetResource();
-  const D3D12_INDEX_BUFFER_VIEW& GetIBV() const;
-  uint                           GetIndexCount() const;
-
-private:
-  ID3D12Resource*         myIndexBuffer_p  = nullptr;
-  D3D12_INDEX_BUFFER_VIEW myIndexBufferView = {};
-  uint                    myNumIndices      = 0u;
+  void Create(uint numberOfIndices)
+  {
+    Init(Resource_Type::IndexBuffer,
+         numberOfIndices * sizeof(uint),
+         DXGI_FORMAT_UNKNOWN,
+         1,
+         1,
+         numberOfIndices);
+  }
 };

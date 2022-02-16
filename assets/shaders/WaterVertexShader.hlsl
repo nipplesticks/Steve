@@ -19,8 +19,6 @@ struct VS_IN
   float4 pos : SV_POSITION;
   float4 col : COLOR;
   float4 nor : NORMAL;
-  float4 tangent : TANGENT;
-  float4 bitangent : BITANGENT;
   float4 uv : TEXCOORD;
 };
 
@@ -50,7 +48,7 @@ VS_OUT main(VS_IN vIn)
   vOut.col = vIn.col;
   vOut.uv = vIn.uv;
   vOut.nor = vIn.nor;
-  vOut.bitangent = mul(vIn.bitangent, transpose(worldMat));
-  vOut.tangent = mul(vIn.tangent, transpose(worldMat));
+  //vOut.bitangent = mul(vIn.bitangent, transpose(worldMat));
+  //vOut.tangent = mul(vIn.tangent, transpose(worldMat));
   return vOut;
 }

@@ -47,6 +47,8 @@ public:
 
   void UpdateNow(void* data_p);
   void UpdateNow(void* data_p, D3D12_RESOURCE_STATES stateAfter);
+  void UpdateForGraphic(void* data_p, D3D12_RESOURCE_STATES stateAfter);
+  void UpdateForCompute(void* data_p, D3D12_RESOURCE_STATES stateAfter);
 
   uint64 GetRowPitch();
 

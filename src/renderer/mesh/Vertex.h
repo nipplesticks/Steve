@@ -1,12 +1,32 @@
 #pragma once
 #include <DirectXMath.h>
 
-struct Vertex
+enum class VertexType
+{
+  VertexBasic = 0,
+  VertexTangent,
+  NumberOfVertexTypes
+};
+
+struct Vertex_Basic
 {
   DirectX::XMFLOAT4A position;
-  DirectX::XMFLOAT4A color;
   DirectX::XMFLOAT4A normal;
+  DirectX::XMFLOAT2A uv;
+};
+
+struct Vertex_With_Tangent
+{
+  Vertex_Basic vertexBasic;
   DirectX::XMFLOAT4A tangent;
   DirectX::XMFLOAT4A bitangent;
-  DirectX::XMFLOAT4A uv;
+};
+
+struct Vertex
+{
+  union
+  {
+    Vertex_Basic vertexBasic;
+    Vertex_With_Tangent vertexTangent;
+  };
 };

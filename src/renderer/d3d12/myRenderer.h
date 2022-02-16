@@ -10,6 +10,8 @@
 
 struct IDXGISwapChain4;
 class Resource;
+class ComputationalPipeline;
+class ResourceDescriptorHeap;
 
 class MyRenderer
 {
@@ -28,27 +30,40 @@ public:
   static void        Release();
   static MyRenderer* GetInstance();
 
-  void BeginFrame(const DM::Vec4f& color = DM::Vec4f());
+  void BeginFrame();
+  void Clear(const DM::Vec4f& color = DM::Vec4f());
+  void FlushDrawQueue();
+  void Draw(Resource*               vertexBuffer_p,
+            Resource*               indexBuffer_p,
+            ResourceDescriptorHeap* resourceDescHeap_p,
+            GraphicsPipelineState*  graphicalPipelineState_p);
+
   void EndFrame();
   void BeginCompute();
+  void Compute(ComputationalPipeline*  pipeline_p,
+               ResourceDescriptorHeap* resourceDescHeap_p,
+               const DM::Vec3u&        numThreads);
   void EndCompute();
   void DrawImgui();
 
   void SetResolution(uint resX, uint resY);
   void ResourceUpdate(void* data_p, Resource* resource_p, D3D12_RESOURCE_STATES stateAfter);
 
+  ID3D12RootSignature* GetGraphicalRootSignature();
+  ID3D12RootSignature* GetComputeRootSignature();
+
   ID3D12Device5*        GetDevice() const;
   ID3D12DescriptorHeap* GetUploadHeap() const;
   uint                  GetSrvUavCbvDescritorSize() const;
-  void                  ChangeResourceStateGraphic(ID3D12Resource*       resource_p,
-                                            D3D12_RESOURCE_STATES StateBefore,
-                                            D3D12_RESOURCE_STATES StateAfter);
+  void                  ChangeResourceStateGraphic(ID3D12Resource* resource_p,
+                                            D3D12_RESOURCE_STATES stateBefore,
+                                            D3D12_RESOURCE_STATES stateAfter);
   void                  ChangeResourceStateCompute(ID3D12Resource*       resource_p,
-                                                   D3D12_RESOURCE_STATES StateBefore,
-                                                   D3D12_RESOURCE_STATES StateAfter);
+                                                   D3D12_RESOURCE_STATES stateBefore,
+                                                   D3D12_RESOURCE_STATES stateAfter);
   void                  ChangeResourceStateNow(ID3D12Resource*       resource_p,
-                                               D3D12_RESOURCE_STATES StateBefore,
-                                               D3D12_RESOURCE_STATES StateAfter);
+                                               D3D12_RESOURCE_STATES stateBefore,
+                                               D3D12_RESOURCE_STATES stateAfter);
 
 private:
   void _Init(uint resX, uint resY, HWND hwnd);

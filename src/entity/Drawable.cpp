@@ -1,6 +1,6 @@
 #include "Drawable.h"
 #include "../renderer/mesh/Mesh.h"
-#include "../renderer/buffers/TextureBuffer.h"
+#include "../renderer/buffers/Texture2D.h"
 #include "../renderer/d3d12/GraphicsPipelineState.h"
 #include "../renderer/camera/Camera.h"
 #include "../utility/UtilityFuncs.h"
@@ -10,9 +10,9 @@ std::unordered_map<GraphicsPipelineState*, Drawable::DrawQueue> Drawable::DRAW_Q
 Drawable::Drawable(const DM::Vec3f& position)
     : Transform(position)
 {
-  myWorldConstantBuffer.Init(sizeof(DM::Mat4x4f));
+  myWorldConstantBuffer.Create(sizeof(DM::Mat4x4f));
   DM::Mat4x4f world = GetWorldMatrix();
-  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4f));
+  myWorldConstantBuffer.UpdateNow(&world);
 }
 
 void Drawable::SetMesh(Mesh* mesh_p)
@@ -20,7 +20,7 @@ void Drawable::SetMesh(Mesh* mesh_p)
   myMesh_p = mesh_p;
 }
 
-void Drawable::SetTexture(TextureBuffer* textureBuffer_p)
+void Drawable::SetTexture(Texture2D* textureBuffer_p)
 {
   myTextureBuffer_p = textureBuffer_p;
 }
@@ -30,20 +30,27 @@ void Drawable::SetGraphicsPipelineState(GraphicsPipelineState* state_p)
   myGraphicsState_p = state_p;
 }
 
-void Drawable::Bind()
+void Drawable::BindWithDefaultResourceDescHeap()
 {
-  if (myIsBinded)
-    ASSERT_STR(false, "Object is already binded...\n");
-
-  myResourceDescHeap.Create(
+  myResourceDescHeap_p = new ResourceDescriptorHeap;
+  myResourceDescHeap_p->Create(
       {&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer}, {myTextureBuffer_p}, {});
-  myIsBinded = true;
 }
 
-void Drawable::UpdateConstantBuffer()
+void Drawable::SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHeap_p)
+{
+  myResourceDescHeap_p = customHeap_p;
+}
+
+void Drawable::UpdateWorldMatrixConstantBuffer()
 {
   DM::Mat4x4f world = GetWorldMatrix();
-  myWorldConstantBuffer.Update(&world, sizeof(DM::Mat4x4f));
+  myWorldConstantBuffer.UpdateNow(&world);
+}
+
+ConstantBuffer* Drawable::GetWorldMatrixConstantBuffer() const
+{
+  return (ConstantBuffer*)&myWorldConstantBuffer;
 }
 
 void Drawable::Draw()
@@ -61,7 +68,7 @@ Mesh* Drawable::GetMesh() const
   return myMesh_p;
 }
 
-TextureBuffer* Drawable::GetTextureBuffer() const
+Texture2D* Drawable::GetTextureBuffer() const
 {
   return myTextureBuffer_p;
 }
@@ -71,9 +78,9 @@ GraphicsPipelineState* Drawable::GetGraphicsPipelineState() const
   return myGraphicsState_p;
 }
 
-const ResourceDescriptorHeap& Drawable::GetResourceDescHeap() const
+ResourceDescriptorHeap* Drawable::GetResourceDescHeap() const
 {
-  return myResourceDescHeap;
+  return myResourceDescHeap_p;
 }
 
 void Drawable::PushDrawableToDrawQueue(Drawable* drawable)

@@ -47,6 +47,19 @@ void Resource::Init(Resource_Type resourceType,
   desc.SampleDesc.Quality = 0;
   
   myState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+  if (resourceType == Resource_Type::VertexBuffer)
+  {
+    myResourceView.vbv.BufferLocation = myResource_p->GetGPUVirtualAddress();
+    myResourceView.vbv.SizeInBytes    = desc.Width;
+    myResourceView.vbv.StrideInBytes  = myElementSize;
+  }
+  else if (resourceType == Resource_Type::IndexBuffer)
+  {
+    myResourceView.ibv.BufferLocation = myResource_p->GetGPUVirtualAddress();
+    myResourceView.ibv.SizeInBytes    = desc.Width;
+    myResourceView.ibv.Format         = DXGI_FORMAT_R32_UINT;
+  }
   
   Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
@@ -138,6 +151,15 @@ void Resource::UpdateNow(void* data_p, D3D12_RESOURCE_STATES stateAfter)
   myState = stateAfter;
 }
 
+void Resource::UpdateForGraphic(void* data_p, D3D12_RESOURCE_STATES stateAfter)
+{
+  ASSERT(false);
+}
+void Resource::UpdateForCompute(void* data_p, D3D12_RESOURCE_STATES stateAfter)
+{
+  ASSERT(false);
+}
+
 const DM::Vec3u& Resource::GetDimention() const
 {
   return myDimention;
@@ -153,7 +175,12 @@ uint64 Resource::GetRowPitch()
   return myRowPitch;
 }
 
-void Resource::SetState(D3D12_RESOURCE_STATES state) { }
+void Resource::SetState(D3D12_RESOURCE_STATES state)
+{
+  MyRenderer::GetInstance()->ChangeResourceStateNow(GetResource(), myState, state);
+  myState = state;
+}
+
 
 D3D12_RESOURCE_STATES Resource::GetState() const
 {

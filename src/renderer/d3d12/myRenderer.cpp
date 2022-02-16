@@ -1,8 +1,13 @@
 #include "myRenderer.h"
 #define NOMINMAX
+#include "../../entity/Drawable.h"
 #include "../../utility/RenderUtility.h"
 #include "../../window/Window.h"
 #include "../buffers/Resource.h"
+#include "../mesh/Mesh.h"
+#include "ComputationalPipeline.h"
+#include "GraphicsPipelineState.h"
+#include "ResourceDescriptorHeap.h"
 #include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
@@ -34,7 +39,7 @@ MyRenderer* MyRenderer::GetInstance()
   return &gRenderer;
 }
 
-void MyRenderer::BeginFrame(const DM::Vec4f& color)
+void MyRenderer::BeginFrame()
 {
   myGraphicalInterface.commandAllocator_p->Reset();
   myGraphicalInterface.commandList4_p->Reset(myGraphicalInterface.commandAllocator_p, nullptr);
@@ -56,25 +61,134 @@ void MyRenderer::BeginFrame(const DM::Vec4f& color)
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
   myGraphicalInterface.commandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);
 
-  myGraphicalInterface.commandList4_p->ClearDepthStencilView(
-      cpuDescHnd2, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-  myGraphicalInterface.commandList4_p->ClearRenderTargetView(
-      cpuDescHndl, (FLOAT*)color.data, 0, NULL);
   myGraphicalInterface.commandList4_p->SetGraphicsRootSignature(
       myGraphicalInterface.rootSignature_p);
 }
 
-void MyRenderer::EndFrame() { }
+void MyRenderer::Clear(const DM::Vec4f& color)
+{
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
+      myGraphicalInterface.renderTargetHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHndl.ptr +=
+      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
+
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
+      myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHnd2.ptr +=
+      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
+  myGraphicalInterface.commandList4_p->ClearDepthStencilView(
+      cpuDescHnd2, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+  myGraphicalInterface.commandList4_p->ClearRenderTargetView(
+      cpuDescHndl, (FLOAT*)color.data, 0, NULL);
+}
+
+void MyRenderer::FlushDrawQueue()
+{
+  for (auto& gps : Drawable::DRAW_QUEUE)
+  {
+    Drawable::DrawQueue* drawQueue     = &gps.second;
+    uint                 nrOfDrawables = drawQueue->nrOfElements;
+    for (uint i = 0; i < nrOfDrawables; i++)
+    {
+      Drawable*               d_p            = drawQueue->queue[i];
+      Mesh*                   mesh_p         = d_p->GetMesh();
+      ResourceDescriptorHeap* rdh_p          = d_p->GetResourceDescHeap();
+      Resource*               indexBuffer_p  = mesh_p->GetIndexBuffer();
+      Resource*               vertexBuffer_p = mesh_p->GetVertexBuffer();
+      GraphicsPipelineState*  gps_p          = gps.first;
+      Draw(vertexBuffer_p, indexBuffer_p, rdh_p, gps_p);
+    }
+  }
+}
+
+void MyRenderer::Draw(Resource*               vertexBuffer_p,
+                      Resource*               indexBuffer_p,
+                      ResourceDescriptorHeap* resourceDescHeap_p,
+                      GraphicsPipelineState*  graphicalPipelineState_p)
+{
+  ID3D12GraphicsCommandList4* commandList_p = myGraphicalInterface.commandList4_p;
+  commandList_p->SetPipelineState(graphicalPipelineState_p->GetPipelineState());
+
+  commandList_p->RSSetViewports(1, &myGraphicalInterface.viewport);
+  commandList_p->RSSetScissorRects(1, &myGraphicalInterface.scissorRect);
+
+  commandList_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  commandList_p->IASetVertexBuffers(0, 1, &vertexBuffer_p->GetView().vbv);
+  commandList_p->IASetIndexBuffer(&indexBuffer_p->GetView().ibv);
+
+  ID3D12DescriptorHeap* arr[1] = {resourceDescHeap_p->GetDescriptorHeap()};
+
+  commandList_p->SetDescriptorHeaps(1, arr);
+  if (resourceDescHeap_p->HasCbvs())
+    commandList_p->SetGraphicsRootDescriptorTable(0, resourceDescHeap_p->GetCbvHeapLocationStart());
+  if (resourceDescHeap_p->HasSrvs())
+    commandList_p->SetGraphicsRootDescriptorTable(1, resourceDescHeap_p->GetSrvHeapLocationStart());
+  if (resourceDescHeap_p->HasUavs())
+    commandList_p->SetGraphicsRootDescriptorTable(
+        2, resourceDescHeap_p->GetUavBufferHeapLocationStart());
+
+  commandList_p->DrawIndexedInstanced(indexBuffer_p->GetElementCount(), 1, 0, 0, 0);
+}
+
+void MyRenderer::EndFrame()
+{
+  FlushDrawQueue();
+  DrawImgui();
+  _SetResourceTransitionBarrier(
+      myGraphicalInterface.commandList4_p,
+      myGraphicalInterface.renderTargets_pp[myGraphicalInterface.currentBackbufferIndex],
+      D3D12_RESOURCE_STATE_RENDER_TARGET,
+      D3D12_RESOURCE_STATE_PRESENT);
+  HR_ASSERT(myGraphicalInterface.commandList4_p->Close());
+  myGraphicalInterface.commandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myGraphicalInterface.commandList4_p));
+  HR_ASSERT(myGraphicalInterface.swapChain_p->Present(0, 0));
+  _HardWait(myGraphicalInterface.commandQueue_p);
+  myGraphicalInterface.currentBackbufferIndex =
+      myGraphicalInterface.swapChain_p->GetCurrentBackBufferIndex();
+}
 
 void MyRenderer::BeginCompute()
 {
   myComputeInterface.commandAllocator_p->Reset();
   myComputeInterface.commandList4_p->Reset(myComputeInterface.commandAllocator_p, nullptr);
+  myComputeInterface.commandList4_p->SetComputeRootSignature(myComputeInterface.rootSignature_p);
 }
 
-void MyRenderer::EndCompute() { }
+void MyRenderer::Compute(ComputationalPipeline*  pipeline_p,
+                         ResourceDescriptorHeap* resourceDescHeap_p,
+                         const DM::Vec3u&        numThreads)
+{
+  myComputeInterface.commandList4_p->SetPipelineState(pipeline_p->GetPipelineState());
+  ID3D12DescriptorHeap* arr[1] = {resourceDescHeap_p->GetDescriptorHeap()};
+  myComputeInterface.commandList4_p->SetDescriptorHeaps(1, arr);
+  if (resourceDescHeap_p->HasCbvs())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        0, resourceDescHeap_p->GetCbvHeapLocationStart());
+  if (resourceDescHeap_p->HasSrvs())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        1, resourceDescHeap_p->GetSrvHeapLocationStart());
+  if (resourceDescHeap_p->HasUavs())
+    myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
+        2, resourceDescHeap_p->GetUavBufferHeapLocationStart());
 
-void MyRenderer::DrawImgui() { }
+  myComputeInterface.commandList4_p->Dispatch(numThreads.x, numThreads.y, numThreads.z);
+}
+
+void MyRenderer::EndCompute()
+{
+  HR_ASSERT(myComputeInterface.commandList4_p->Close());
+  myComputeInterface.commandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myComputeInterface.commandList4_p));
+  _HardWait(myComputeInterface.commandQueue_p);
+}
+
+void MyRenderer::DrawImgui()
+{
+  ImGui::Render();
+  myGraphicalInterface.commandList4_p->SetDescriptorHeaps(1, &myGraphicalInterface.imguiDescHeap_p);
+  ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), myGraphicalInterface.commandList4_p);
+}
 
 void MyRenderer::SetResolution(uint resX, uint resY)
 {
@@ -215,7 +329,7 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
 
   UpdateSubresources(
       myResourceUpdateCommandList4_p, resource_p->GetResource(), tempResource_p, 0, 0, 1, &srdDesc);
-  
+
   _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
                                 resource_p->GetResource(),
                                 D3D12_RESOURCE_STATE_COPY_DEST,
@@ -225,6 +339,16 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   myResourceUpdateCommandQueue_p->ExecuteCommandLists(
       1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
   _HardWait(myResourceUpdateCommandQueue_p);
+}
+
+ID3D12RootSignature* MyRenderer::GetGraphicalRootSignature()
+{
+  return myGraphicalInterface.rootSignature_p;
+}
+
+ID3D12RootSignature* MyRenderer::GetComputeRootSignature()
+{
+  return myComputeInterface.rootSignature_p;
 }
 
 ID3D12Device5* MyRenderer::GetDevice() const

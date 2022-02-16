@@ -10,10 +10,8 @@ public:
   ~ComputationalPipeline();
 
   HRESULT SetComputeShader(const std::string& computeShader);
-  HRESULT GenerateRootSignature();
   HRESULT CreatePipelineState();
   ID3D12PipelineState* GetPipelineState() const;
-  ID3D12RootSignature* GetRootSignature() const;
 
 private:
   void _initDefaultValues();
@@ -21,5 +19,4 @@ private:
 private:
   ID3DBlob* myComputeShader_p = nullptr;
   ID3D12PipelineState*   myPipelineState_p = nullptr;
-  ID3D12RootSignature*   myRootSignature_p = nullptr;
 };
