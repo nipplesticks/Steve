@@ -5,18 +5,18 @@
 #include "renderer/camera/FpsCamera.h"
 #include "renderer/d3d12/ResourceDescriptorHeap.h"
 #include "renderer/d3d12/myRenderer.h"
+#include "renderer/mesh/MeshLoader.h"
+#include "renderer/textureLoader/TextureHandler.h"
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
-#include "renderer/mesh/MeshLoader.h"
-#include "renderer/textureLoader/TextureHandler.h"
 
 void SetupInput();
 bool HandleInput(Camera* camera_p, float dt, Window* wnd_p);
 bool PlanetGeneration(Noise& heightNoise,
                       Noise& diffuseNoise,
                       float& waterLevel,
-                      bool&  toggleWireframe);
+                      float& planetScale);
 
 int main()
 {
@@ -39,7 +39,6 @@ int main()
   skybox.SetGraphicsPipelineState(&skyboxPipeline);
   skybox.BindWithDefaultResourceDescHeap();
 
-
   FpsCamera camera;
   camera.SetLookTo(0.0f, 0.0f, -1.0f);
   camera.SetPosition(0, 0, 10);
@@ -47,10 +46,10 @@ int main()
   Noise heightMapGenerator  = {};
   Noise diffuseMapGenerator = {};
   float waterLevel          = 0.4f;
-  bool  drawWireframe       = false;
+  float planetScale         = 1.0f;
 
   Map planet;
-  planet.Create(8);
+  planet.Create(10);
   planet.SetWaterLevel(waterLevel);
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
 
@@ -67,11 +66,12 @@ int main()
     KeyboardInput::Update();
     if (HandleInput(&camera, dt, &wnd))
     {
-      if (PlanetGeneration(heightMapGenerator, diffuseMapGenerator, waterLevel, drawWireframe))
+      if (PlanetGeneration(heightMapGenerator, diffuseMapGenerator, waterLevel, planetScale))
       {
         planet.SetWaterLevel(waterLevel);
         planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
       }
+      planet.SetScale(planetScale, planetScale, planetScale);
     }
 
     planet.Update(dt, &camera);
@@ -107,9 +107,9 @@ bool HandleInput(Camera* camera_p, float dt, Window* wnd_p)
 {
   static bool      lockMouse           = false;
   static bool      disableMouseCapture = false;
-  static float     speed     = 0.001f;
-  static float     zoomSpeed = 0.1f;
-  static float     rollSpeed = 0.5f;
+  static float     speed               = 0.001f;
+  static float     zoomSpeed           = 0.1f;
+  static float     rollSpeed           = 0.5f;
   static DM::Vec2i mpLast;
 
   if (KeyboardInput::IsKeyFirstPressedThisFrame("toggleLockMouse"))
@@ -208,12 +208,13 @@ bool HandleInput(Camera* camera_p, float dt, Window* wnd_p)
 bool PlanetGeneration(Noise& heightNoise,
                       Noise& diffuseNoise,
                       float& waterLevel,
-                      bool&  toggleWireframe)
+                      float& planetScale)
 {
   bool somethingChanged = false;
   ImGui::Begin("Planet Generation Modifier");
 
   ImGui::Text("Generic");
+  ImGui::SliderFloat("planet size", &planetScale, 1, 10);
   somethingChanged |= ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 2.0f);
   ImGui::Checkbox("WireFrame: ", &GraphicsPipelineState::WIRE_FRAME);
 

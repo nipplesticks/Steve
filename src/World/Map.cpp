@@ -49,12 +49,12 @@ void Map::SetWaterLevel(float waterLevel)
 
 void Map::Update(float dt, Camera* camera_p)
 {
-  Rotate(0, dt * myRotationSpeed, 0);
-  myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);
+  /*Rotate(0, dt * myRotationSpeed, 0);
+  myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);*/
 
   _CalcDetailLevel(camera_p);
   myWaterOffset += dt * 0.01f;
-  myWaterDrawable.SetScale(GetScale() + myWaterLevel);
+  myWaterDrawable.SetScale(GetScale() + (GetScale() * myWaterLevel));
   WaterUVoffset wo;
   wo.waterUV = myWaterOffset;
 
@@ -336,8 +336,7 @@ void Map::_CalcDetailLevel(Camera* camera_p)
   float t                        = distanceFromPlanet / LOD_MAX_DISTANCE;
 
   myLocalCameraDirection = (cameraPos * -1.0f).Normalize();
-
-
+  
   myCurrentDetailLevel =
       myTotalDetailLevels - std::min((uint)(myTotalDetailLevels * t), myTotalDetailLevels);
   myCurrentDetailLevel = std::min(myCurrentDetailLevel, myTotalDetailLevels - 1);

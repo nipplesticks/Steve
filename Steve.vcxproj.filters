@@ -257,6 +257,9 @@
     <ClInclude Include="src\renderer\textureLoader\TextureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\lights\Header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\PlanetPixelShader.hlsl" />

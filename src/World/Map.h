@@ -103,7 +103,6 @@ private:
   struct MeshPerDetailLevel
   {
     Mesh                   sides[ICOSAHEDRON_SIDES];
-    ResourceDescriptorHeap myRenderDescHeaps[ICOSAHEDRON_SIDES];
   };
 
   Texture2D              myHeightMap;

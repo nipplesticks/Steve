@@ -27,6 +27,6 @@ float4 main(VS_OUT vIn) : SV_TARGET
   float ambient = 0.5f;
   float3 finalColor = max(dot(aNormal, -lightDir), ambient) * color;
   
-  return saturate(float4(finalColor, 0.5f));
+  return saturate(float4(finalColor, 0.8f));
   //return float4(aNormal, 1.0f);
 }
