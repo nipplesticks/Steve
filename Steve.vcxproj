@@ -176,7 +176,7 @@
     <ClCompile Include="src\renderer\mesh\MeshLoader.cpp" />
     <ClCompile Include="src\renderer\textureLoader\TextureHandler.cpp" />
     <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp" />
-    <ClCompile Include="src\Source_new.cpp" />
+    <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
     <ClCompile Include="src\World\Map.cpp" />
   </ItemGroup>

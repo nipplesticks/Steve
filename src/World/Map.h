@@ -127,11 +127,13 @@ private:
   StructuredBuffer       myWaterTangents;
   ConstantBuffer         myWaterOffsetBuffer;
   float                  myWaterOffset = 0.0f;
+  float                  myWaterLevel = 0.0f;
 
   Drawable                        mySides[ICOSAHEDRON_SIDES];
   DM::Vec3f                       myTopLevelNormals[ICOSAHEDRON_SIDES];
   std::vector<MeshPerDetailLevel> myDetailLevels;
   ConstantBuffer                  myWorldMatrix;
+  ResourceDescriptorHeap          myRenderDescHeap;
 
   uint      myCurrentDetailLevel = 0;
   uint      myTotalDetailLevels  = 0;
@@ -139,5 +141,5 @@ private:
   DM::Vec2f myTextureSize;
 
 
-  float myRotationSpeed = 1.0f;
+  float myRotationSpeed = 0.1f;
 };

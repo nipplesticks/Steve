@@ -84,7 +84,7 @@
     <ClCompile Include="src\renderer\buffers\Resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Source_new.cpp">
+    <ClCompile Include="src\Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\mesh\Mesh.cpp">

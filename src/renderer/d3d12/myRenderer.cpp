@@ -344,6 +344,7 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   myResourceUpdateCommandQueue_p->ExecuteCommandLists(
       1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
   _HardWait(myResourceUpdateCommandQueue_p);
+  SafeRelease(&tempResource_p);
 }
 
 ID3D12RootSignature* MyRenderer::GetGraphicalRootSignature()

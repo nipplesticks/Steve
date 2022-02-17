@@ -44,16 +44,17 @@ void Map::Create(uint maxSubdivisions, float waterTiles, const DM::Vec2u& textur
 
 void Map::SetWaterLevel(float waterLevel)
 {
-  myWaterDrawable.SetScale(waterLevel, waterLevel, waterLevel);
+  myWaterLevel = waterLevel;
 }
 
 void Map::Update(float dt, Camera* camera_p)
 {
-  //Rotate(0, dt * myRotationSpeed, 0);
-  //myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);
+  Rotate(0, dt * myRotationSpeed, 0);
+  myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);
 
   _CalcDetailLevel(camera_p);
   myWaterOffset += dt * 0.01f;
+  myWaterDrawable.SetScale(GetScale() + myWaterLevel);
   WaterUVoffset wo;
   wo.waterUV = myWaterOffset;
 
@@ -76,7 +77,7 @@ void Map::GenerateMap(const Noise& heightMap, const Noise& diffuseMap)
     hm.iterations                = heightMap.iterations;
     memcpy(&hm.permutationVector[0], permutation.data(), sizeof(int) * permutation.size());
     hm.textureSize = myTextureSize.AsXmAsXmFloat2A();
-    hm.waterLevel  = myWaterDrawable.GetScale().x;
+    hm.waterLevel  = myWaterLevel;
   }
   {
     PerlinNoise      pn(diffuseMap.seed);
@@ -87,7 +88,7 @@ void Map::GenerateMap(const Noise& heightMap, const Noise& diffuseMap)
     dm.iterations                = diffuseMap.iterations;
     memcpy(&dm.permutationVector[0], permutation.data(), sizeof(int) * permutation.size());
     dm.textureSize = myTextureSize.AsXmAsXmFloat2A();
-    dm.waterLevel  = myWaterDrawable.GetScale().x;
+    dm.waterLevel  = myWaterLevel;
   }
   myHeightMapGenInput.UpdateNow(&hm, D3D12_RESOURCE_STATE_GENERIC_READ);
   myDiffuseMapGenInput.UpdateNow(&dm, D3D12_RESOURCE_STATE_GENERIC_READ);
@@ -124,7 +125,7 @@ void Map::Draw()
 
   for (uint i = 0; i < ICOSAHEDRON_SIDES; i++)
   {
-    mySides[i].SetCustomResourceDescriptorHeap(&dl_p->myRenderDescHeaps[i]);
+    mySides[i].SetCustomResourceDescriptorHeap(&myRenderDescHeap);
     mySides[i].SetMesh(&dl_p->sides[i]);
     if (myTopLevelNormals[i].Dot(myLocalCameraDirection) < 0.3f)
       mySides[i].Draw();
@@ -311,14 +312,12 @@ void Map::_SetupDetailLevels(const Icosahedron& icosahedron, uint divisions)
                       icosahedron.sides[side].detailLevel[div].indices,
                       VertexType::VertexBasic);
       mesh_p->CreateBuffers(true);
-      myDetailLevels[div].myRenderDescHeaps[side].Create(
-          {&Camera::VIEW_PROJECTION_CB,
-           &myWorldMatrix,
-           myWaterDrawable.GetWorldMatrixConstantBuffer()},
-          {&myHeightMap, &myBumpMap, &myDiffuseMap},
-          {});
     }
   }
+  myRenderDescHeap.Create(
+      {&Camera::VIEW_PROJECTION_CB, &myWorldMatrix, myWaterDrawable.GetWorldMatrixConstantBuffer()},
+      {&myHeightMap, &myBumpMap, &myDiffuseMap},
+      {});
 }
 
 void Map::_CalcDetailLevel(Camera* camera_p)
@@ -329,7 +328,6 @@ void Map::_CalcDetailLevel(Camera* camera_p)
     return;
   }
 
-  //DM::Vec3f cameraLookTo = camera_p->GetRelativeForward();
   DM::Vec3f cameraPos    = camera_p->GetPosition();
 
   DM::Mat4x4f worldMatrixInverse = GetWorldMatrix().Inverse();
@@ -337,7 +335,7 @@ void Map::_CalcDetailLevel(Camera* camera_p)
   float distanceFromPlanet       = cameraPos.Length();
   float t                        = distanceFromPlanet / LOD_MAX_DISTANCE;
 
-  myLocalCameraDirection = ((cameraPos * -1.0f) * worldMatrixInverse).Normalize();
+  myLocalCameraDirection = (cameraPos * -1.0f).Normalize();
 
 
   myCurrentDetailLevel =
