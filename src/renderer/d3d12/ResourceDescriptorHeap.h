@@ -29,7 +29,5 @@ private:
   ID3D12DescriptorHeap* myHeap_p       = nullptr;
   uint                  myNumberOfCbvs = 0u;
   uint                  myNumberOfSrvs = 0u;
-  bool                  myUavExist     = false;
-  bool                  myCbvExist     = false;
-  bool                  mySrvExist     = false;
+  uint                  myNumberOfUavs = 0u;
 };

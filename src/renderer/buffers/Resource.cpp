@@ -15,6 +15,8 @@ void Resource::Init(Resource_Type resourceType,
   myDimention.y  = height;
   myDimention.z  = depth;
   myElementSize  = (width * height * depth) / nrOfElements;
+  if (myElementSize == 0)
+    int asd = 123;
   myBufferSize   = myElementSize * nrOfElements;
   myRowPitch     = width;
   myFormat       = format;
@@ -23,7 +25,7 @@ void Resource::Init(Resource_Type resourceType,
   uint nrOfChannels       = 0;
   if (GetChannelInformation(format, &channelElementSize, &nrOfChannels))
   {
-    myBufferSize *= channelElementSize * nrOfChannels;
+    //myBufferSize *= channelElementSize * nrOfChannels;
     myRowPitch *= channelElementSize * nrOfChannels;
   }
 
@@ -41,27 +43,28 @@ void Resource::Init(Resource_Type resourceType,
   desc.Flags            = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   desc.DepthOrArraySize = depth;
   desc.Format           = format;
-  desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+    desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   desc.MipLevels          = 1;
   desc.SampleDesc.Count   = 1;
   desc.SampleDesc.Quality = 0;
   
   myState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+  
+  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
   if (resourceType == Resource_Type::VertexBuffer)
   {
     myResourceView.vbv.BufferLocation = myResource_p->GetGPUVirtualAddress();
-    myResourceView.vbv.SizeInBytes    = desc.Width;
+    myResourceView.vbv.SizeInBytes    = (uint)desc.Width;
     myResourceView.vbv.StrideInBytes  = myElementSize;
   }
   else if (resourceType == Resource_Type::IndexBuffer)
   {
     myResourceView.ibv.BufferLocation = myResource_p->GetGPUVirtualAddress();
-    myResourceView.ibv.SizeInBytes    = desc.Width;
+    myResourceView.ibv.SizeInBytes    = (uint)desc.Width;
     myResourceView.ibv.Format         = DXGI_FORMAT_R32_UINT;
   }
-  
-  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 D3D12_UAV_DIMENSION Resource::GetUAVDimension(Resource* resource_p)

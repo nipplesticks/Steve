@@ -18,13 +18,7 @@
     <ClCompile Include="src\window\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\d3d12\oldRenderer\Renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World\Planet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\events\Event.cpp">
@@ -96,6 +90,15 @@
     <ClCompile Include="src\renderer\mesh\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\World\Map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\mesh\MeshLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\textureLoader\TextureHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
@@ -105,9 +108,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\Vector2u.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\d3d12\oldRenderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\Vector3f.h">
@@ -135,9 +135,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\d3d12\d3dx12.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\Planet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\events\Event.h">
@@ -251,6 +248,15 @@
     <ClInclude Include="src\renderer\mesh\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\Map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\mesh\MeshLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\textureLoader\TextureHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\PlanetPixelShader.hlsl" />
@@ -265,5 +271,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\PerlinNoise_cs.hlsli" />
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

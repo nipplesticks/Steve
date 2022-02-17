@@ -12,6 +12,7 @@ struct IDXGISwapChain4;
 class Resource;
 class ComputationalPipeline;
 class ResourceDescriptorHeap;
+class GraphicsPipelineState;
 
 class MyRenderer
 {

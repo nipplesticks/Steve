@@ -200,12 +200,12 @@ void Renderer::Draw(const VertexBuffer&           vertexBuffer,
   ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
 
   myCommandList4_p->SetDescriptorHeaps(1, arr);
-  if (rh.HasConstantBuffers())
-    myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetConstantBufferHeapLocationStart());
-  if (rh.HasTextures())
-    myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetTextureHeapLocationStart());
+  if (rh.HasCbvs())
+    myCommandList4_p->SetGraphicsRootDescriptorTable(0, rh.GetCbvHeapLocationStart());
+  if (rh.HasSrvs())
+    myCommandList4_p->SetGraphicsRootDescriptorTable(1, rh.GetSrvHeapLocationStart());
   if (rh.HasUavs())
-    myCommandList4_p->SetGraphicsRootDescriptorTable(2, rh.GetUAVBufferHeapLocationStart());
+    myCommandList4_p->SetGraphicsRootDescriptorTable(2, rh.GetUavBufferHeapLocationStart());
 
   myCommandList4_p->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
 }
@@ -224,15 +224,15 @@ void Renderer::Compute(const ComputationalPipeline&  pipeline,
   myComputeInterface.commandList4_p->SetComputeRootSignature(pipeline.GetRootSignature());
   ID3D12DescriptorHeap* arr[1] = {rh.GetDescriptorHeap()};
   myComputeInterface.commandList4_p->SetDescriptorHeaps(1, arr);
-  if (rh.HasConstantBuffers())
+  if (rh.HasCbvs())
     myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
-        0, rh.GetConstantBufferHeapLocationStart());
-  if (rh.HasTextures())
+        0, rh.GetCbvHeapLocationStart());
+  if (rh.HasSrvs())
     myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
-        1, rh.GetTextureHeapLocationStart());
+        1, rh.GetSrvHeapLocationStart());
   if (rh.HasUavs())
     myComputeInterface.commandList4_p->SetComputeRootDescriptorTable(
-        2, rh.GetUAVBufferHeapLocationStart());
+        2, rh.GetUavBufferHeapLocationStart());
 
   myComputeInterface.commandList4_p->Dispatch(threads.x, threads.y, threads.z);
 }

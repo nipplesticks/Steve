@@ -20,9 +20,11 @@ public:
   bool LoadFromFile(const std::string& path, bool flipWindingOrder = false);
 
   void SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType);
-  void SetMesh(const std::vector<Vertex>& vertices, const std::vector<uint>& indices, VertexType vertexType);
+  void SetMesh(const std::vector<Vertex>& vertices,
+               const std::vector<uint>&   indices,
+               VertexType                 vertexType);
 
-  void CreateBuffers();
+  void CreateBuffers(bool deleteCpuData = false);
 
   IndexBuffer*  GetIndexBuffer() const;
   VertexBuffer* GetVertexBuffer() const;
@@ -34,14 +36,14 @@ public:
   uint*      GetRawIndices() const;
 
 private:
-  VertexType myVertexType = VertexType::NumberOfVertexTypes;
-  std::vector<uint> myIndices;
-  VertexBuffer      myVertexBuffer;
-  IndexBuffer       myIndexBuffer;
+  VertexType                       myVertexType = VertexType::NumberOfVertexTypes;
+  std::vector<uint>                myIndices;
+  VertexBuffer                     myVertexBuffer;
+  IndexBuffer                      myIndexBuffer;
+  std::vector<Vertex_Basic>        myBasicVertices;
+  std::vector<Vertex_With_Tangent> myTangentVertices;
+  uint                             myNumberOfVertices;
+  uint                             myNumberOfIndices;
+  bool                             myCpuDataDeleted = false;
 
-  union
-  {
-    std::vector<Vertex_Basic>        basicVertices;
-    std::vector<Vertex_With_Tangent> tangentVertices;
-  } myVertices;
 };

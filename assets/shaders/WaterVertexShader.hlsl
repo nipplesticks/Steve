@@ -9,15 +9,14 @@ cbuffer cbv1 : register(b1)
   float4x4 worldMat;
 }
 
-cbuffer cbv2 : register(b3)
+cbuffer cbv2 : register(b2)
 {
-  float4 waterLevel;
+  float uvOffset;
 }
 
 struct VS_IN
 {
   float4 pos : SV_POSITION;
-  float4 col : COLOR;
   float4 nor : NORMAL;
   float4 uv : TEXCOORD;
 };
@@ -26,17 +25,24 @@ struct VS_OUT
 {
   float4 worldPos : WORLD_POS;
   float4 pos : SV_POSITION;
-  float4 col : COLOR;
   float4 uv : TEXCOORD;
   float4 tangent : TANGENT;
   float4 bitangent : BITANGENT;
   float4 nor : NORMAL;
 };
 
-VS_OUT main(VS_IN vIn)
+struct TangentBitangent
+{
+  float4 tangent;
+  float4 bitangent;
+};
+
+StructuredBuffer<TangentBitangent> tangents : register(t0);
+
+VS_OUT main(VS_IN vIn, uint pid : SV_VertexID)
 {
   VS_OUT vOut;
-  vIn.pos = mul(vIn.pos + vIn.nor * waterLevel.x, transpose(worldMat));
+  vIn.pos = mul(vIn.pos, transpose(worldMat));
   vOut.worldPos = vIn.pos;
   
   vIn.nor = (normalize(mul(vIn.nor, transpose(worldMat))));
@@ -44,11 +50,13 @@ VS_OUT main(VS_IN vIn)
   
   vIn.pos = mul(vIn.pos, transpose(mul(proj, view)));
   
+  vIn.uv.x += uvOffset.x;
+  vIn.uv.y += uvOffset.x;
+  
   vOut.pos = vIn.pos;
-  vOut.col = vIn.col;
   vOut.uv = vIn.uv;
   vOut.nor = vIn.nor;
-  //vOut.bitangent = mul(vIn.bitangent, transpose(worldMat));
-  //vOut.tangent = mul(vIn.tangent, transpose(worldMat));
+  vOut.tangent = normalize(mul(tangents[pid / 3].tangent, transpose(worldMat)));
+  vOut.bitangent = normalize(mul(tangents[pid / 3].bitangent, transpose(worldMat)));
   return vOut;
 }

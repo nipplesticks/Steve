@@ -22,7 +22,7 @@ public:
     }
     void Push(Drawable* drawable)
     {
-      if (nrOfElements > queue.size())
+      if (nrOfElements >= queue.size())
       {
         queue.resize(queue.size() * 2);
       }
@@ -48,7 +48,7 @@ public:
   void            UpdateWorldMatrixConstantBuffer();
   ConstantBuffer* GetWorldMatrixConstantBuffer() const;
 
-  void Draw();
+  virtual void Draw();
 
   Mesh*                   GetMesh() const;
   Texture2D*              GetTextureBuffer() const;
@@ -57,7 +57,7 @@ public:
 
   static std::unordered_map<GraphicsPipelineState*, DrawQueue> DRAW_QUEUE;
 
-private:
+protected:
   static void PushDrawableToDrawQueue(Drawable* drawable);
 
 protected:

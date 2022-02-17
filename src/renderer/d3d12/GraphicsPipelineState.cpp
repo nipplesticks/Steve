@@ -155,7 +155,7 @@ void GraphicsPipelineState::EnableBlending()
   BlendState.RenderTarget[0].BlendEnable           = TRUE;
   BlendState.RenderTarget[0].LogicOpEnable         = FALSE;
   BlendState.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
-  BlendState.RenderTarget[0].DestBlend             = D3D12_BLEND_SRC_ALPHA;
+  BlendState.RenderTarget[0].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
   BlendState.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
   BlendState.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
   BlendState.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;

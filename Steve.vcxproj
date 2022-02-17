@@ -171,13 +171,14 @@
     <ClCompile Include="src\renderer\d3d12\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\renderer\d3d12\myRenderer.cpp" />
     <ClCompile Include="src\renderer\camera\OrbitCamera.cpp" />
-    <ClCompile Include="src\renderer\d3d12\oldRenderer\Renderer.cpp" />
     <ClCompile Include="src\renderer\d3d12\ResourceDescriptorHeap.cpp" />
     <ClCompile Include="src\renderer\mesh\Mesh.cpp" />
+    <ClCompile Include="src\renderer\mesh\MeshLoader.cpp" />
+    <ClCompile Include="src\renderer\textureLoader\TextureHandler.cpp" />
     <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp" />
     <ClCompile Include="src\Source_new.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
-    <ClCompile Include="src\World\Planet.cpp" />
+    <ClCompile Include="src\World\Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imconfig.h" />
@@ -213,9 +214,10 @@
     <ClInclude Include="src\renderer\d3d12\myRenderer.h" />
     <ClInclude Include="src\renderer\mesh\Mesh.h" />
     <ClInclude Include="src\renderer\camera\OrbitCamera.h" />
-    <ClInclude Include="src\renderer\d3d12\oldRenderer\Renderer.h" />
     <ClInclude Include="src\renderer\d3d12\ResourceDescriptorHeap.h" />
+    <ClInclude Include="src\renderer\mesh\MeshLoader.h" />
     <ClInclude Include="src\renderer\textureLoader\stb_image.h" />
+    <ClInclude Include="src\renderer\textureLoader\TextureHandler.h" />
     <ClInclude Include="src\renderer\textureLoader\TextureLoader.h" />
     <ClInclude Include="src\renderer\mesh\Vertex.h" />
     <ClInclude Include="src\entity\Transform.h" />
@@ -230,7 +232,7 @@
     <ClInclude Include="src\utility\Vector4f.h" />
     <ClInclude Include="src\window\Window.h" />
     <ClInclude Include="src\World\Generation.h" />
-    <ClInclude Include="src\World\Planet.h" />
+    <ClInclude Include="src\World\Map.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\GenerateBump.hlsl">
@@ -327,6 +329,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

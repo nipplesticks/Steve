@@ -55,7 +55,7 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
           aiProcess_SortByPType | aiProcess_RemoveRedundantMaterials | aiProcess_GenUVCoords |
           aiProcess_OptimizeMeshes);
 
-  ASSERT_STR(!(!scene || !scene->HasMeshes()), "Failed to load %s\n", path);
+  ASSERT_STR(!(!scene || !scene->HasMeshes()), "Failed to load %s\n", path.c_str());
 
   uint vertexOffset = 0;
   uint indexOffset  = 0;
@@ -84,22 +84,22 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
       }
     }
     if (myVertexType == VertexType::VertexBasic)
-      myVertices.basicVertices.resize(myVertices.basicVertices.size() + numVerts);
+      myBasicVertices.resize(myBasicVertices.size() + numVerts);
     else if (myVertexType == VertexType::VertexTangent)
-      myVertices.tangentVertices.resize(myVertices.tangentVertices.size() + numVerts);
+      myTangentVertices.resize(myTangentVertices.size() + numVerts);
 
     if (myVertexType == VertexType::VertexBasic)
     {
       for (uint j = 0; j < numVerts; j++)
       {
         if (scene->mMeshes[i]->mVertices)
-          myVertices.basicVertices[vertexOffset + j].position =
+          myBasicVertices[vertexOffset + j].position =
               AssimpToXmFloat4A(scene->mMeshes[i]->mVertices[j]);
         if (scene->mMeshes[i]->mNormals)
-          myVertices.basicVertices[vertexOffset + j].normal =
+          myBasicVertices[vertexOffset + j].normal =
               AssimpToXmFloat4A(scene->mMeshes[i]->mNormals[j], 0.0f);
         if (scene->mMeshes[i]->mTextureCoords[0])
-          myVertices.basicVertices[vertexOffset + j].uv =
+          myBasicVertices[vertexOffset + j].uv =
               AssimpToXmFloat2A(scene->mMeshes[i]->mTextureCoords[0][j]);
       }
     }
@@ -108,19 +108,19 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
       for (uint j = 0; j < numVerts; j++)
       {
         if (scene->mMeshes[i]->mVertices)
-          myVertices.tangentVertices[vertexOffset + j].vertexBasic.position =
+          myTangentVertices[vertexOffset + j].vertexBasic.position =
               AssimpToXmFloat4A(scene->mMeshes[i]->mVertices[j]);
         if (scene->mMeshes[i]->mNormals)
-          myVertices.tangentVertices[vertexOffset + j].vertexBasic.normal =
+          myTangentVertices[vertexOffset + j].vertexBasic.normal =
               AssimpToXmFloat4A(scene->mMeshes[i]->mNormals[j], 0.0f);
         if (scene->mMeshes[i]->mTextureCoords[0])
-          myVertices.tangentVertices[vertexOffset + j].vertexBasic.uv =
+          myTangentVertices[vertexOffset + j].vertexBasic.uv =
               AssimpToXmFloat2A(scene->mMeshes[i]->mTextureCoords[0][j]);
         if (scene->mMeshes[i]->mTangents)
-          myVertices.tangentVertices[vertexOffset + j].tangent =
+          myTangentVertices[vertexOffset + j].tangentBitangent.tangent =
               AssimpToXmFloat4A(scene->mMeshes[i]->mTangents[j]);
         if (scene->mMeshes[i]->mBitangents)
-          myVertices.tangentVertices[vertexOffset + j].bitangent =
+          myTangentVertices[vertexOffset + j].tangentBitangent.bitangent =
               AssimpToXmFloat4A(scene->mMeshes[i]->mBitangents[j]);
       }
     }
@@ -143,6 +143,13 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
 
   importer.FreeScene();
 
+  if (myVertexType == VertexType::VertexBasic)
+    myNumberOfVertices = (uint)myBasicVertices.size();
+  else if (myVertexType == VertexType::VertexTangent)
+    myNumberOfVertices = (uint)myTangentVertices.size();
+
+  myNumberOfIndices = (uint)myIndices.size();
+
   return true;
 }
 
@@ -152,55 +159,78 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
 
   if (myVertexType == VertexType::VertexBasic)
   {
-    myVertices.basicVertices.resize(vertices.size());
+    myBasicVertices.resize(vertices.size());
     myIndices.resize(vertices.size());
     for (uint i = 0; i < (uint)vertices.size(); i++)
     {
-      myVertices.basicVertices[i] = vertices[i].vertexBasic;
-      myIndices[i]                = i;
+      myBasicVertices[i] = vertices[i].vertexBasic;
+      myIndices[i]     = i;
     }
   }
   else if (myVertexType == VertexType::VertexTangent)
   {
-    myVertices.tangentVertices.resize(vertices.size());
+    myTangentVertices.resize(vertices.size());
     myIndices.resize(vertices.size());
     for (uint i = 0; i < (uint)vertices.size(); i++)
     {
-      myVertices.tangentVertices[i] = vertices[i].vertexTangent;
-      myIndices[i]                  = i;
+      myTangentVertices[i] = vertices[i].vertexTangent;
+      myIndices[i]       = i;
     }
   }
+
+  if (myVertexType == VertexType::VertexBasic)
+    myNumberOfVertices = (uint)myBasicVertices.size();
+  else if (myVertexType == VertexType::VertexTangent)
+    myNumberOfVertices = (uint)myTangentVertices.size();
+
+  myNumberOfIndices = (uint)myIndices.size();
+
 }
 
 void Mesh::SetMesh(const std::vector<Vertex>& vertices,
                    const std::vector<uint>&   indices,
                    VertexType                 vertexType)
 {
-  myIndices = indices;
+  myIndices    = indices;
   myVertexType = vertexType;
 
   if (myVertexType == VertexType::VertexBasic)
   {
-    myVertices.basicVertices.resize(vertices.size());
+    myBasicVertices.resize(vertices.size());
     for (uint i = 0; i < (uint)vertices.size(); i++)
-      myVertices.basicVertices[i] = vertices[i].vertexBasic;
+      myBasicVertices[i] = vertices[i].vertexBasic;
   }
   else if (myVertexType == VertexType::VertexTangent)
   {
-    myVertices.tangentVertices.resize(vertices.size());
+    myTangentVertices.resize(vertices.size());
     myIndices.resize(vertices.size());
     for (uint i = 0; i < (uint)vertices.size(); i++)
-      myVertices.tangentVertices[i] = vertices[i].vertexTangent;
+      myTangentVertices[i] = vertices[i].vertexTangent;
   }
 
+  if (myVertexType == VertexType::VertexBasic)
+    myNumberOfVertices = (uint)myBasicVertices.size();
+  else if (myVertexType == VertexType::VertexTangent)
+    myNumberOfVertices = (uint)myTangentVertices.size();
+
+  myNumberOfIndices = (uint)myIndices.size();
 }
 
-void Mesh::CreateBuffers()
+void Mesh::CreateBuffers(bool deleteCpuData)
 {
+  myCpuDataDeleted = deleteCpuData;
   myIndexBuffer.Create(GetNumberOfIndices());
   myVertexBuffer.Create(GetSingleVertexByteSize(), GetNumberOfVertices());
   myIndexBuffer.UpdateNow(myIndices.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
   myVertexBuffer.UpdateNow(GetRawVertices(), D3D12_RESOURCE_STATE_GENERIC_READ);
+
+  if (myCpuDataDeleted)
+  {
+    myIndices.clear();
+    myBasicVertices.clear();
+    myTangentVertices.clear();
+  }
+
 }
 
 IndexBuffer* Mesh::GetIndexBuffer() const
@@ -215,23 +245,12 @@ VertexBuffer* Mesh::GetVertexBuffer() const
 
 uint Mesh::GetNumberOfVertices() const
 {
-  switch (myVertexType)
-  {
-  case VertexType::VertexBasic:
-    return myVertices.basicVertices.size();
-  case VertexType::VertexTangent:
-    return myVertices.tangentVertices.size();
-  default:
-    ASSERT_STR(false, "Unsupported Vertex Type");
-    break;
-  }
-
-  return UINT_MAX;
+  return myNumberOfVertices;
 }
 
 uint Mesh::GetNumberOfIndices() const
 {
-  return myIndices.size();
+  return myNumberOfIndices;
 }
 
 VertexType Mesh::GetVertexType() const
@@ -244,10 +263,10 @@ void* Mesh::GetRawVertices() const
   switch (myVertexType)
   {
   case VertexType::VertexBasic:
-    return (void*)myVertices.basicVertices.data();
+    return (void*)myBasicVertices.data();
     break;
   case VertexType::VertexTangent:
-    return (void*)myVertices.tangentVertices.data();
+    return (void*)myTangentVertices.data();
   default:
     ASSERT_STR(false, "Unsupported Vertex Type");
     break;

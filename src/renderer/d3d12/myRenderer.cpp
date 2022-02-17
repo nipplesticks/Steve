@@ -98,6 +98,7 @@ void MyRenderer::FlushDrawQueue()
       GraphicsPipelineState*  gps_p          = gps.first;
       Draw(vertexBuffer_p, indexBuffer_p, rdh_p, gps_p);
     }
+    drawQueue->Clear();
   }
 }
 
@@ -295,7 +296,11 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   heapProp.MemoryPoolPreference        = D3D12_MEMORY_POOL_UNKNOWN;
 
   D3D12_RESOURCE_DESC resDesc  = resource_p->GetResource()->GetDesc();
-  uint64              byteSize = resource_p->GetBufferSize();
+  //uint64              byteSize = AlignAs256(resource_p->GetBufferSize());
+  UINT64              byteSize = 0;
+  myDevice_p->GetCopyableFootprints(&resDesc, 0, 1, 0, nullptr, nullptr, nullptr, &byteSize);
+
+
   D3D12_RESOURCE_DESC desc     = {};
   desc.DepthOrArraySize        = 1;
   desc.Dimension               = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -393,6 +398,8 @@ void MyRenderer::ChangeResourceStateNow(ID3D12Resource*       resource_p,
 
   _SetResourceTransitionBarrier(
       myResourceUpdateCommandList4_p, resource_p, StateBefore, StateAfter);
+
+  myResourceUpdateCommandList4_p->Close();
   myResourceUpdateCommandQueue_p->ExecuteCommandLists(
       1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
   _HardWait(myResourceUpdateCommandQueue_p);
@@ -762,7 +769,7 @@ void MyRenderer::_HardWait(ID3D12CommandQueue* commandQueue_p)
   if (myFenceValue > myFence_p->GetCompletedValue())
   {
     myFence_p->SetEventOnCompletion(myFenceValue, myEventHandle);
-    WaitForMultipleObjects(1, &myEventHandle, TRUE, INFINITE);
+    WaitForMultipleObjects(1, &myEventHandle, TRUE, 1000);
   }
 
   myFenceValue++;

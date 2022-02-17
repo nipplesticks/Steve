@@ -7,7 +7,6 @@ cbuffer cbv0 : register(b0)
 struct Vertex
 {
   float4 pos : SV_POSITION;
-  float4 col : COLOR;
   float4 nor : NORMAL;
   float4 uv : TEXCOORD;
 };

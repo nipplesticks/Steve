@@ -140,12 +140,12 @@ void Camera::SetAsMainCameraAndUpdate() const
 
 
 
-  VIEW_PROJECTION_CB.Update(&viewProjection, sizeof(viewProjection));
+  VIEW_PROJECTION_CB.UpdateNow(&viewProjection, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 void Camera::InitViewProjectionCb()
 {
-  VIEW_PROJECTION_CB.Init(sizeof(DM::Mat4x4f) * 2);
+  VIEW_PROJECTION_CB.Create(sizeof(DM::Mat4x4f) * 2);
 }
 
 void Camera::_buildProjection()

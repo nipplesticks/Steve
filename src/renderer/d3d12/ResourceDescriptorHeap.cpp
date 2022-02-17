@@ -9,9 +9,9 @@ void ResourceDescriptorHeap::Create(const std::vector<Resource*>& cbvBuffers,
                                     const std::vector<Resource*>& srvBuffers,
                                     const std::vector<Resource*>& uavBuffers)
 {
-  myCbvExist = cbvBuffers.size() > 0;
-  mySrvExist = srvBuffers.size() > 0;
-  myUavExist = uavBuffers.size() > 0;
+  myNumberOfCbvs = (uint)cbvBuffers.size();
+  myNumberOfSrvs = (uint)srvBuffers.size();
+  myNumberOfUavs = (uint)uavBuffers.size();
 
   MyRenderer* renderer_p = MyRenderer::GetInstance();
 
@@ -128,15 +128,15 @@ D3D12_GPU_DESCRIPTOR_HANDLE ResourceDescriptorHeap::GetUavBufferHeapLocationStar
 
 bool ResourceDescriptorHeap::HasUavs() const
 {
-  return myUavExist;
+  return myNumberOfUavs > 0;
 }
 
 bool ResourceDescriptorHeap::HasCbvs() const
 {
-  return myCbvExist;
+  return myNumberOfCbvs > 0;
 }
 
 bool ResourceDescriptorHeap::HasSrvs() const
 {
-  return mySrvExist;
+  return myNumberOfSrvs > 0;
 }

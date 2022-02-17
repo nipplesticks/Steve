@@ -8,6 +8,12 @@ enum class VertexType
   NumberOfVertexTypes
 };
 
+struct TangentBitangent
+{
+  DirectX::XMFLOAT4A tangent;
+  DirectX::XMFLOAT4A bitangent;
+};
+
 struct Vertex_Basic
 {
   DirectX::XMFLOAT4A position;
@@ -18,8 +24,7 @@ struct Vertex_Basic
 struct Vertex_With_Tangent
 {
   Vertex_Basic vertexBasic;
-  DirectX::XMFLOAT4A tangent;
-  DirectX::XMFLOAT4A bitangent;
+  TangentBitangent tangentBitangent;
 };
 
 struct Vertex

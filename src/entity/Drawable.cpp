@@ -1,8 +1,8 @@
 #include "Drawable.h"
-#include "../renderer/mesh/Mesh.h"
 #include "../renderer/buffers/Texture2D.h"
-#include "../renderer/d3d12/GraphicsPipelineState.h"
 #include "../renderer/camera/Camera.h"
+#include "../renderer/d3d12/GraphicsPipelineState.h"
+#include "../renderer/mesh/Mesh.h"
 #include "../utility/UtilityFuncs.h"
 
 std::unordered_map<GraphicsPipelineState*, Drawable::DrawQueue> Drawable::DRAW_QUEUE;
@@ -45,7 +45,7 @@ void Drawable::SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHea
 void Drawable::UpdateWorldMatrixConstantBuffer()
 {
   DM::Mat4x4f world = GetWorldMatrix();
-  myWorldConstantBuffer.UpdateNow(&world);
+  myWorldConstantBuffer.UpdateNow(&world, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 ConstantBuffer* Drawable::GetWorldMatrixConstantBuffer() const
@@ -55,11 +55,11 @@ ConstantBuffer* Drawable::GetWorldMatrixConstantBuffer() const
 
 void Drawable::Draw()
 {
-  ASSERT_STR(myMesh_p && myGraphicsState_p,
-             "myMesh_p=%p or myGraphicsState_p=%p is nullptr\n",
+  ASSERT_STR(myMesh_p && myGraphicsState_p && myResourceDescHeap_p,
+             "myMesh_p=%p or myGraphicsState_p=%p or myResourceDescHeap_p=%p is nullptr\n",
              (void*)myMesh_p,
-             (void*)myGraphicsState_p);
-  ASSERT_STR(myIsBinded, "Object is not binded...\n");
+             (void*)myGraphicsState_p,
+             (void*)myResourceDescHeap_p);
   PushDrawableToDrawQueue(this);
 }
 

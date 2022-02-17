@@ -7,10 +7,10 @@ cbuffer Generation : register(b0)
   float exponent;
   float fudgeFactor;
   uint iterations;
+  float waterLevel;
   float4 textureSize;
+  int permutation[256];
 };
-
-int permutation[256] : register(b1);
 
 [numthreads(32, 32, 1)]
 void main(
@@ -40,5 +40,5 @@ void main(
   if (div > 0.0f)
     e = e / div;
   e = pow(abs(e * fudgeFactor), exponent);
-  heightMap[dispatchThreadId.xy] = e;
+  heightMap[dispatchThreadId.xy].r = e;
 }

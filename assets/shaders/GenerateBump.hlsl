@@ -81,7 +81,7 @@ void CalcNormal(int x, int y, uint width, uint height)
   float3 bumpNormal;
   bumpNormal = normalize((bump.x * tangent) + (bump.y * binormal) + (bump.z * normal));
   bumpMap[target] = float4(bumpNormal, 0.0f);
-  //bumpMap[target] = float4(normal, 0);
+  //bumpMap[target] = float4(float3(1,1,1), 0);
 }
 
 [numthreads(1, 1, 1)]

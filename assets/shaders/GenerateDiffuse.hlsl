@@ -2,25 +2,16 @@
 RWTexture2D<float> heightMap : register(u0);
 RWTexture2D<float4> diffuseTexture : register(u1);
 
-cbuffer WaterLevel : register(b0)
-{
-  float4 waterLevel;
-}
-
-cbuffer Generation : register(b1)
+cbuffer Generation : register(b0)
 {
   float frequency;
   float exponent;
   float fudgeFactor;
   uint iterations;
+  float waterLevel;
   float4 textureSize;
-};
-
-cbuffer Permutation : register(b2)
-{
   int permutation[256];
 };
-
 
 void SetPixel(uint2 texCoord, float elevation, float moisture)
 {
