@@ -15,18 +15,18 @@ void Resource::Init(Resource_Type resourceType,
   myDimention.y  = height;
   myDimention.z  = depth;
   myElementSize  = (width * height * depth) / nrOfElements;
-  if (myElementSize == 0)
-    int asd = 123;
   myBufferSize   = myElementSize * nrOfElements;
   myRowPitch     = width;
   myFormat       = format;
+  myNumberOfElements = nrOfElements;
 
   uint channelElementSize = 0;
   uint nrOfChannels       = 0;
   if (GetChannelInformation(format, &channelElementSize, &nrOfChannels))
   {
-    //myBufferSize *= channelElementSize * nrOfChannels;
-    myRowPitch *= channelElementSize * nrOfChannels;
+    myElementSize = channelElementSize * nrOfChannels;
+    myBufferSize = (width * height * depth) * channelElementSize * nrOfChannels;
+    myRowPitch = channelElementSize * nrOfChannels * width;
   }
 
   D3D12_HEAP_PROPERTIES heapProp = {};
@@ -143,22 +143,26 @@ void Resource::Init(D3D12_HEAP_PROPERTIES* heapProperties,
                                                              IID_PPV_ARGS(&myResource_p)));
 }
 
-void Resource::UpdateNow(void* data_p)
+void Resource::UpdateNow(void*                 data_p,
+                         D3D12_RESOURCE_STATES stateAfter,
+                         uint64                sizeofData,
+                         uint64                offset)
 {
-  UpdateNow(data_p, myState);
-}
-
-void Resource::UpdateNow(void* data_p, D3D12_RESOURCE_STATES stateAfter)
-{
-  MyRenderer::GetInstance()->ResourceUpdate(data_p, this, stateAfter);
+  MyRenderer::GetInstance()->ResourceUpdate(data_p, sizeofData, offset, stateAfter, this);
   myState = stateAfter;
 }
 
-void Resource::UpdateForGraphic(void* data_p, D3D12_RESOURCE_STATES stateAfter)
+void Resource::UpdateForGraphic(void*                 data_p,
+                                D3D12_RESOURCE_STATES stateAfter,
+                                uint64                sizeofData,
+                                uint64                offset)
 {
   ASSERT(false);
 }
-void Resource::UpdateForCompute(void* data_p, D3D12_RESOURCE_STATES stateAfter)
+void Resource::UpdateForCompute(void*                 data_p,
+                                D3D12_RESOURCE_STATES stateAfter,
+                                uint64                sizeofData,
+                                uint64                offset)
 {
   ASSERT(false);
 }
@@ -212,7 +216,7 @@ uint Resource::GetElementSize() const
 
 uint Resource::GetElementCount() const
 {
-  return myBufferSize / myElementSize;
+  return myNumberOfElements;
 }
 
 Resource::Resource_Type Resource::GetResourceType() const

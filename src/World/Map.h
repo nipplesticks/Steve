@@ -134,6 +134,8 @@ private:
   ConstantBuffer                  myWorldMatrix;
   ResourceDescriptorHeap          myRenderDescHeap;
 
+  StructuredBuffer myLights;
+
   uint      myCurrentDetailLevel = 0;
   uint      myTotalDetailLevels  = 0;
   DM::Vec3f myLocalCameraDirection;

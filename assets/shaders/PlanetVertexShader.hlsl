@@ -1,17 +1,19 @@
 SamplerState aSampler : register(s0);
 Texture2D<float> heightMap : register(t0);
 Texture2D<float4> bumpMap : register(t1);
-//Texture2D<float4> diffuseTexture : register(t2);
 
 cbuffer cbv0 : register(b0)
 {
   float4x4 view;
   float4x4 proj;
+  float4 cameraPosition;
 };
 
 cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
+  float4x4 worldInverse;
+  uint numberOfLights;
 }
 
 struct VS_IN

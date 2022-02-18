@@ -1,6 +1,13 @@
 #pragma once
 #include <DirectXMath.h>
 
+struct alignas(256) DefaultWorldMatrix
+{
+  DirectX::XMFLOAT4X4A        worldMatrix;
+  DirectX::XMFLOAT4X4A        worldMatrixInverse;
+  unsigned int numberOfLights;
+};
+
 enum class VertexType
 {
   VertexBasic = 0,

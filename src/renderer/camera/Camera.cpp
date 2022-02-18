@@ -2,6 +2,12 @@
 #include "../../utility/Typedef.h"
 
 ConstantBuffer Camera::VIEW_PROJECTION_CB;
+struct alignas(256) ViewProj
+{
+  DM::Mat4x4f        view;
+  DM::Mat4x4f        projection;
+  DirectX::XMFLOAT4A position;
+};
 
 Camera::Camera()
 {
@@ -129,23 +135,19 @@ Camera::View Camera::GetDefaultView()
 
 void Camera::SetAsMainCameraAndUpdate() const
 {
-  struct
-  {
-    DM::Mat4x4f view;
-    DM::Mat4x4f projection;
-  } viewProjection;
+  ViewProj viewProjection;
 
   viewProjection.view = GetViewMatrix();
-  viewProjection.projection = GetProjectionMatrix();
+  viewProjection.projection = GetProjectionMatrix().AsXmFloat4x4A();
+  viewProjection.position   = GetPosition().AsXmAsXmFloat4A(1.0f);
 
 
-
-  VIEW_PROJECTION_CB.UpdateNow(&viewProjection, D3D12_RESOURCE_STATE_GENERIC_READ);
+  VIEW_PROJECTION_CB.UpdateNow(&viewProjection, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(viewProjection));
 }
 
 void Camera::InitViewProjectionCb()
 {
-  VIEW_PROJECTION_CB.Create(sizeof(DM::Mat4x4f) * 2);
+  VIEW_PROJECTION_CB.Create(sizeof(ViewProj));
 }
 
 void Camera::_buildProjection()

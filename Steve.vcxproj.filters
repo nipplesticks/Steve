@@ -99,6 +99,9 @@
     <ClCompile Include="src\renderer\textureLoader\TextureHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\World\Star.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\Window.h">
@@ -257,7 +260,10 @@
     <ClInclude Include="src\renderer\textureLoader\TextureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\lights\Header.h">
+    <ClInclude Include="src\renderer\lights\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Star.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -271,9 +277,12 @@
     <FxCompile Include="assets\shaders\GenerateBump.hlsl" />
     <FxCompile Include="assets\shaders\WaterVertexShader.hlsl" />
     <FxCompile Include="assets\shaders\WaterPixelShader.hlsl" />
+    <FxCompile Include="assets\shaders\StarVertexShader.hlsl" />
+    <FxCompile Include="assets\shaders\StarPixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\PerlinNoise_cs.hlsli" />
     <None Include="cpp.hint" />
+    <None Include="assets\shaders\LightCalculations.hlsli" />
   </ItemGroup>
 </Project>

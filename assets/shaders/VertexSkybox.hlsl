@@ -2,6 +2,7 @@ cbuffer cbv0 : register(b0)
 {
   float4x4 view;
   float4x4 proj;
+  float4 cameraPosition;
 };
 
 struct Vertex

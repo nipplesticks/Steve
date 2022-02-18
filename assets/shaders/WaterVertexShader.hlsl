@@ -2,11 +2,14 @@ cbuffer cbv0 : register(b0)
 {
   float4x4 view;
   float4x4 proj;
+  float4 cameraPosition;
 };
 
 cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
+  float4x4 worldInverse;
+  uint numberOfLights;
 }
 
 cbuffer cbv2 : register(b2)

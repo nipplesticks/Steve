@@ -1,7 +1,9 @@
 #pragma once
 #define NOMINMAX
 #include "../renderer/buffers/ConstantBuffer.h"
+#include "../renderer/buffers/StructuredBuffer.h"
 #include "../renderer/d3d12/ResourceDescriptorHeap.h"
+#include "../renderer/lights/Light.h"
 #include "Transform.h"
 #include <unordered_map>
 #include <vector>
@@ -40,13 +42,15 @@ public:
   Drawable(const DM::Vec3f& position = DM::Vec3f());
   virtual ~Drawable() = default;
 
-  void            SetMesh(Mesh* mesh_p);
-  void            SetTexture(Texture2D* textureBuffer_p);
-  void            SetGraphicsPipelineState(GraphicsPipelineState* state_p);
-  virtual void    BindWithDefaultResourceDescHeap();
-  void            SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHeap_p);
-  void            UpdateWorldMatrixConstantBuffer();
-  ConstantBuffer* GetWorldMatrixConstantBuffer() const;
+  void              SetMesh(Mesh* mesh_p);
+  void              SetTexture(Texture2D* textureBuffer_p);
+  void              SetGraphicsPipelineState(GraphicsPipelineState* state_p);
+  virtual void      BindWithDefaultResourceDescHeap();
+  void              SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHeap_p);
+  void              UpdateWorldMatrixConstantBuffer();
+  ConstantBuffer*   GetWorldMatrixConstantBuffer() const;
+  StructuredBuffer* GetLightBuffer() const;
+  void              SetLights(const std::vector<Light>& lights);
 
   virtual void Draw();
 
@@ -66,5 +70,7 @@ protected:
   Texture2D*              myTextureBuffer_p    = nullptr;
   GraphicsPipelineState*  myGraphicsState_p    = nullptr;
   ResourceDescriptorHeap* myResourceDescHeap_p = nullptr;
+  uint                    myActiveLights       = 0;
   ConstantBuffer          myWorldConstantBuffer;
+  StructuredBuffer        myLightBuffer;
 };

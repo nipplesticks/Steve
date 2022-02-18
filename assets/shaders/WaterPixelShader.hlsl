@@ -1,5 +1,20 @@
+#include "LightCalculations.hlsli"
+cbuffer cbv0 : register(b0)
+{
+  float4x4 view;
+  float4x4 proj;
+  float4 cameraPosition;
+};
+
+cbuffer cbv1 : register(b1)
+{
+  float4x4 worldMat;
+  float4x4 worldInverse;
+  uint numberOfLights;
+}
 SamplerState aSampler : register(s0);
 Texture2D<float4> bumpMap : register(t1);
+StructuredBuffer<Light> lightBuffer : register(t2);
 
 struct VS_OUT
 {
@@ -24,9 +39,17 @@ float4 main(VS_OUT vIn) : SV_TARGET
   aNormal = normalize(mul(aNormal, TBN));
   
   float3 color = float3(0, 0.1607f, 0.2275f);
-  float ambient = 0.5f;
-  float3 finalColor = max(dot(aNormal, -lightDir), ambient) * color;
+  float3 ambient = color * 0.5f;
+  //float3 finalColor = max(dot(aNormal, -lightDir), ambient) * color;
   
-  return saturate(float4(finalColor, 0.8f));
+  float3 finalColor = float3(0, 0, 0);
+  
+  float4 specularHighlight = float4(0, 0, 0, 0);
+  
+  for (uint i = 0; i < numberOfLights; i++)
+  {
+    finalColor += LightCalculation(lightBuffer[i], cameraPosition, vIn.worldPos, float4(color, 1.0f), float4(aNormal, 0.0f), 0.6f, 64.0f, specularHighlight).rgb;
+  }
+  return saturate(float4(finalColor + ambient + specularHighlight.rgb, 0.9f));
   //return float4(aNormal, 1.0f);
 }

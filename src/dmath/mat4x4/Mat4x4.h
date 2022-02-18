@@ -62,7 +62,7 @@ public:
   Mat4x4              Transpose() const;
   DirectX::XMFLOAT3X3 AsXmFloat3x3() const;
   DirectX::XMFLOAT4X4 AsXmFloat4x4() const;
-  DirectX::XMFLOAT4X4 AsXmFloat4x4A() const;
+  DirectX::XMFLOAT4X4A AsXmFloat4x4A() const;
 
   std::string ToString() const;
 
@@ -371,7 +371,7 @@ inline DirectX::XMFLOAT4X4 Mat4x4<T>::AsXmFloat4x4() const
   return f;
 }
 template <class T>
-inline DirectX::XMFLOAT4X4 Mat4x4<T>::AsXmFloat4x4A() const
+inline DirectX::XMFLOAT4X4A Mat4x4<T>::AsXmFloat4x4A() const
 {
   DirectX::XMFLOAT4X4A f;
   DirectX::XMStoreFloat4x4(&f, Load());

@@ -179,6 +179,7 @@
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
     <ClCompile Include="src\World\Map.cpp" />
+    <ClCompile Include="src\World\Star.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imconfig.h" />
@@ -212,7 +213,7 @@
     <ClInclude Include="src\renderer\d3d12\d3dx12.h" />
     <ClInclude Include="src\renderer\d3d12\GraphicsPipelineState.h" />
     <ClInclude Include="src\renderer\d3d12\myRenderer.h" />
-    <ClInclude Include="src\renderer\lights\Header.h" />
+    <ClInclude Include="src\renderer\lights\Light.h" />
     <ClInclude Include="src\renderer\mesh\Mesh.h" />
     <ClInclude Include="src\renderer\camera\OrbitCamera.h" />
     <ClInclude Include="src\renderer\d3d12\ResourceDescriptorHeap.h" />
@@ -233,6 +234,7 @@
     <ClInclude Include="src\utility\Vector4f.h" />
     <ClInclude Include="src\window\Window.h" />
     <ClInclude Include="src\World\Generation.h" />
+    <ClInclude Include="src\World\Star.h" />
     <ClInclude Include="src\World\Map.h" />
   </ItemGroup>
   <ItemGroup>
@@ -296,6 +298,26 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="assets\shaders\StarPixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="assets\shaders\StarVertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="assets\shaders\VertexSkybox.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
@@ -324,6 +346,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\LightCalculations.hlsli" />
     <None Include="assets\shaders\PerlinNoise_cs.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>

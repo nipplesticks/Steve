@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "../renderer/d3d12/myRenderer.h"
 #include "../renderer/textureLoader/TextureLoader.h"
+#include "Star.h"
 #include <unordered_map>
 
 float Map::LOD_MAX_DISTANCE = 10.0f;
@@ -12,20 +13,19 @@ struct alignas(256) WaterUVoffset
 
 Map::Map()
     : Transform()
-{
-  
-}
+{ }
 
 void Map::SetRotationSpeed(float rotationSpeed) { }
 
 void Map::Create(uint maxSubdivisions, float waterTiles, const DM::Vec2u& textureResulotion)
 {
+  maxSubdivisions += 1;
   myTextureSize = textureResulotion;
   myHeightMapGenInput.Create(sizeof(GPUGenerationInput));
   myDiffuseMapGenInput.Create(sizeof(GPUGenerationInput));
-  maxSubdivisions += 1;
   myTotalDetailLevels = maxSubdivisions;
-  myWorldMatrix.Create(sizeof(DM::Mat4x4f));
+  myWorldMatrix.Create(sizeof(DefaultWorldMatrix));
+  myLights.Create(sizeof(Light), MAX_LIGHTS);
 
   uint waterDetailLevel = myTotalDetailLevels / 2;
 
@@ -52,15 +52,30 @@ void Map::Update(float dt, Camera* camera_p)
   /*Rotate(0, dt * myRotationSpeed, 0);
   myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);*/
 
+  std::vector<Light> lightVector(Star::Active_Stars.size());
+
+  for (uint i = 0; i < Star::Active_Stars.size(); i++)
+  {
+    lightVector[i] = Star::Active_Stars[i]->GetLight();
+  }
+  myLights.UpdateNow(lightVector.data(),
+                     D3D12_RESOURCE_STATE_GENERIC_READ,
+                     sizeof(Light) * (uint64)lightVector.size());
+
   _CalcDetailLevel(camera_p);
   myWaterOffset += dt * 0.01f;
   myWaterDrawable.SetScale(GetScale() + (GetScale() * myWaterLevel));
+  myWaterDrawable.SetLights(lightVector);
   WaterUVoffset wo;
   wo.waterUV = myWaterOffset;
 
   myWaterDrawable.UpdateWorldMatrixConstantBuffer();
-  DM::Mat4x4f worldMat = GetWorldMatrix();
-  myWorldMatrix.UpdateNow(&worldMat, D3D12_RESOURCE_STATE_GENERIC_READ);
+  DM::Mat4x4f        worldMat = GetWorldMatrix();
+  DefaultWorldMatrix wm       = {};
+  wm.worldMatrix              = worldMat.AsXmFloat4x4A();
+  wm.worldMatrixInverse       = worldMat.Inverse().AsXmFloat4x4A();
+  wm.numberOfLights           = Star::Active_Stars.size();
+  myWorldMatrix.UpdateNow(&wm, D3D12_RESOURCE_STATE_GENERIC_READ);
   myWaterOffsetBuffer.UpdateNow(&wo, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
@@ -90,8 +105,8 @@ void Map::GenerateMap(const Noise& heightMap, const Noise& diffuseMap)
     dm.textureSize = myTextureSize.AsXmAsXmFloat2A();
     dm.waterLevel  = myWaterLevel;
   }
-  myHeightMapGenInput.UpdateNow(&hm, D3D12_RESOURCE_STATE_GENERIC_READ);
-  myDiffuseMapGenInput.UpdateNow(&dm, D3D12_RESOURCE_STATE_GENERIC_READ);
+  myHeightMapGenInput.UpdateNow(&hm, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(hm));
+  myDiffuseMapGenInput.UpdateNow(&dm, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(dm));
 
   myBumpMap.SetState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
   myHeightMap.SetState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -109,9 +124,8 @@ void Map::GenerateMap(const Noise& heightMap, const Noise& diffuseMap)
                  DM::Vec3u(myTextureSize.x / 32, myTextureSize.y / 32, 1));
   ren_p->EndCompute();
   ren_p->BeginCompute();
-  ren_p->Compute(&myBumpGenPipeline,
-                 &myBumpGenDescHeap,
-                 DM::Vec3u(myTextureSize.x, myTextureSize.y, 1));
+  ren_p->Compute(
+      &myBumpGenPipeline, &myBumpGenDescHeap, DM::Vec3u(myTextureSize.x, myTextureSize.y, 1));
   ren_p->EndCompute();
 
   myBumpMap.SetState(D3D12_RESOURCE_STATE_GENERIC_READ);
@@ -125,7 +139,6 @@ void Map::Draw()
 
   for (uint i = 0; i < ICOSAHEDRON_SIDES; i++)
   {
-    mySides[i].SetCustomResourceDescriptorHeap(&myRenderDescHeap);
     mySides[i].SetMesh(&dl_p->sides[i]);
     if (myTopLevelNormals[i].Dot(myLocalCameraDirection) < 0.3f)
       mySides[i].Draw();
@@ -316,7 +329,7 @@ void Map::_SetupDetailLevels(const Icosahedron& icosahedron, uint divisions)
   }
   myRenderDescHeap.Create(
       {&Camera::VIEW_PROJECTION_CB, &myWorldMatrix, myWaterDrawable.GetWorldMatrixConstantBuffer()},
-      {&myHeightMap, &myBumpMap, &myDiffuseMap},
+      {&myHeightMap, &myBumpMap, &myDiffuseMap, &myLights},
       {});
 }
 
@@ -328,7 +341,7 @@ void Map::_CalcDetailLevel(Camera* camera_p)
     return;
   }
 
-  DM::Vec3f cameraPos    = camera_p->GetPosition();
+  DM::Vec3f cameraPos = camera_p->GetPosition();
 
   DM::Mat4x4f worldMatrixInverse = GetWorldMatrix().Inverse();
   cameraPos                      = cameraPos * worldMatrixInverse;
@@ -336,7 +349,7 @@ void Map::_CalcDetailLevel(Camera* camera_p)
   float t                        = distanceFromPlanet / LOD_MAX_DISTANCE;
 
   myLocalCameraDirection = (cameraPos * -1.0f).Normalize();
-  
+
   myCurrentDetailLevel =
       myTotalDetailLevels - std::min((uint)(myTotalDetailLevels * t), myTotalDetailLevels);
   myCurrentDetailLevel = std::min(myCurrentDetailLevel, myTotalDetailLevels - 1);
@@ -350,7 +363,10 @@ void Map::_SetupGraphicPipelineState()
   myGraphicPipeline.GenerateInputElementDesc();
   myGraphicPipeline.CreatePipelineState();
   for (uint i = 0; i < ICOSAHEDRON_SIDES; i++)
+  {
+    mySides[i].SetCustomResourceDescriptorHeap(&myRenderDescHeap);
     mySides[i].SetGraphicsPipelineState(&myGraphicPipeline);
+  }
 }
 
 void Map::_SetupComputePipelineState()
@@ -430,12 +446,12 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
       DM::Vec3f bitangent((-dUv1.x * e0.x - dUv0.x * e1.x) * r,
                           (-dUv1.x * e0.y - dUv0.x * e1.y) * r,
                           (-dUv1.x * e0.z - dUv0.x * e1.z) * r);
-      bitangent                          = bitangent.Normalize();
-      tan[waterTangentCounter].tangent   = tangent.AsXmAsXmFloat4A(0.0f);
+      bitangent                            = bitangent.Normalize();
+      tan[waterTangentCounter].tangent     = tangent.AsXmAsXmFloat4A(0.0f);
       tan[waterTangentCounter++].bitangent = bitangent.AsXmAsXmFloat4A(0.0f);
-      idx[waterIndexCounter++]           = idx1 + idxOffset;
-      idx[waterIndexCounter++]           = idx2 + idxOffset;
-      idx[waterIndexCounter++]           = idx3 + idxOffset;
+      idx[waterIndexCounter++]             = idx1 + idxOffset;
+      idx[waterIndexCounter++]             = idx2 + idxOffset;
+      idx[waterIndexCounter++]             = idx3 + idxOffset;
     }
     idxOffset += numVertsPerSide;
   }
@@ -443,7 +459,8 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
   myWaterMesh.CreateBuffers(true);
 
   myWaterTangents.Create(sizeof(TangentBitangent), nrOfWaterTangents);
-  myWaterTangents.UpdateNow(tan.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
+  myWaterTangents.UpdateNow(
+      tan.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
   TextureLoader::Image waterNormalMap =
       TextureLoader::LoadImageData("assets/textures/waterBump.jpeg");
@@ -457,11 +474,11 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
   myWaterOffsetBuffer.Create(sizeof(WaterUVoffset));
   myWaterOffsetBuffer.UpdateNow(&wo, D3D12_RESOURCE_STATE_GENERIC_READ);
 
-
-  myWaterResourceDescHeap.Create(
-      {&Camera::VIEW_PROJECTION_CB, myWaterDrawable.GetWorldMatrixConstantBuffer(), &myWaterOffsetBuffer},
-      {&myWaterTangents, &myWaterBumpMap},
-      {});
+  myWaterResourceDescHeap.Create({&Camera::VIEW_PROJECTION_CB,
+                                  myWaterDrawable.GetWorldMatrixConstantBuffer(),
+                                  &myWaterOffsetBuffer},
+                                 {&myWaterTangents, &myWaterBumpMap, &myLights},
+                                 {});
 
   myWaterGraphicPipeline.SetVertexShader("assets/shaders/WaterVertexShader.hlsl");
   myWaterGraphicPipeline.SetPixelShader("assets/shaders/WaterPixelShader.hlsl");

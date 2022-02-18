@@ -10,6 +10,7 @@
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
+#include "World/Star.h"
 
 void SetupInput();
 bool HandleInput(Camera* camera_p, float dt, Window* wnd_p);
@@ -27,6 +28,7 @@ int main()
   MyRenderer* renderer_p = MyRenderer::GetInstance();
   SetupInput();
   MeshLoader::LoadMesh("assets/models/Skybox/sphere.obj", "skybox", true);
+  MeshLoader::LoadMesh("assets/models/Skybox/sphere.obj", "star", false);
   TextureHandler::LoadTexture("assets/textures/skybox.jpg", "skybox");
   GraphicsPipelineState skyboxPipeline;
   skyboxPipeline.SetVertexShader("assets/shaders/VertexSkybox.hlsl");
@@ -43,18 +45,28 @@ int main()
   camera.SetLookTo(0.0f, 0.0f, -1.0f);
   camera.SetPosition(0, 0, 10);
 
+  Star mainStar;
+  {
+    Light l = mainStar.GetLight();
+    DM::Vec3f dir = l.direction;
+    mainStar.SetPosition(dir * -100);
+    mainStar.SetScale(10, 10, 10);
+  }
+
+
   Noise heightMapGenerator  = {};
   Noise diffuseMapGenerator = {};
   float waterLevel          = 0.4f;
   float planetScale         = 1.0f;
 
   Map planet;
-  planet.Create(10);
+  planet.Create(8, 10);
   planet.SetWaterLevel(waterLevel);
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
 
   Timer frameTimer;
   frameTimer.Start();
+  uint c = 0;
   while (wnd.IsOpen() && !KeyboardInput::IsKeyPressed("close"))
   {
     float dt = (float)frameTimer.Stop();
@@ -74,12 +86,16 @@ int main()
       planet.SetScale(planetScale, planetScale, planetScale);
     }
 
+    mainStar.UpdateWorldMatrixConstantBuffer();
+
     planet.Update(dt, &camera);
     renderer_p->BeginFrame();
     renderer_p->Clear();
     planet.Draw();
+    mainStar.Draw();
     skybox.Draw();
     renderer_p->EndFrame();
+    c++;
   }
 
   return 0;

@@ -45,10 +45,18 @@ public:
             D3D12_RESOURCE_STATES  initialState,
             D3D12_CLEAR_VALUE*     clearValue = nullptr);
 
-  void UpdateNow(void* data_p);
-  void UpdateNow(void* data_p, D3D12_RESOURCE_STATES stateAfter);
-  void UpdateForGraphic(void* data_p, D3D12_RESOURCE_STATES stateAfter);
-  void UpdateForCompute(void* data_p, D3D12_RESOURCE_STATES stateAfter);
+  void UpdateNow(void*                 data_p,
+                 D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
+                 uint64                sizeofData = 0,
+                 uint64                offset     = 0);
+  void UpdateForGraphic(void*                 data_p,
+                        D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
+                        uint64                sizeofData = 0,
+                        uint64                offset     = 0);
+  void UpdateForCompute(void*                 data_p,
+                        D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
+                        uint64                sizeofData = 0,
+                        uint64                offset     = 0);
 
   uint64 GetRowPitch();
 
@@ -76,5 +84,6 @@ protected:
   DM::Vec3u             myDimention    = DM::Vec3u(0, 0, 0);
   Resource_Type         myResourceType = Resource_Type::Unknown;
   Resource_View         myResourceView;
-  uint64                myRowPitch = 0;
+  uint64                myRowPitch         = 0;
+  uint                  myNumberOfElements = 0;
 };

@@ -164,7 +164,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
     for (uint i = 0; i < (uint)vertices.size(); i++)
     {
       myBasicVertices[i] = vertices[i].vertexBasic;
-      myIndices[i]     = i;
+      myIndices[i]       = i;
     }
   }
   else if (myVertexType == VertexType::VertexTangent)
@@ -174,7 +174,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
     for (uint i = 0; i < (uint)vertices.size(); i++)
     {
       myTangentVertices[i] = vertices[i].vertexTangent;
-      myIndices[i]       = i;
+      myIndices[i]         = i;
     }
   }
 
@@ -184,7 +184,6 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
     myNumberOfVertices = (uint)myTangentVertices.size();
 
   myNumberOfIndices = (uint)myIndices.size();
-
 }
 
 void Mesh::SetMesh(const std::vector<Vertex>& vertices,
@@ -221,8 +220,10 @@ void Mesh::CreateBuffers(bool deleteCpuData)
   myCpuDataDeleted = deleteCpuData;
   myIndexBuffer.Create(GetNumberOfIndices());
   myVertexBuffer.Create(GetSingleVertexByteSize(), GetNumberOfVertices());
-  myIndexBuffer.UpdateNow(myIndices.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
-  myVertexBuffer.UpdateNow(GetRawVertices(), D3D12_RESOURCE_STATE_GENERIC_READ);
+  myIndexBuffer.UpdateNow(
+      GetRawIndices(), D3D12_RESOURCE_STATE_GENERIC_READ);
+  myVertexBuffer.UpdateNow(
+      GetRawVertices(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
   if (myCpuDataDeleted)
   {
@@ -230,7 +231,6 @@ void Mesh::CreateBuffers(bool deleteCpuData)
     myBasicVertices.clear();
     myTangentVertices.clear();
   }
-
 }
 
 IndexBuffer* Mesh::GetIndexBuffer() const

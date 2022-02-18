@@ -48,7 +48,11 @@ public:
   void DrawImgui();
 
   void SetResolution(uint resX, uint resY);
-  void ResourceUpdate(void* data_p, Resource* resource_p, D3D12_RESOURCE_STATES stateAfter);
+  void ResourceUpdate(void*                 data_p,
+                      uint64                sizeofData,
+                      uint64                offset,
+                      D3D12_RESOURCE_STATES stateAfter,
+                      Resource*             resource_p);
 
   ID3D12RootSignature* GetGraphicalRootSignature();
   ID3D12RootSignature* GetComputeRootSignature();
@@ -56,9 +60,9 @@ public:
   ID3D12Device5*        GetDevice() const;
   ID3D12DescriptorHeap* GetUploadHeap() const;
   uint                  GetSrvUavCbvDescritorSize() const;
-  void                  ChangeResourceStateGraphic(ID3D12Resource* resource_p,
-                                            D3D12_RESOURCE_STATES stateBefore,
-                                            D3D12_RESOURCE_STATES stateAfter);
+  void                  ChangeResourceStateGraphic(ID3D12Resource*       resource_p,
+                                                   D3D12_RESOURCE_STATES stateBefore,
+                                                   D3D12_RESOURCE_STATES stateAfter);
   void                  ChangeResourceStateCompute(ID3D12Resource*       resource_p,
                                                    D3D12_RESOURCE_STATES stateBefore,
                                                    D3D12_RESOURCE_STATES stateAfter);
