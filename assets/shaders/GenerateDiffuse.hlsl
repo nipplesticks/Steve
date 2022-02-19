@@ -68,7 +68,7 @@ void SetPixel(uint2 texCoord, float elevation, float moisture)
 [numthreads(32, 32, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-  const float PI = 3.14159265359f;
+  const float PI = 3.141592654f;
   
   int x = threadID.x;
   int y = threadID.y;
@@ -93,5 +93,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
     m = m / div;
   m = pow(abs(m * fudgeFactor), exponent);
   float e = heightMap[uint2(threadID.xy)];
+  
   SetPixel(threadID.xy, e, m);
 }

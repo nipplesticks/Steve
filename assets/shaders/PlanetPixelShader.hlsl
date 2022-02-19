@@ -45,8 +45,10 @@ float4 main(Vertex vertex)
   {
     finalColor += LightCalculation(lightBuffer[i], cameraPosition, vertex.worldPos, float4(color, 1.0f), vertex.nor, 0.1f, 32.0f, specularHighlight).rgb;
   }
+  //float4 c = float4(finalColor + ambient + specularHighlight.rgb, 1.0f);
+  
   return saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
-  //return (float4(vertex.nor.xyz + finalColor.xyz * 0.0f, 1.0f));
+  //return (float4(vertex.nor.xyz + c.xyz * 0.0f, 1.0f));
   //return (float4(float3(1,1,1) + finalColor.xyz * 0.0f, 1.0f));
   //return float4(color, 1.0f);
 }

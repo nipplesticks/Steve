@@ -300,9 +300,13 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   D3D12_RESOURCE_DESC resDesc = resource_p->GetResource()->GetDesc();
   D3D12_RESOURCE_DESC desc = {};
 
-  //uint64              byteSize = AlignAs256(resource_p->GetBufferSize());
-  UINT64 byteSize = 0;
-  myDevice_p->GetCopyableFootprints(&resDesc, 0, 1, 0, nullptr, nullptr, nullptr, &byteSize);
+  UINT64                             byteSize  = sizeofData;
+  UINT64                             rowSize   = 0;
+  UINT                               numRows   = 0;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint = {};
+  myDevice_p->GetCopyableFootprints(
+      &resDesc, 0, 1, offset, &footPrint, &numRows, &rowSize, &byteSize);
+
 
   desc.Width               = byteSize;
   desc.DepthOrArraySize    = 1;
@@ -324,13 +328,11 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
 
   D3D12_SUBRESOURCE_DATA srdDesc = {};
   srdDesc.pData                  = data_p;
-  srdDesc.RowPitch               = resource_p->GetRowPitch();
-  srdDesc.SlicePitch             = srdDesc.RowPitch * resource_p->GetDimention().y;
+  srdDesc.RowPitch               = rowSize;
+  srdDesc.SlicePitch             = srdDesc.RowPitch * numRows;
 
   if (sizeofData)
   {
-    if (resource_p->GetResourceType() == Resource::Resource_Type::StructuredBuffer)
-      int lol = 123;
     srdDesc.RowPitch = sizeofData;
   }
 

@@ -15,7 +15,7 @@ void Resource::Init(Resource_Type resourceType,
   myDimention.y  = height;
   myDimention.z  = depth;
   myElementSize  = (width * height * depth) / nrOfElements;
-  myBufferSize   = myElementSize * nrOfElements;
+  myBufferSize   = AlignAs256(myElementSize * nrOfElements);
   myRowPitch     = width;
   myFormat       = format;
   myNumberOfElements = nrOfElements;
@@ -25,7 +25,7 @@ void Resource::Init(Resource_Type resourceType,
   if (GetChannelInformation(format, &channelElementSize, &nrOfChannels))
   {
     myElementSize = channelElementSize * nrOfChannels;
-    myBufferSize = (width * height * depth) * channelElementSize * nrOfChannels;
+    myBufferSize = AlignAs(256,((width * height * depth) * channelElementSize * nrOfChannels));
     myRowPitch = channelElementSize * nrOfChannels * width;
   }
 

@@ -74,7 +74,7 @@ void Map::Update(float dt, Camera* camera_p)
   DefaultWorldMatrix wm       = {};
   wm.worldMatrix              = worldMat.AsXmFloat4x4A();
   wm.worldMatrixInverse       = worldMat.Inverse().AsXmFloat4x4A();
-  wm.numberOfLights           = Star::Active_Stars.size();
+  wm.numberOfLights           = (uint)Star::Active_Stars.size();
   myWorldMatrix.UpdateNow(&wm, D3D12_RESOURCE_STATE_GENERIC_READ);
   myWaterOffsetBuffer.UpdateNow(&wo, D3D12_RESOURCE_STATE_GENERIC_READ);
 }

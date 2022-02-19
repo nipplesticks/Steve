@@ -60,7 +60,7 @@ int main()
   float planetScale         = 1.0f;
 
   Map planet;
-  planet.Create(8, 10);
+  planet.Create(10, 10);
   planet.SetWaterLevel(waterLevel);
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
 
