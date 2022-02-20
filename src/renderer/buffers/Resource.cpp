@@ -15,8 +15,6 @@ void Resource::Init(Resource_Type resourceType,
   myDimention.y  = height;
   myDimention.z  = depth;
   myElementSize  = (width * height * depth) / nrOfElements;
-  myBufferSize   = AlignAs256(myElementSize * nrOfElements);
-  myRowPitch     = width;
   myFormat       = format;
   myNumberOfElements = nrOfElements;
 
@@ -25,8 +23,6 @@ void Resource::Init(Resource_Type resourceType,
   if (GetChannelInformation(format, &channelElementSize, &nrOfChannels))
   {
     myElementSize = channelElementSize * nrOfChannels;
-    myBufferSize = AlignAs(256,((width * height * depth) * channelElementSize * nrOfChannels));
-    myRowPitch = channelElementSize * nrOfChannels * width;
   }
 
   D3D12_HEAP_PROPERTIES heapProp = {};
@@ -141,6 +137,16 @@ void Resource::Init(D3D12_HEAP_PROPERTIES* heapProperties,
                                                              initialState,
                                                              clearValue,
                                                              IID_PPV_ARGS(&myResource_p)));
+  D3D12_RESOURCE_DESC resDesc = myResource_p->GetDesc();
+  UINT64              bufferSize = 0;
+  UINT64              rowSize    = 0;
+  UINT                numRows    = 0;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint  = {};
+  renderer_p->GetDevice()->GetCopyableFootprints(
+      &resDesc, 0, 1, 0, &footPrint, &numRows, &rowSize, &bufferSize);
+  myBufferSize = bufferSize;
+  myRowPitch   = rowSize;
+  myNumberOfRows = numRows;
 }
 
 void Resource::UpdateNow(void*                 data_p,
@@ -249,4 +255,9 @@ D3D12_RESOURCE_DIMENSION Resource::_GetResourceDimension(Resource_Type resourceT
     break;
   }
   return D3D12_RESOURCE_DIMENSION_UNKNOWN;
+}
+
+uint Resource::GetNumberOfRows() const
+{
+  return myNumberOfRows;
 }

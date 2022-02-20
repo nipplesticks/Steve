@@ -286,32 +286,114 @@ void Map::_CreateVertices(Icosahedron&                  icosahedron,
         icosahedron.sides[side].detailLevel[level].indices[idxCounter++] = triangle.A;
         icosahedron.sides[side].detailLevel[level].indices[idxCounter++] = triangle.B;
         icosahedron.sides[side].detailLevel[level].indices[idxCounter++] = triangle.C;
-
-        DM::Vec3f v0 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.A].vertexBasic.position;
-        DM::Vec3f v1 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.B].vertexBasic.position;
-        DM::Vec3f v2 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.C].vertexBasic.position;
-        DM::Vec2f uv0 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.A].vertexBasic.uv;
-        DM::Vec2f uv1 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.B].vertexBasic.uv;
-        DM::Vec2f uv2 =
-            icosahedron.sides[side].detailLevel[level].vertices[triangle.C].vertexBasic.uv;
-
-        DM::Vec3f e0 = v1 - v0;
-        DM::Vec3f e1 = v2 - v0;
-
         if (level == 0)
         {
+          DM::Vec3f v0 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.A].vertexBasic.position;
+          DM::Vec3f v1 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.B].vertexBasic.position;
+          DM::Vec3f v2 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.C].vertexBasic.position;
+          DM::Vec2f uv0 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.A].vertexBasic.uv;
+          DM::Vec2f uv1 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.B].vertexBasic.uv;
+          DM::Vec2f uv2 =
+              icosahedron.sides[side].detailLevel[level].vertices[triangle.C].vertexBasic.uv;
+
+          DM::Vec3f e0 = v1 - v0;
+          DM::Vec3f e1 = v2 - v0;
+
           myTopLevelNormals[side] = e1.Cross(e0).Normalize();
         }
       }
+      _FixWrappedUVCoords(icosahedron.sides[side].detailLevel[level].indices,
+                          icosahedron.sides[side].detailLevel[level].vertices);
     }
   }
 }
+void Map::_FixWrappedUVCoords(std::vector<uint>& indices, std::vector<Vertex>& vertices)
+{
+  uint                           numIndices  = (uint)indices.size();
+  uint                           vertexIndex = (uint)vertices.size() - 1;
+  std::unordered_map<uint, uint> visited;
+  Vertex                         v = {};
 
+  for (uint i = 0; i < numIndices; i += 3)
+  {
+    uint a = indices[i + 0];
+    uint b = indices[i + 1];
+    uint c = indices[i + 2];
+
+    DM::Vec3f uvA(vertices[a].vertexBasic.uv);
+    DM::Vec3f uvB(vertices[b].vertexBasic.uv);
+    DM::Vec3f uvC(vertices[c].vertexBasic.uv);
+    DM::Vec3f n = (uvC - uvA).Cross(uvB - uvA);
+    if (n.z < 0.0f)
+    {
+      Vertex_Basic A = vertices[a].vertexBasic;
+      Vertex_Basic B = vertices[b].vertexBasic;
+      Vertex_Basic C = vertices[c].vertexBasic;
+      if (A.uv.x < 0.25f)
+      {
+        uint tempA = a;
+        if (visited.find(a) == visited.end())
+        {
+          A.uv.x += 1.0f;
+          v.vertexBasic = A;
+          vertices.push_back(v);
+          vertexIndex++;
+          visited.insert(std::make_pair(a, vertexIndex));
+          tempA = vertexIndex;
+        }
+        else
+        {
+          tempA = visited[a];
+        }
+        a = tempA;
+      }
+      if (B.uv.x < 0.25f)
+      {
+        uint tempB = b;
+        if (visited.find(b) == visited.end())
+        {
+          B.uv.x += 1.0f;
+          v.vertexBasic = B;
+          vertices.push_back(v);
+          vertexIndex++;
+          visited.insert(std::make_pair(b, vertexIndex));
+          tempB = vertexIndex;
+        }
+        else
+        {
+          tempB = visited[b];
+        }
+        b = tempB;
+      }
+      if (C.uv.x < 0.25f)
+      {
+        uint tempC = c;
+        if (visited.find(c) == visited.end())
+        {
+          C.uv.x += 1.0f;
+          v.vertexBasic = C;
+          vertices.push_back(v);
+          vertexIndex++;
+          visited.insert(std::make_pair(c, vertexIndex));
+          tempC = vertexIndex;
+        }
+        else
+        {
+          tempC = visited[c];
+        }
+        c = tempC;
+      }
+      indices[i + 0] = a;
+      indices[i + 1] = b;
+      indices[i + 2] = c;
+    }
+  }
+}
 void Map::_SetupDetailLevels(const Icosahedron& icosahedron, uint divisions)
 {
   myDetailLevels.resize(divisions);
@@ -392,17 +474,17 @@ void Map::_SetupTextures(const DM::Vec2u& textureResulotion)
 
 void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, float waterTiles)
 {
-  uint numVertsPerSide   = (uint)icosahedron.sides[0].detailLevel[waterDetailLevel].vertices.size();
-  uint nrOfWaterVertices = numVertsPerSide * ICOSAHEDRON_SIDES;
-  uint nrOfWaterIndices =
-      (uint)icosahedron.sides[0].detailLevel[waterDetailLevel].indices.size() * ICOSAHEDRON_SIDES;
-  uint                nrOfWaterTangents = nrOfWaterIndices / 3;
-  std::vector<Vertex> water(nrOfWaterVertices);
+  std::vector<Vertex> water;
+  uint                totalIndices = 0;
+
 
   uint waterVertexCounter = 0;
   for (uint side = 0; side < ICOSAHEDRON_SIDES; side++)
   {
-    for (uint i = 0; i < numVertsPerSide; i++)
+    uint numVert = (uint)icosahedron.sides[side].detailLevel[waterDetailLevel].vertices.size();
+    totalIndices += (uint)icosahedron.sides[side].detailLevel[waterDetailLevel].indices.size();
+    water.resize(water.size() + numVert);
+    for (uint i = 0; i < numVert; i++)
     {
       water[waterVertexCounter].vertexBasic =
           icosahedron.sides[side].detailLevel[waterDetailLevel].vertices[i].vertexBasic;
@@ -412,8 +494,9 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
     }
   }
 
+  std::vector<uint>   idx(totalIndices);
+  uint                nrOfWaterTangents = (uint)idx.size() / 3;
   std::vector<TangentBitangent> tan(nrOfWaterTangents);
-  std::vector<uint>             idx(nrOfWaterIndices);
 
   uint waterIndexCounter   = 0;
   uint waterTangentCounter = 0;
@@ -453,14 +536,13 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
       idx[waterIndexCounter++]             = idx2 + idxOffset;
       idx[waterIndexCounter++]             = idx3 + idxOffset;
     }
-    idxOffset += numVertsPerSide;
+    idxOffset += (uint)side_p->detailLevel[waterDetailLevel].vertices.size();
   }
   myWaterMesh.SetMesh(water, idx, VertexType::VertexBasic);
   myWaterMesh.CreateBuffers(true);
 
   myWaterTangents.Create(sizeof(TangentBitangent), nrOfWaterTangents);
-  myWaterTangents.UpdateNow(
-      tan.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
+  myWaterTangents.UpdateNow(tan.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
   TextureLoader::Image waterNormalMap =
       TextureLoader::LoadImageData("assets/textures/waterBump.jpeg");

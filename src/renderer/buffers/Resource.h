@@ -71,6 +71,7 @@ public:
   uint64                GetBufferSize() const;
   uint                  GetElementSize() const;
   uint                  GetElementCount() const;
+  uint                  GetNumberOfRows() const;
   Resource_Type         GetResourceType() const;
 
 protected:
@@ -86,4 +87,5 @@ protected:
   Resource_View         myResourceView;
   uint64                myRowPitch         = 0;
   uint                  myNumberOfElements = 0;
+  uint                  myNumberOfRows     = 0;
 };

@@ -300,13 +300,12 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   D3D12_RESOURCE_DESC resDesc = resource_p->GetResource()->GetDesc();
   D3D12_RESOURCE_DESC desc = {};
 
-  UINT64                             byteSize  = sizeofData;
-  UINT64                             rowSize   = 0;
-  UINT                               numRows   = 0;
-  D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint = {};
-  myDevice_p->GetCopyableFootprints(
-      &resDesc, 0, 1, offset, &footPrint, &numRows, &rowSize, &byteSize);
-
+  UINT64                             byteSize  = resource_p->GetBufferSize();
+  UINT64                             rowSize   = resource_p->GetRowPitch();
+  UINT                               numRows   = resource_p->GetNumberOfRows();
+  //D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint = {};
+  /*myDevice_p->GetCopyableFootprints(
+      &resDesc, 0, 1, offset, &footPrint, &numRows, &rowSize, &byteSize);*/
 
   desc.Width               = byteSize;
   desc.DepthOrArraySize    = 1;
@@ -334,6 +333,7 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   if (sizeofData)
   {
     srdDesc.RowPitch = sizeofData;
+    srdDesc.SlicePitch = 0;
   }
 
   myResourceUpdateAllocator_p->Reset();
