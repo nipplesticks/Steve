@@ -85,7 +85,7 @@ protected:
   DM::Vec3u             myDimention    = DM::Vec3u(0, 0, 0);
   Resource_Type         myResourceType = Resource_Type::Unknown;
   Resource_View         myResourceView;
-  uint64                myRowPitch         = 0;
-  uint                  myNumberOfElements = 0;
-  uint                  myNumberOfRows     = 0;
+  uint64                myRowPitch             = 0;
+  uint                  myNumberOfElements     = 0;
+  uint                  myNumberOfRows         = 0;
 };

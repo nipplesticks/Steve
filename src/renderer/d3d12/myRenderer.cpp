@@ -298,25 +298,22 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   heapProp.MemoryPoolPreference        = D3D12_MEMORY_POOL_UNKNOWN;
 
   D3D12_RESOURCE_DESC resDesc = resource_p->GetResource()->GetDesc();
-  D3D12_RESOURCE_DESC desc = {};
+  D3D12_RESOURCE_DESC desc    = {};
 
-  UINT64                             byteSize  = resource_p->GetBufferSize();
-  UINT64                             rowSize   = resource_p->GetRowPitch();
-  UINT                               numRows   = resource_p->GetNumberOfRows();
-  //D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint = {};
-  /*myDevice_p->GetCopyableFootprints(
-      &resDesc, 0, 1, offset, &footPrint, &numRows, &rowSize, &byteSize);*/
+  UINT64 byteSize = resource_p->GetBufferSize();
+  UINT64 rowSize  = resource_p->GetRowPitch();
+  UINT   numRows  = resource_p->GetNumberOfRows();
 
-  desc.Width               = byteSize;
-  desc.DepthOrArraySize    = 1;
-  desc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
-  desc.Flags               = D3D12_RESOURCE_FLAG_NONE;
-  desc.Format              = DXGI_FORMAT_UNKNOWN;
-  desc.Height              = 1;
-  desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-  desc.MipLevels           = 1;
-  desc.SampleDesc.Count    = 1;
-  desc.SampleDesc.Quality  = 0;
+  desc.Width              = byteSize;
+  desc.DepthOrArraySize   = 1;
+  desc.Dimension          = D3D12_RESOURCE_DIMENSION_BUFFER;
+  desc.Flags              = D3D12_RESOURCE_FLAG_NONE;
+  desc.Format             = DXGI_FORMAT_UNKNOWN;
+  desc.Height             = 1;
+  desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  desc.MipLevels          = 1;
+  desc.SampleDesc.Count   = 1;
+  desc.SampleDesc.Quality = 0;
 
   HR_ASSERT(myDevice_p->CreateCommittedResource(&heapProp,
                                                 D3D12_HEAP_FLAG_NONE,
@@ -330,10 +327,13 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   srdDesc.RowPitch               = rowSize;
   srdDesc.SlicePitch             = srdDesc.RowPitch * numRows;
 
-  if (sizeofData)
+  if (resource_p->GetResourceType() == Resource::Resource_Type::StructuredBuffer)
   {
-    srdDesc.RowPitch = sizeofData;
-    srdDesc.SlicePitch = 0;
+    if (sizeofData)
+    {
+      srdDesc.RowPitch   = sizeofData;
+      srdDesc.SlicePitch = 1;
+    }
   }
 
   myResourceUpdateAllocator_p->Reset();
@@ -344,8 +344,13 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
                                 resource_p->GetState(),
                                 D3D12_RESOURCE_STATE_COPY_DEST);
 
-  UpdateSubresources(
-      myResourceUpdateCommandList4_p, resource_p->GetResource(), tempResource_p, offset, 0, 1, &srdDesc);
+  UpdateSubresources(myResourceUpdateCommandList4_p,
+                      resource_p->GetResource(),
+                      tempResource_p,
+                      offset,
+                      0,
+                      1,
+                      &srdDesc);
 
   _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
                                 resource_p->GetResource(),

@@ -2,7 +2,7 @@
 #include <DirectXMath.h>
 #include "../../utility/Typedef.h"
 #define MAX_LIGHTS 256
-enum class LightType
+enum class LightType : uint
 {
   PointLight = 0,
   DirectionalLight,
@@ -16,7 +16,7 @@ struct Light
   float              pow;
   float              radius;
   float              intensity;
-  DirectX::XMINT3    pad;
+  float              pad[3];
   union
   {
     DirectX::XMFLOAT4A direction;

@@ -52,15 +52,14 @@ void Map::Update(float dt, Camera* camera_p)
   /*Rotate(0, dt * myRotationSpeed, 0);
   myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);*/
 
-  std::vector<Light> lightVector(Star::Active_Stars.size());
+  std::vector<Light> lightVector(MAX_LIGHTS);
 
   for (uint i = 0; i < Star::Active_Stars.size(); i++)
   {
     lightVector[i] = Star::Active_Stars[i]->GetLight();
   }
-  myLights.UpdateNow(lightVector.data(),
-                     D3D12_RESOURCE_STATE_GENERIC_READ,
-                     sizeof(Light) * (uint64)lightVector.size());
+  myLights.UpdateNow(
+      lightVector.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
   _CalcDetailLevel(camera_p);
   myWaterOffset += dt * 0.01f;
@@ -309,6 +308,8 @@ void Map::_CreateVertices(Icosahedron&                  icosahedron,
       }
       _FixWrappedUVCoords(icosahedron.sides[side].detailLevel[level].indices,
                           icosahedron.sides[side].detailLevel[level].vertices);
+      _FixSharedPoleVertices(icosahedron.sides[side].detailLevel[level].indices,
+                             icosahedron.sides[side].detailLevel[level].vertices);
     }
   }
 }
@@ -394,6 +395,54 @@ void Map::_FixWrappedUVCoords(std::vector<uint>& indices, std::vector<Vertex>& v
     }
   }
 }
+
+void Map::_FixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vertices)
+{
+  uint northIdx  = UINT_MAX;
+  for (uint i = 0; i < vertices.size(); i++)
+  {
+    if (northIdx != UINT_MAX /* && southIdx != UINT_MAX*/)
+      break;
+
+    if (vertices[i].vertexBasic.position.y == 1.0f)
+      northIdx = i;
+    /*if (vertices[i].vertexBasic.position.y == -1.0f)
+      southIdx = i;*/
+  }
+
+  for (uint i = 0; i < indices.size(); i+=3)
+  {
+    if (indices[i] == northIdx)
+    {
+      uint   startIdx = i;
+      Vertex A        = vertices[indices[startIdx + 0]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
+      Vertex newNorth = vertices[northIdx];
+      //newNorth.vertexBasic.uv.x   = (B.vertexBasic.uv.x + C.vertexBasic.uv.x) * 0.5f;
+      newNorth.vertexBasic.uv.y = (B.vertexBasic.uv.y + C.vertexBasic.uv.y) * 0.5f;
+      if (A.vertexBasic.position.y == 1.0f)
+        vertices[indices[startIdx + 0]].vertexBasic.uv = newNorth.vertexBasic.uv;
+      else if (B.vertexBasic.position.y == 1.0f)
+        vertices[indices[startIdx + 1]].vertexBasic.uv = newNorth.vertexBasic.uv;
+      else if (C.vertexBasic.position.y == 1.0f)
+        vertices[indices[startIdx + 2]].vertexBasic.uv = newNorth.vertexBasic.uv;
+    }
+    /*else if (indices[i] == southIdx)
+    {
+      uint   startIdx = i - (i % 3);
+      Vertex A        = vertices[indices[startIdx]];
+      Vertex B        = vertices[indices[startIdx + 1]];
+      Vertex C        = vertices[indices[startIdx + 2]];
+      Vertex newSouth = vertices[southIdx];
+      newSouth.uv.x   = (B.uv.x + C.uv.x) * 0.5f;
+      vertexIdx++;
+      vertices.push_back(newSouth);
+      indices[i] = vertexIdx;
+    }*/
+  }
+}
+
 void Map::_SetupDetailLevels(const Icosahedron& icosahedron, uint divisions)
 {
   myDetailLevels.resize(divisions);
@@ -402,7 +451,8 @@ void Map::_SetupDetailLevels(const Icosahedron& icosahedron, uint divisions)
   {
     for (uint side = 0; side < ICOSAHEDRON_SIDES; side++)
     {
-      Mesh* mesh_p = &myDetailLevels[div].sides[side];
+      myDetailLevels[div].sides[side] = Mesh();
+      Mesh* mesh_p                    = &myDetailLevels[div].sides[side];
       mesh_p->SetMesh(icosahedron.sides[side].detailLevel[div].vertices,
                       icosahedron.sides[side].detailLevel[div].indices,
                       VertexType::VertexBasic);
@@ -477,7 +527,6 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
   std::vector<Vertex> water;
   uint                totalIndices = 0;
 
-
   uint waterVertexCounter = 0;
   for (uint side = 0; side < ICOSAHEDRON_SIDES; side++)
   {
@@ -494,8 +543,8 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
     }
   }
 
-  std::vector<uint>   idx(totalIndices);
-  uint                nrOfWaterTangents = (uint)idx.size() / 3;
+  std::vector<uint>             idx(totalIndices);
+  uint                          nrOfWaterTangents = (uint)idx.size() / 3;
   std::vector<TangentBitangent> tan(nrOfWaterTangents);
 
   uint waterIndexCounter   = 0;

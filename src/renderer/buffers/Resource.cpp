@@ -14,7 +14,8 @@ void Resource::Init(Resource_Type resourceType,
   myDimention.x  = width;
   myDimention.y  = height;
   myDimention.z  = depth;
-  myElementSize  = (width * height * depth) / nrOfElements;
+  myBufferSize   = (width * height * depth);
+  myElementSize  = myBufferSize / nrOfElements;
   myFormat       = format;
   myNumberOfElements = nrOfElements;
 
@@ -32,12 +33,12 @@ void Resource::Init(Resource_Type resourceType,
 
   D3D12_RESOURCE_DESC desc = {};
   desc.Dimension           = _GetResourceDimension(resourceType);
-  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+  if (resourceType == Resource_Type::ConstantBuffer || resourceType == Resource_Type::StructuredBuffer)
     width = AlignAs256(width);
   desc.Width            = width;
   desc.Height           = height;
-  desc.Flags            = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   desc.DepthOrArraySize = depth;
+  desc.Flags            = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   desc.Format           = format;
   if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
     desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
@@ -144,8 +145,9 @@ void Resource::Init(D3D12_HEAP_PROPERTIES* heapProperties,
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint  = {};
   renderer_p->GetDevice()->GetCopyableFootprints(
       &resDesc, 0, 1, 0, &footPrint, &numRows, &rowSize, &bufferSize);
-  myBufferSize = bufferSize;
-  myRowPitch   = rowSize;
+  if (myResourceType == Resource_Type::Texture2D)
+    myBufferSize = bufferSize;
+  myRowPitch   = (uint64)rowSize;
   myNumberOfRows = numRows;
 }
 
@@ -236,18 +238,15 @@ D3D12_RESOURCE_DIMENSION Resource::_GetResourceDimension(Resource_Type resourceT
   {
   case Resource::Resource_Type::Unknown:
     return D3D12_RESOURCE_DIMENSION_UNKNOWN;
-  case Resource::Resource_Type::ConstantBuffer:
-    return D3D12_RESOURCE_DIMENSION_BUFFER;
   case Resource::Resource_Type::Texture1D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
   case Resource::Resource_Type::Texture2D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
   case Resource::Resource_Type::Texture3D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+  case Resource::Resource_Type::ConstantBuffer:
   case Resource::Resource_Type::StructuredBuffer:
-    return D3D12_RESOURCE_DIMENSION_BUFFER;
   case Resource::Resource_Type::VertexBuffer:
-    return D3D12_RESOURCE_DIMENSION_BUFFER;
   case Resource::Resource_Type::IndexBuffer:
     return D3D12_RESOURCE_DIMENSION_BUFFER;
   default:

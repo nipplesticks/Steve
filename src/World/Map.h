@@ -89,6 +89,8 @@ private:
 
   void _FixWrappedUVCoords(std::vector<uint>& indices, std::vector<Vertex>& vertices);
 
+  void _FixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vertices);
+
   void _SetupDetailLevels(const Icosahedron& icosahedron, uint divisions);
 
   void _CalcDetailLevel(Camera* camera_p);

@@ -217,19 +217,22 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices,
 
 void Mesh::CreateBuffers(bool deleteCpuData)
 {
-  myCpuDataDeleted = deleteCpuData;
-  myIndexBuffer.Create(GetNumberOfIndices());
-  myVertexBuffer.Create(GetSingleVertexByteSize(), GetNumberOfVertices());
-  myIndexBuffer.UpdateNow(
-      GetRawIndices(), D3D12_RESOURCE_STATE_GENERIC_READ);
-  myVertexBuffer.UpdateNow(
-      GetRawVertices(), D3D12_RESOURCE_STATE_GENERIC_READ);
-
-  if (myCpuDataDeleted)
+  if (!myCpuDataDeleted)
   {
-    myIndices.clear();
-    myBasicVertices.clear();
-    myTangentVertices.clear();
+    myCpuDataDeleted = deleteCpuData;
+    myIndexBuffer.Create(GetNumberOfIndices());
+    myVertexBuffer.Create(GetSingleVertexByteSize(), GetNumberOfVertices());
+    myIndexBuffer.UpdateNow(
+        GetRawIndices(), D3D12_RESOURCE_STATE_GENERIC_READ);
+    myVertexBuffer.UpdateNow(
+        GetRawVertices(), D3D12_RESOURCE_STATE_GENERIC_READ);
+
+    if (myCpuDataDeleted)
+    {
+      myIndices.clear();
+      myBasicVertices.clear();
+      myTangentVertices.clear();
+    }
   }
 }
 
@@ -258,13 +261,12 @@ VertexType Mesh::GetVertexType() const
   return myVertexType;
 }
 
-void* Mesh::GetRawVertices() const
+void* Mesh::GetRawVertices()
 {
   switch (myVertexType)
   {
   case VertexType::VertexBasic:
     return (void*)myBasicVertices.data();
-    break;
   case VertexType::VertexTangent:
     return (void*)myTangentVertices.data();
   default:
@@ -274,7 +276,7 @@ void* Mesh::GetRawVertices() const
   return nullptr;
 }
 
-uint* Mesh::GetRawIndices() const
+uint* Mesh::GetRawIndices()
 {
-  return (uint*)myIndices.data();
+  return myIndices.data();
 }

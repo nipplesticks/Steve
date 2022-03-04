@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_NUMBER_OF_SUB_RESOURCES 256
+
 #include "../../utility/DMath.h"
 #include "../../utility/Typedef.h"
 #include <d3d12.h>

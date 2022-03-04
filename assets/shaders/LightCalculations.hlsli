@@ -8,7 +8,7 @@ struct Light
   float pow;
   float radius;
   float intensity;
-  int3 pad;
+  float3 pad;
   float4 positionOrDirection;
   float4 color;
 };

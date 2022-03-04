@@ -32,8 +32,8 @@ public:
   uint       GetNumberOfVertices() const;
   uint       GetNumberOfIndices() const;
   VertexType GetVertexType() const;
-  void*      GetRawVertices() const;
-  uint*      GetRawIndices() const;
+  void*      GetRawVertices();
+  uint*      GetRawIndices();
 
 private:
   VertexType                       myVertexType = VertexType::NumberOfVertexTypes;
@@ -42,8 +42,8 @@ private:
   IndexBuffer                      myIndexBuffer;
   std::vector<Vertex_Basic>        myBasicVertices;
   std::vector<Vertex_With_Tangent> myTangentVertices;
-  uint                             myNumberOfVertices;
-  uint                             myNumberOfIndices;
+  uint                             myNumberOfVertices = 0;
+  uint                             myNumberOfIndices = 0;
   bool                             myCpuDataDeleted = false;
 
 };

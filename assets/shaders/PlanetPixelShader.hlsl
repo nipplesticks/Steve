@@ -35,6 +35,7 @@ struct Vertex
 float4 main(Vertex vertex)
     : SV_TARGET
 {
+  //return float4(vertex.uv.xy, 0, 1);
   // X: 0.917060, Y: -0.398749, Z: 0.000000
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
   float3 color = diffuseTexture.Sample(aSampler, vertex.uv.xy).rgb;

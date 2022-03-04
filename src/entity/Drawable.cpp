@@ -77,7 +77,9 @@ StructuredBuffer* Drawable::GetLightBuffer() const
 void Drawable::SetLights(const std::vector<Light>& lights)
 {
   myActiveLights = (uint)lights.size();
-  myLightBuffer.UpdateNow((void*)lights.data(), D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(Light) * myActiveLights);
+  std::vector<Light> asd(MAX_LIGHTS);
+  memcpy(asd.data(), lights.data(), sizeof(Light) * myActiveLights);
+  myLightBuffer.UpdateNow(asd.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 void Drawable::Draw()
