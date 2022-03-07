@@ -1,5 +1,6 @@
 #include "Input/KeyboardInput.h"
 #include "World/Map.h"
+#include "World/Star.h"
 #include "events/EventHandler.h"
 #include "renderer/buffers/Resource.h"
 #include "renderer/camera/FpsCamera.h"
@@ -10,7 +11,8 @@
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
-#include "World/Star.h"
+
+Map* map_p = nullptr;
 
 void SetupInput();
 bool HandleInput(Camera* camera_p, float dt, Window* wnd_p);
@@ -47,12 +49,11 @@ int main()
 
   Star mainStar;
   {
-    Light l = mainStar.GetLight();
+    Light     l   = mainStar.GetLight();
     DM::Vec3f dir = l.direction;
     mainStar.SetPosition(dir * -100);
     mainStar.SetScale(10, 10, 10);
   }
-
 
   Noise heightMapGenerator  = {};
   Noise diffuseMapGenerator = {};
@@ -60,6 +61,7 @@ int main()
   float planetScale         = 1.0f;
 
   Map planet;
+  map_p = &planet;
   planet.Create(8, 10);
   planet.SetWaterLevel(waterLevel);
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
@@ -119,6 +121,44 @@ void SetupInput()
   KeyboardInput::SetAnActionToKey("rotatePlanetLeft", (uint16)'G');
 }
 
+void CreateRay(const DM::Vec2f& mousePos, Camera* camera_p)
+{
+  Camera::View view        = camera_p->GetView();
+  float        aspectRatio = view.width / view.height;
+
+  float px = (2.0f * ((mousePos.x + 0.5) / view.width) - 1) *
+             tan(view.fov / 2 * DirectX::XM_PI / 180.0f) * aspectRatio;
+  float py = (1.0f - 2.0f * ((mousePos.y + 0.5f) / view.height)) *
+             tan(view.fov / 2 * DirectX::XM_PI / 180.0f);
+
+  DM::Vec3f   origin(0);
+  DM::Mat4x4f viewMatrixInverse = camera_p->GetViewMatrix().Inverse();
+
+  origin           = origin * viewMatrixInverse;
+  DM::Vec3f p      = DM::Vec3f(px, py, -1) * viewMatrixInverse;
+  DM::Vec3f rayDir = (p - origin).Normalize();
+
+  float r = 2.0f * map_p->GetScale().x;
+
+  DM::Vec3f m = origin - map_p->GetPosition();
+  float     b = m.Dot(rayDir);
+  float     c = m.Dot(m) - r * r;
+  if (c > 0.0f && b > 0.0f)
+    return;
+
+  float discr = b * b - c;
+  if (discr < 0.0f)
+    return;
+
+  float t = -b - sqrt(discr);
+  if (t < 0.0f)
+    t = 0.0f;
+
+  DM::Vec3f intersectionPoint = origin + (rayDir * t);
+
+  std::cout << "Hit at: " << intersectionPoint.ToString() << std::endl;
+}
+
 bool HandleInput(Camera* camera_p, float dt, Window* wnd_p)
 {
   static bool      lockMouse           = false;
@@ -148,8 +188,10 @@ bool HandleInput(Camera* camera_p, float dt, Window* wnd_p)
         for (Event* event_p : events)
         {
           EventMouseMoved* mouseEvent_p = (EventMouseMoved*)event_p;
-          float            dx           = ((float)mouseEvent_p->MouseDelta.x) * speed;
-          float            dy           = ((float)mouseEvent_p->MouseDelta.y) * speed;
+          if (mouseEvent_p->RButtonPressed)
+            CreateRay(mouseEvent_p->MousePosition, camera_p);
+          float dx = ((float)mouseEvent_p->MouseDelta.x) * speed;
+          float dy = ((float)mouseEvent_p->MouseDelta.y) * speed;
           if (!lockMouse)
           {
             mpLast = mouseEvent_p->MousePosition;

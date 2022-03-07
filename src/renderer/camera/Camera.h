@@ -5,6 +5,7 @@
 
 class Camera
 {
+public:
   struct View
   {
     float fov;
