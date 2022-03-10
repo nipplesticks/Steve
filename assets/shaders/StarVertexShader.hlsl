@@ -15,14 +15,15 @@ cbuffer cbv1 : register(b1)
 struct VS_IN
 {
   float4 pos : SV_POSITION;
+  float4 worldPos : WORLDPOS;
   float4 nor : NORMAL;
   float4 uv : TEXCOORD;
 };
 
 VS_IN main(VS_IN vIn)
 {
-  vIn.pos = mul(vIn.pos, transpose(worldMat));
-  vIn.pos = mul(vIn.pos, transpose(mul(proj, view)));
+  vIn.worldPos = mul(vIn.pos, transpose(worldMat));
+  vIn.pos = mul(vIn.worldPos, transpose(mul(proj, view)));
   
   return vIn;
 }

@@ -266,6 +266,9 @@
     <ClInclude Include="src\World\Star.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\buffers\Rendertarget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="assets\shaders\PlanetPixelShader.hlsl" />
@@ -279,10 +282,13 @@
     <FxCompile Include="assets\shaders\WaterPixelShader.hlsl" />
     <FxCompile Include="assets\shaders\StarVertexShader.hlsl" />
     <FxCompile Include="assets\shaders\StarPixelShader.hlsl" />
+    <FxCompile Include="assets\shaders\DeferredVertex.hlsl" />
+    <FxCompile Include="assets\shaders\DeferredPixel.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\PerlinNoise_cs.hlsli" />
     <None Include="cpp.hint" />
     <None Include="assets\shaders\LightCalculations.hlsli" />
+    <None Include="assets\shaders\DeferredOutput.hlsli" />
   </ItemGroup>
 </Project>

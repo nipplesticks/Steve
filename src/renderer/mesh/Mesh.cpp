@@ -30,7 +30,7 @@ uint Mesh::GetSingleVertexByteSize()
   case VertexType::VertexBasic:
     return sizeof(Vertex_Basic);
     break;
-  case VertexType::VertexTangent:
+  case VertexType::VertexWithTangent:
     return sizeof(Vertex_With_Tangent);
     break;
   default:
@@ -71,7 +71,7 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
           scene->mMeshes[i]->mTextureCoords[0] && scene->mMeshes[i]->mTangents &&
           scene->mMeshes[i]->mBitangents)
       {
-        myVertexType = VertexType::VertexTangent;
+        myVertexType = VertexType::VertexWithTangent;
       }
       else if (scene->mMeshes[i]->mVertices && scene->mMeshes[i]->mNormals &&
                scene->mMeshes[i]->mTextureCoords[0])
@@ -85,7 +85,7 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
     }
     if (myVertexType == VertexType::VertexBasic)
       myBasicVertices.resize(myBasicVertices.size() + numVerts);
-    else if (myVertexType == VertexType::VertexTangent)
+    else if (myVertexType == VertexType::VertexWithTangent)
       myTangentVertices.resize(myTangentVertices.size() + numVerts);
 
     if (myVertexType == VertexType::VertexBasic)
@@ -103,7 +103,7 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
               AssimpToXmFloat2A(scene->mMeshes[i]->mTextureCoords[0][j]);
       }
     }
-    else if (myVertexType == VertexType::VertexTangent)
+    else if (myVertexType == VertexType::VertexWithTangent)
     {
       for (uint j = 0; j < numVerts; j++)
       {
@@ -145,7 +145,7 @@ bool Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
 
   if (myVertexType == VertexType::VertexBasic)
     myNumberOfVertices = (uint)myBasicVertices.size();
-  else if (myVertexType == VertexType::VertexTangent)
+  else if (myVertexType == VertexType::VertexWithTangent)
     myNumberOfVertices = (uint)myTangentVertices.size();
 
   myNumberOfIndices = (uint)myIndices.size();
@@ -167,7 +167,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
       myIndices[i]       = i;
     }
   }
-  else if (myVertexType == VertexType::VertexTangent)
+  else if (myVertexType == VertexType::VertexWithTangent)
   {
     myTangentVertices.resize(vertices.size());
     myIndices.resize(vertices.size());
@@ -180,7 +180,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices, VertexType vertexType)
 
   if (myVertexType == VertexType::VertexBasic)
     myNumberOfVertices = (uint)myBasicVertices.size();
-  else if (myVertexType == VertexType::VertexTangent)
+  else if (myVertexType == VertexType::VertexWithTangent)
     myNumberOfVertices = (uint)myTangentVertices.size();
 
   myNumberOfIndices = (uint)myIndices.size();
@@ -199,7 +199,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices,
     for (uint i = 0; i < (uint)vertices.size(); i++)
       myBasicVertices[i] = vertices[i].vertexBasic;
   }
-  else if (myVertexType == VertexType::VertexTangent)
+  else if (myVertexType == VertexType::VertexWithTangent)
   {
     myTangentVertices.resize(vertices.size());
     myIndices.resize(vertices.size());
@@ -209,7 +209,7 @@ void Mesh::SetMesh(const std::vector<Vertex>& vertices,
 
   if (myVertexType == VertexType::VertexBasic)
     myNumberOfVertices = (uint)myBasicVertices.size();
-  else if (myVertexType == VertexType::VertexTangent)
+  else if (myVertexType == VertexType::VertexWithTangent)
     myNumberOfVertices = (uint)myTangentVertices.size();
 
   myNumberOfIndices = (uint)myIndices.size();
@@ -267,7 +267,7 @@ void* Mesh::GetRawVertices()
   {
   case VertexType::VertexBasic:
     return (void*)myBasicVertices.data();
-  case VertexType::VertexTangent:
+  case VertexType::VertexWithTangent:
     return (void*)myTangentVertices.data();
   default:
     ASSERT_STR(false, "Unsupported Vertex Type");

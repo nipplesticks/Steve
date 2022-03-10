@@ -2,7 +2,6 @@
 #include "../../utility/RenderUtility.h"
 #include "../d3d12/myRenderer.h"
 
-
 void Resource::Init(Resource_Type resourceType,
                     uint          width,
                     DXGI_FORMAT   format,
@@ -10,13 +9,13 @@ void Resource::Init(Resource_Type resourceType,
                     uint          depth,
                     uint          nrOfElements)
 {
-  myResourceType = resourceType;
-  myDimention.x  = width;
-  myDimention.y  = height;
-  myDimention.z  = depth;
-  myBufferSize   = (width * height * depth);
-  myElementSize  = myBufferSize / nrOfElements;
-  myFormat       = format;
+  myResourceType     = resourceType;
+  myDimention.x      = width;
+  myDimention.y      = height;
+  myDimention.z      = depth;
+  myBufferSize       = (width * height * depth);
+  myElementSize      = myBufferSize / nrOfElements;
+  myFormat           = format;
   myNumberOfElements = nrOfElements;
 
   uint channelElementSize = 0;
@@ -33,22 +32,26 @@ void Resource::Init(Resource_Type resourceType,
 
   D3D12_RESOURCE_DESC desc = {};
   desc.Dimension           = _GetResourceDimension(resourceType);
-  if (resourceType == Resource_Type::ConstantBuffer || resourceType == Resource_Type::StructuredBuffer)
+  if (resourceType == Resource_Type::ConstantBuffer ||
+      resourceType == Resource_Type::StructuredBuffer)
     width = AlignAs256(width);
   desc.Width            = width;
   desc.Height           = height;
   desc.DepthOrArraySize = depth;
-  desc.Flags            = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+  desc.Flags            = resourceType == Resource_Type::RenderTarget
+                              ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+                              : D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   desc.Format           = format;
   if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
-    desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   desc.MipLevels          = 1;
   desc.SampleDesc.Count   = 1;
   desc.SampleDesc.Quality = 0;
-  
-  myState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-  
-  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+  myState = resourceType == Resource_Type::RenderTarget ? D3D12_RESOURCE_STATE_GENERIC_READ
+                                                        : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState);
 
   if (resourceType == Resource_Type::VertexBuffer)
   {
@@ -112,6 +115,7 @@ D3D12_SRV_DIMENSION Resource::GetSRVDimension(Resource* resource_p)
     else
       srvDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
     break;
+  case Resource::Resource_Type::RenderTarget:
   case Resource::Resource_Type::Texture2D:
     if (resource_p->myDimention.z > 1)
       srvDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
@@ -138,16 +142,16 @@ void Resource::Init(D3D12_HEAP_PROPERTIES* heapProperties,
                                                              initialState,
                                                              clearValue,
                                                              IID_PPV_ARGS(&myResource_p)));
-  D3D12_RESOURCE_DESC resDesc = myResource_p->GetDesc();
-  UINT64              bufferSize = 0;
-  UINT64              rowSize    = 0;
-  UINT                numRows    = 0;
+  D3D12_RESOURCE_DESC                resDesc    = myResource_p->GetDesc();
+  UINT64                             bufferSize = 0;
+  UINT64                             rowSize    = 0;
+  UINT                               numRows    = 0;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint  = {};
   renderer_p->GetDevice()->GetCopyableFootprints(
       &resDesc, 0, 1, 0, &footPrint, &numRows, &rowSize, &bufferSize);
   if (myResourceType == Resource_Type::Texture2D)
     myBufferSize = bufferSize;
-  myRowPitch   = (uint64)rowSize;
+  myRowPitch     = (uint64)rowSize;
   myNumberOfRows = numRows;
 }
 
@@ -196,7 +200,6 @@ void Resource::SetState(D3D12_RESOURCE_STATES state)
   myState = state;
 }
 
-
 D3D12_RESOURCE_STATES Resource::GetState() const
 {
   return myState;
@@ -240,6 +243,7 @@ D3D12_RESOURCE_DIMENSION Resource::_GetResourceDimension(Resource_Type resourceT
     return D3D12_RESOURCE_DIMENSION_UNKNOWN;
   case Resource::Resource_Type::Texture1D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+  case Resource::Resource_Type::RenderTarget:
   case Resource::Resource_Type::Texture2D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
   case Resource::Resource_Type::Texture3D:

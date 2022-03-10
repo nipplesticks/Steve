@@ -44,13 +44,39 @@ void MyRenderer::BeginFrame()
   myGraphicalInterface.commandAllocator_p->Reset();
   myGraphicalInterface.commandList4_p->Reset(myGraphicalInterface.commandAllocator_p, nullptr);
 
-  _SetResourceTransitionBarrier(
+  /*_SetResourceTransitionBarrier(
       myGraphicalInterface.commandList4_p,
       myGraphicalInterface.renderTargets_pp[myGraphicalInterface.currentBackbufferIndex],
       D3D12_RESOURCE_STATE_PRESENT,
-      D3D12_RESOURCE_STATE_RENDER_TARGET);
+      D3D12_RESOURCE_STATE_RENDER_TARGET);*/
+
+  RenderTarget* currentRenderTargets_p =
+      myGraphicalInterface.deferredRenderTargets[myGraphicalInterface.currentBackbufferIndex];
+
+  for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
+  {
+    _SetResourceTransitionBarrier(
+        myGraphicalInterface.commandList4_p,
+        currentRenderTargets_p[i].GetResource(),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+  }
 
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
+      myGraphicalInterface.deferredRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHndl.ptr +=
+      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
+      myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
+  cpuDescHnd2.ptr +=
+      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
+  myGraphicalInterface.commandList4_p->OMSetRenderTargets(
+      RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
+      &cpuDescHndl,
+      TRUE,
+      &cpuDescHnd2);
+
+  /*D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
       myGraphicalInterface.renderTargetHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHndl.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
@@ -59,7 +85,7 @@ void MyRenderer::BeginFrame()
       myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHnd2.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
-  myGraphicalInterface.commandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);
+  myGraphicalInterface.commandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, &cpuDescHnd2);*/
 
   myGraphicalInterface.commandList4_p->SetGraphicsRootSignature(
       myGraphicalInterface.rootSignature_p);
@@ -345,12 +371,12 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
                                 D3D12_RESOURCE_STATE_COPY_DEST);
 
   UpdateSubresources(myResourceUpdateCommandList4_p,
-                      resource_p->GetResource(),
-                      tempResource_p,
-                      offset,
-                      0,
-                      1,
-                      &srdDesc);
+                     resource_p->GetResource(),
+                     tempResource_p,
+                     offset,
+                     0,
+                     1,
+                     &srdDesc);
 
   _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
                                 resource_p->GetResource(),
@@ -586,6 +612,11 @@ void MyRenderer::_CreateRenderTargets()
   HR_ASSERT(myDevice_p->CreateDescriptorHeap(
       &dhd, IID_PPV_ARGS(&myGraphicalInterface.renderTargetHeap_p)));
 
+  dhd.NumDescriptors = NUM_SWAP_BUFFERS * RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
+
+  HR_ASSERT(myDevice_p->CreateDescriptorHeap(
+      &dhd, IID_PPV_ARGS(&myGraphicalInterface.deferredRenderTargetsHeap_p)));
+
   mySrvUavCbvDescriptorSize =
       myDevice_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -595,12 +626,33 @@ void MyRenderer::_CreateRenderTargets()
   D3D12_CPU_DESCRIPTOR_HANDLE cdh =
       myGraphicalInterface.renderTargetHeap_p->GetCPUDescriptorHandleForHeapStart();
 
+  D3D12_CPU_DESCRIPTOR_HANDLE cdh2 =
+      myGraphicalInterface.deferredRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
+
+  D3D12_RENDER_TARGET_VIEW_DESC rtvd = {};
+  rtvd.ViewDimension                 = D3D12_RTV_DIMENSION_TEXTURE2D;
   for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
   {
+    std::vector<Resource*> renderTargets(RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
     HR_ASSERT(myGraphicalInterface.swapChain_p->GetBuffer(
         n, IID_PPV_ARGS(&myGraphicalInterface.renderTargets_pp[n])));
     myDevice_p->CreateRenderTargetView(myGraphicalInterface.renderTargets_pp[n], nullptr, cdh);
     cdh.ptr += myGraphicalInterface.renderTargetDescriptorSize;
+
+    for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
+    {
+      rtvd.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      if (RenderTarget::RenderTargetType(i) == RenderTarget::RenderTargetType::PickableID)
+        rtvd.Format = DXGI_FORMAT_R32_UINT;
+      myGraphicalInterface.deferredRenderTargets[n][i].Create(
+          myResulotion.x, myResulotion.y, RenderTarget::RenderTargetType(i), rtvd.Format);
+
+      myDevice_p->CreateRenderTargetView(
+          myGraphicalInterface.deferredRenderTargets[n][i].GetResource(), &rtvd, cdh2);
+      cdh2.ptr += myGraphicalInterface.renderTargetDescriptorSize;
+      renderTargets[i] = &myGraphicalInterface.deferredRenderTargets[n][i];
+    }
+    myGraphicalInterface.deferredResourceDescHeap[n].Create({}, renderTargets, {});
   }
 }
 
@@ -776,6 +828,22 @@ void MyRenderer::_SetupComputeInterface()
                                           nullptr,
                                           IID_PPV_ARGS(&myComputeInterface.commandList4_p)));
   HR_ASSERT(myComputeInterface.commandList4_p->Close());
+}
+
+void MyRenderer::_CreateDeferredQuad()
+{
+  struct DeferredQuad
+  {
+    DirectX::XMFLOAT4A position;
+    DirectX::XMFLOAT2A uv;
+  };
+  DeferredQuad quad[] = {{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+                         {{-1.0f,  1.0f, 0.0f, 1.0F}, {0.0f, 0.0f}},
+                         {{ 1.0f, -1.0f, 0.0f, 1.0F}, {1.0f, 1.0f}},
+                         {{ 1.0f,  1.0f, 0.0f, 1.0F}, {1.0f, 0.0f}}};
+
+  myGraphicalInterface.deferredQuad.Create(sizeof(DeferredQuad), 4);
+  myGraphicalInterface.deferredQuad.UpdateNow(&quad);
 }
 
 void MyRenderer::_Cleanup() { }

@@ -22,6 +22,7 @@ public:
     StructuredBuffer,
     VertexBuffer,
     IndexBuffer,
+    RenderTarget,
     NrOfSupportedTypes
   };
 

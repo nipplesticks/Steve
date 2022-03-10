@@ -1,4 +1,6 @@
 #include "LightCalculations.hlsli"
+#include "DeferredOutput.hlsli"
+
 cbuffer cbv0 : register(b0)
 {
   float4x4 view;
@@ -26,8 +28,9 @@ struct VS_OUT
   float4 nor : NORMAL;
 };
 
-float4 main(VS_OUT vIn) : SV_TARGET
+DeferredOutput main(VS_OUT vIn)
 {
+  DeferredOutput output;
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
   float3 T = normalize(vIn.tangent.xyz);
   float3 N = normalize(vIn.nor.xyz);
@@ -50,6 +53,12 @@ float4 main(VS_OUT vIn) : SV_TARGET
   {
     finalColor += LightCalculation(lightBuffer[i], cameraPosition, vIn.worldPos, float4(color, 1.0f), float4(aNormal, 0.0f), 0.6f, 64.0f, specularHighlight).rgb;
   }
-  return saturate(float4(finalColor + ambient + specularHighlight.rgb, 0.9f));
+  
+  output.position = vIn.worldPos;
+  output.normal = float4(aNormal, 0.0f);
+  output.color = float4(finalColor + ambient + specularHighlight.rgb, 0.9f);
+  output.pickableId = 0;
+  //return saturate(float4(finalColor + ambient + specularHighlight.rgb, 0.9f));
   //return float4(aNormal, 1.0f);
+  return output;
 }

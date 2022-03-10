@@ -11,7 +11,7 @@ struct alignas(256) DefaultWorldMatrix
 enum class VertexType
 {
   VertexBasic = 0,
-  VertexTangent,
+  VertexWithTangent,
   NumberOfVertexTypes
 };
 

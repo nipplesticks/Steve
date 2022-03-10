@@ -1,4 +1,5 @@
 #include "LightCalculations.hlsli"
+#include "DeferredOutput.hlsli"
 SamplerState aSampler : register(s0);
 Texture2D<float4> diffuseTexture : register(t2);
 StructuredBuffer<Light> lightBuffer : register(t3);
@@ -32,9 +33,9 @@ struct Vertex
   float4 nor : NORMAL;
 };
 
-float4 main(Vertex vertex)
-    : SV_TARGET
+DeferredOutput main(Vertex vertex)
 {
+  DeferredOutput output;
   //return float4(vertex.uv.xy, 0, 1);
   // X: 0.917060, Y: -0.398749, Z: 0.000000
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
@@ -49,8 +50,14 @@ float4 main(Vertex vertex)
   //return float4(color + finalColor.xyz * 0, 1.0f);
   //float4 c = float4(finalColor + ambient + specularHighlight.rgb, 1.0f);
   
-  return saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
+  output.position = vertex.worldPos;
+  output.normal = vertex.nor;
+  output.color = saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
+  output.pickableId = 0;
+  
+  //return saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
   //return (float4(vertex.nor.xyz + c.xyz * 0.0f, 1.0f));
   //return (float4(float3(1,1,1) + finalColor.xyz * 0.0f, 1.0f));
   //return float4(color, 1.0f);
+  return output;
 }

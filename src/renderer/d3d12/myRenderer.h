@@ -4,11 +4,14 @@
 
 #include "../../utility/DMath.h"
 #include "../../utility/Typedef.h"
+#include "../buffers/Rendertarget.h"
+#include "../buffers/VertexBuffer.h"
 #include <d3d12.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui/imgui_impl_win32.h>
 #include <windows.h>
+#include "../d3d12/ResourceDescriptorHeap.h"
 
 struct IDXGISwapChain4;
 class Resource;
@@ -83,6 +86,7 @@ private:
   void _CreateDepthBuffers();
   void _CreateRootsignatures();
   void _SetupComputeInterface();
+  void _CreateDeferredQuad();
   void _Cleanup();
   void _HardWait(ID3D12CommandQueue* commandQueue_p);
   void _SetResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList_p,
@@ -112,6 +116,7 @@ private:
     ID3D12GraphicsCommandList4* commandList4_p                     = nullptr;
     IDXGISwapChain4*            swapChain_p                        = nullptr;
     ID3D12DescriptorHeap*       renderTargetHeap_p                 = nullptr;
+    ID3D12DescriptorHeap*       deferredRenderTargetsHeap_p        = nullptr;
     ID3D12DescriptorHeap*       depthBufferHeap_p                  = nullptr;
     ID3D12DescriptorHeap*       imguiDescHeap_p                    = nullptr;
     ID3D12Resource1*            depthBuffers_pp[NUM_SWAP_BUFFERS]  = {};
@@ -121,6 +126,11 @@ private:
     uint                        currentBackbufferIndex             = 0u;
     uint                        renderTargetDescriptorSize         = 0u;
     uint                        depthBufferDescriptorSize          = 0u;
+    VertexBuffer                deferredQuad;
+    RenderTarget
+        deferredRenderTargets[NUM_SWAP_BUFFERS]
+                             [RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES];
+    ResourceDescriptorHeap deferredResourceDescHeap[NUM_SWAP_BUFFERS];
   } myGraphicalInterface;
 
   struct
