@@ -874,6 +874,7 @@ void MyRenderer::_CreateDeferredQuad()
   myGraphicalInterface.deferredPipelineState.SetVertexShader("assets/shaders/DeferredVertex.hlsl");
   myGraphicalInterface.deferredPipelineState.SetPixelShader("assets/shaders/DeferredPixel.hlsl");
   myGraphicalInterface.deferredPipelineState.GenerateInputElementDesc();
+  myGraphicalInterface.deferredPipelineState.NumRenderTargets = 1;
   myGraphicalInterface.deferredPipelineState.CreatePipelineState();
 }
 

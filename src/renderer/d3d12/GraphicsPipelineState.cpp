@@ -3,6 +3,7 @@
 #include "../../utility/UtilityFuncs.h"
 #include "myRenderer.h"
 #include <d3dcompiler.h>
+#include "../buffers/Rendertarget.h"
 
 bool GraphicsPipelineState::WIRE_FRAME = false;
 
@@ -263,7 +264,7 @@ void GraphicsPipelineState::_defaultValues()
   RasterizerState.FillMode                         = D3D12_FILL_MODE_SOLID;
   RasterizerState.CullMode                         = D3D12_CULL_MODE_BACK;
   PrimitiveTopologyType                            = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-  NumRenderTargets                                 = 1;
+  NumRenderTargets                                 = RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
   RTVFormats[0]                                    = DXGI_FORMAT_R8G8B8A8_UNORM;
   SampleDesc.Count                                 = 1;
   SampleMask                                       = UINT_MAX;
