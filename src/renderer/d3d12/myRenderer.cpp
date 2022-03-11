@@ -653,6 +653,7 @@ void MyRenderer::_CreateRenderTargets()
 
   D3D12_RENDER_TARGET_VIEW_DESC rtvd = {};
   rtvd.ViewDimension                 = D3D12_RTV_DIMENSION_TEXTURE2D;
+
   for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
   {
     std::vector<Resource*> renderTargets(
@@ -875,6 +876,7 @@ void MyRenderer::_CreateDeferredQuad()
   myGraphicalInterface.deferredPipelineState.SetPixelShader("assets/shaders/DeferredPixel.hlsl");
   myGraphicalInterface.deferredPipelineState.GenerateInputElementDesc();
   myGraphicalInterface.deferredPipelineState.NumRenderTargets = 1;
+  myGraphicalInterface.deferredPipelineState.RTVFormats[0]    = DXGI_FORMAT_R8G8B8A8_UNORM;
   myGraphicalInterface.deferredPipelineState.CreatePipelineState();
 }
 

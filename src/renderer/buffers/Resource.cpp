@@ -51,7 +51,15 @@ void Resource::Init(Resource_Type resourceType,
   myState = resourceType == Resource_Type::RenderTarget ? D3D12_RESOURCE_STATE_GENERIC_READ
                                                         : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
-  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState);
+  D3D12_CLEAR_VALUE* clearVal_p = nullptr;
+
+  D3D12_CLEAR_VALUE clearVal  = {};
+  clearVal.Format             = format;
+
+  if (resourceType == Resource_Type::RenderTarget)
+    clearVal_p = &clearVal;
+
+  Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState, clearVal_p);
 
   if (resourceType == Resource_Type::VertexBuffer)
   {

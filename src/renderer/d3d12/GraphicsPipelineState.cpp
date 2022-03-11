@@ -151,18 +151,19 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
 
 void GraphicsPipelineState::EnableBlending()
 {
+  uint i                                           = RenderTarget::RenderTargetType::Color;
   BlendState.AlphaToCoverageEnable                 = FALSE;
   BlendState.IndependentBlendEnable                = FALSE;
-  BlendState.RenderTarget[0].BlendEnable           = TRUE;
-  BlendState.RenderTarget[0].LogicOpEnable         = FALSE;
-  BlendState.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
-  BlendState.RenderTarget[0].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
-  BlendState.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
-  BlendState.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
-  BlendState.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;
-  BlendState.RenderTarget[0].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
-  BlendState.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
-  BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+  BlendState.RenderTarget[i].BlendEnable           = TRUE;
+  BlendState.RenderTarget[i].LogicOpEnable         = FALSE;
+  BlendState.RenderTarget[i].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
+  BlendState.RenderTarget[i].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
+  BlendState.RenderTarget[i].BlendOp               = D3D12_BLEND_OP_ADD;
+  BlendState.RenderTarget[i].SrcBlendAlpha         = D3D12_BLEND_ONE;
+  BlendState.RenderTarget[i].DestBlendAlpha        = D3D12_BLEND_ZERO;
+  BlendState.RenderTarget[i].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+  BlendState.RenderTarget[i].LogicOp               = D3D12_LOGIC_OP_NOOP;
+  BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 }
 
 void GraphicsPipelineState::GenerateInputElementDesc()
@@ -265,23 +266,30 @@ void GraphicsPipelineState::_defaultValues()
   RasterizerState.CullMode                         = D3D12_CULL_MODE_BACK;
   PrimitiveTopologyType                            = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
   NumRenderTargets                                 = RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
-  RTVFormats[0]                                    = DXGI_FORMAT_R8G8B8A8_UNORM;
   SampleDesc.Count                                 = 1;
   SampleMask                                       = UINT_MAX;
-  BlendState.AlphaToCoverageEnable                 = FALSE;
-  BlendState.IndependentBlendEnable                = FALSE;
-  BlendState.RenderTarget[0].BlendEnable           = FALSE;
-  BlendState.RenderTarget[0].LogicOpEnable         = FALSE;
-  BlendState.RenderTarget[0].SrcBlend              = D3D12_BLEND_ONE;
-  BlendState.RenderTarget[0].DestBlend             = D3D12_BLEND_ZERO;
-  BlendState.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
-  BlendState.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
-  BlendState.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;
-  BlendState.RenderTarget[0].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
-  BlendState.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
-  BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
   DepthStencilState.DepthEnable                    = TRUE;
   DepthStencilState.DepthFunc                      = D3D12_COMPARISON_FUNC_LESS_EQUAL;
   DSVFormat                                        = DXGI_FORMAT_D32_FLOAT;
   DepthStencilState.DepthWriteMask                 = D3D12_DEPTH_WRITE_MASK_ALL;
+
+  for (uint i = 0; i < NumRenderTargets; i++)
+  {
+    RTVFormats[i] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    if (RenderTarget::RenderTargetType(i) == RenderTarget::RenderTargetType::PickableID)
+      RTVFormats[i] = DXGI_FORMAT_R32_UINT;
+
+    BlendState.AlphaToCoverageEnable                 = FALSE;
+    BlendState.IndependentBlendEnable                = FALSE;
+    BlendState.RenderTarget[i].BlendEnable           = FALSE;
+    BlendState.RenderTarget[i].LogicOpEnable         = FALSE;
+    BlendState.RenderTarget[i].SrcBlend              = D3D12_BLEND_ONE;
+    BlendState.RenderTarget[i].DestBlend             = D3D12_BLEND_ZERO;
+    BlendState.RenderTarget[i].BlendOp               = D3D12_BLEND_OP_ADD;
+    BlendState.RenderTarget[i].SrcBlendAlpha         = D3D12_BLEND_ONE;
+    BlendState.RenderTarget[i].DestBlendAlpha        = D3D12_BLEND_ZERO;
+    BlendState.RenderTarget[i].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+    BlendState.RenderTarget[i].LogicOp               = D3D12_LOGIC_OP_NOOP;
+    BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    }
 }
