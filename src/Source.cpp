@@ -95,7 +95,7 @@ int main()
     renderer_p->Clear();
     planet.Draw();
     mainStar.Draw();
-    skybox.Draw();
+    //skybox.Draw();
     renderer_p->EndFrame();
     c++;
   }

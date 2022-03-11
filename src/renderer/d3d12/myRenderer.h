@@ -6,18 +6,18 @@
 #include "../../utility/Typedef.h"
 #include "../buffers/Rendertarget.h"
 #include "../buffers/VertexBuffer.h"
+#include "../buffers/IndexBuffer.h"
 #include <d3d12.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui/imgui_impl_win32.h>
 #include <windows.h>
 #include "../d3d12/ResourceDescriptorHeap.h"
+#include "../d3d12/GraphicsPipelineState.h"
 
 struct IDXGISwapChain4;
 class Resource;
 class ComputationalPipeline;
-class ResourceDescriptorHeap;
-class GraphicsPipelineState;
 
 class MyRenderer
 {
@@ -93,6 +93,7 @@ private:
                                      ID3D12Resource*            resource_p,
                                      D3D12_RESOURCE_STATES      StateBefore,
                                      D3D12_RESOURCE_STATES      StateAfter);
+  void _DeferredPass();
 
 private:
   static const uint           NUM_SWAP_BUFFERS               = 2u;
@@ -127,10 +128,12 @@ private:
     uint                        renderTargetDescriptorSize         = 0u;
     uint                        depthBufferDescriptorSize          = 0u;
     VertexBuffer                deferredQuad;
+    IndexBuffer                 deferredQuadIndex;
     RenderTarget
         deferredRenderTargets[NUM_SWAP_BUFFERS]
                              [RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES];
     ResourceDescriptorHeap deferredResourceDescHeap[NUM_SWAP_BUFFERS];
+    GraphicsPipelineState  deferredPipelineState;
   } myGraphicalInterface;
 
   struct
