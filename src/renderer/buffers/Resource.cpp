@@ -163,6 +163,15 @@ void Resource::Init(D3D12_HEAP_PROPERTIES* heapProperties,
   myNumberOfRows = numRows;
 }
 
+void Resource::SetName(const std::string& resourceName)
+{
+  ASSERT(myResource_p != nullptr);
+
+  std::wstring name(resourceName.begin(), resourceName.end());
+
+  HR_ASSERT(myResource_p->SetName(name.c_str()));
+}
+
 void Resource::UpdateNow(void*                 data_p,
                          D3D12_RESOURCE_STATES stateAfter,
                          uint64                sizeofData,

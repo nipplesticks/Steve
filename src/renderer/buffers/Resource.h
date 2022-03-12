@@ -33,6 +33,8 @@ public:
   static D3D12_UAV_DIMENSION GetUAVDimension(Resource* resource_p);
   static D3D12_SRV_DIMENSION GetSRVDimension(Resource* resource_p);
 
+  void SetName(const std::string& resourceName);
+
   void Init(Resource_Type resourceType,
             uint          width,
             DXGI_FORMAT   format       = DXGI_FORMAT_UNKNOWN,

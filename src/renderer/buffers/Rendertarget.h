@@ -23,6 +23,23 @@ public:
   {
     myRenderTargetType = type;
     Init(Resource_Type::RenderTarget, width, format, height);
+
+    switch (myRenderTargetType)
+    {
+    case Position:
+      SetName("RenderTarget_Position");
+      break;
+    case Normal:
+      SetName("RenderTarget_Normal");
+      break;
+    case Color:
+      SetName("RenderTarget_Normal");
+      break;
+    case PickableID:
+      SetName("RenderTarget_PickableID");
+      break;
+    }
+
   }
   RenderTargetType GetRenderTargetType() const
   {

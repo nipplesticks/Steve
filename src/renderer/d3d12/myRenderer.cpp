@@ -55,19 +55,22 @@ void MyRenderer::BeginFrame()
                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
   }
 
-  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
+  D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptorHandle =
       myGraphicalInterface.deferredRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
-  cpuDescHndl.ptr +=
-      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
-  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
+  renderTargetDescriptorHandle.ptr += myGraphicalInterface.currentBackbufferIndex *
+                     myGraphicalInterface.renderTargetDescriptorSize *
+                     RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
+
+  D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptorHandle =
       myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
-  cpuDescHnd2.ptr +=
+  depthStencilDescriptorHandle.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
+
   myGraphicalInterface.commandList4_p->OMSetRenderTargets(
       RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
-      &cpuDescHndl,
+      &renderTargetDescriptorHandle,
       TRUE,
-      &cpuDescHnd2);
+      &depthStencilDescriptorHandle);
 
   myGraphicalInterface.commandList4_p->SetGraphicsRootSignature(
       myGraphicalInterface.rootSignature_p);
@@ -75,19 +78,12 @@ void MyRenderer::BeginFrame()
 
 void MyRenderer::Clear(const DM::Vec4f& color)
 {
-  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
-      myGraphicalInterface.renderTargetHeap_p->GetCPUDescriptorHandleForHeapStart();
-  cpuDescHndl.ptr +=
-      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
-
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHnd2 =
       myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHnd2.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.depthBufferDescriptorSize;
   myGraphicalInterface.commandList4_p->ClearDepthStencilView(
       cpuDescHnd2, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-  myGraphicalInterface.commandList4_p->ClearRenderTargetView(
-      cpuDescHndl, (FLOAT*)color.data, 0, NULL);
 
   RenderTarget* currentRenderTargets_p =
       myGraphicalInterface.deferredRenderTargets[myGraphicalInterface.currentBackbufferIndex];
@@ -95,8 +91,9 @@ void MyRenderer::Clear(const DM::Vec4f& color)
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle3 =
       myGraphicalInterface.deferredRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
 
-  cpuDescHandle3.ptr +=
-      myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
+  cpuDescHandle3.ptr += myGraphicalInterface.currentBackbufferIndex *
+                        myGraphicalInterface.renderTargetDescriptorSize *
+                        RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
 
   for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
   {
@@ -181,15 +178,16 @@ void MyRenderer::EndFrame()
 
   _DeferredPass();
   DrawImgui();
-
-  myGraphicalInterface.commandQueue_p->ExecuteCommandLists(
-      1, reinterpret_cast<ID3D12CommandList**>(&myGraphicalInterface.commandList4_p));
-
   _SetResourceTransitionBarrier(
       myGraphicalInterface.commandList4_p,
       myGraphicalInterface.renderTargets_pp[myGraphicalInterface.currentBackbufferIndex],
       D3D12_RESOURCE_STATE_RENDER_TARGET,
       D3D12_RESOURCE_STATE_PRESENT);
+
+  HR_ASSERT(myGraphicalInterface.commandList4_p->Close());
+  myGraphicalInterface.commandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myGraphicalInterface.commandList4_p));
+
   HR_ASSERT(myGraphicalInterface.swapChain_p->Present(0, 0));
   _HardWait(myGraphicalInterface.commandQueue_p);
   myGraphicalInterface.currentBackbufferIndex =
@@ -483,6 +481,7 @@ void MyRenderer::_Init(uint resX, uint resY, HWND hwnd)
   _CreateDepthBuffers();
   _SetupComputeInterface();
   _CreateRootsignatures();
+  _CreateDeferredQuad();
   _InitImgui();
 }
 
@@ -654,13 +653,17 @@ void MyRenderer::_CreateRenderTargets()
   D3D12_RENDER_TARGET_VIEW_DESC rtvd = {};
   rtvd.ViewDimension                 = D3D12_RTV_DIMENSION_TEXTURE2D;
 
+  std::string renderTargetName = "RenderTarget";
+
   for (UINT n = 0; n < NUM_SWAP_BUFFERS; n++)
   {
+    std::string            renderTargetName = "RenderTarget" + std::to_string(n);
     std::vector<Resource*> renderTargets(
         RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
     HR_ASSERT(myGraphicalInterface.swapChain_p->GetBuffer(
         n, IID_PPV_ARGS(&myGraphicalInterface.renderTargets_pp[n])));
     myDevice_p->CreateRenderTargetView(myGraphicalInterface.renderTargets_pp[n], nullptr, cdh);
+    myGraphicalInterface.renderTargets_pp[n]->SetName(std::wstring(renderTargetName.begin(), renderTargetName.end()).c_str());
     cdh.ptr += myGraphicalInterface.renderTargetDescriptorSize;
 
     for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
@@ -861,22 +864,27 @@ void MyRenderer::_CreateDeferredQuad()
     DirectX::XMFLOAT4A position;
     DirectX::XMFLOAT2A uv;
   };
-  DeferredQuad quad[] = {{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-                         {{-1.0f, 1.0f, 0.0f, 1.0F}, {0.0f, 0.0f}},
-                         {{1.0f, -1.0f, 0.0f, 1.0F}, {1.0f, 1.0f}},
-                         {{1.0f, 1.0f, 0.0f, 1.0F}, {1.0f, 0.0f}}};
+  DeferredQuad quad[] = {{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+                         {{-1.0f, 1.0f, 0.0f, 1.0F}, {0.0f, -1.0f}},
+                         {{1.0f, 1.0f, 0.0f, 1.0F}, {1.0f, -1.0f}},
+                         {{1.0f, -1.0f, 0.0f, 1.0F}, {1.0f, 0.0f}}};
 
   myGraphicalInterface.deferredQuad.Create(sizeof(DeferredQuad), 4);
   myGraphicalInterface.deferredQuad.UpdateNow(&quad);
-  myGraphicalInterface.deferredQuadIndex.Create(4);
-  uint indices[] = {0, 1, 2, 3};
+  myGraphicalInterface.deferredQuadIndex.Create(6);
+  uint indices[] = {0, 1, 2, 0, 2, 3};
   myGraphicalInterface.deferredQuadIndex.UpdateNow(&indices);
 
   myGraphicalInterface.deferredPipelineState.SetVertexShader("assets/shaders/DeferredVertex.hlsl");
   myGraphicalInterface.deferredPipelineState.SetPixelShader("assets/shaders/DeferredPixel.hlsl");
   myGraphicalInterface.deferredPipelineState.GenerateInputElementDesc();
+  for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
+    myGraphicalInterface.deferredPipelineState.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
   myGraphicalInterface.deferredPipelineState.NumRenderTargets = 1;
   myGraphicalInterface.deferredPipelineState.RTVFormats[0]    = DXGI_FORMAT_R8G8B8A8_UNORM;
+  myGraphicalInterface.deferredPipelineState.DepthStencilState.DepthEnable = FALSE;
+  myGraphicalInterface.deferredPipelineState.DepthStencilState.StencilEnable = FALSE;
+  
   myGraphicalInterface.deferredPipelineState.CreatePipelineState();
 }
 
@@ -921,12 +929,16 @@ void MyRenderer::_DeferredPass()
       D3D12_RESOURCE_STATE_PRESENT,
       D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+  float clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHndl =
       myGraphicalInterface.renderTargetHeap_p->GetCPUDescriptorHandleForHeapStart();
   cpuDescHndl.ptr +=
       myGraphicalInterface.currentBackbufferIndex * myGraphicalInterface.renderTargetDescriptorSize;
 
   myGraphicalInterface.commandList4_p->OMSetRenderTargets(1, &cpuDescHndl, TRUE, nullptr);
+
+  myGraphicalInterface.commandList4_p->ClearRenderTargetView(cpuDescHndl, clear, 0, NULL);
 
   myGraphicalInterface.commandList4_p->SetGraphicsRootSignature(
       myGraphicalInterface.rootSignature_p);
