@@ -149,6 +149,11 @@ HRESULT GraphicsPipelineState::SetPixelShader(const std::string& pixelShader)
   return hr;
 }
 
+void GraphicsPipelineState::AllowWireframe(bool flag)
+{
+  myAllowWireframe = flag;
+}
+
 void GraphicsPipelineState::EnableBlending()
 {
   uint i                                           = RenderTarget::RenderTargetType::Color;
@@ -255,7 +260,7 @@ HRESULT GraphicsPipelineState::CreatePipelineState()
 
 ID3D12PipelineState* GraphicsPipelineState::GetPipelineState() const
 {
-  if (WIRE_FRAME)
+  if (WIRE_FRAME && myAllowWireframe)
     return myPipelineStateWireframe_p;
   return myPipelineState_p;
 }

@@ -1,11 +1,12 @@
 #pragma once
 #include <DirectXMath.h>
 
-struct alignas(256) DefaultWorldMatrix
+struct alignas(256) DefaultConstantBufferContent
 {
-  DirectX::XMFLOAT4X4A        worldMatrix;
-  DirectX::XMFLOAT4X4A        worldMatrixInverse;
-  unsigned int numberOfLights;
+  DirectX::XMFLOAT4X4A worldMatrix;
+  DirectX::XMFLOAT4X4A worldMatrixInverse;
+  unsigned int         pickableId = UINT_MAX;
+  unsigned int         numberOfLights = 0;
 };
 
 enum class VertexType
@@ -21,6 +22,12 @@ struct TangentBitangent
   DirectX::XMFLOAT4A bitangent;
 };
 
+struct Vertex_Basic_No_UV
+{
+  DirectX::XMFLOAT4A position;
+  DirectX::XMFLOAT4A normal;
+};
+
 struct Vertex_Basic
 {
   DirectX::XMFLOAT4A position;
@@ -30,7 +37,7 @@ struct Vertex_Basic
 
 struct Vertex_With_Tangent
 {
-  Vertex_Basic vertexBasic;
+  Vertex_Basic     vertexBasic;
   TangentBitangent tangentBitangent;
 };
 
@@ -38,7 +45,7 @@ struct Vertex
 {
   union
   {
-    Vertex_Basic vertexBasic;
+    Vertex_Basic        vertexBasic;
     Vertex_With_Tangent vertexTangent;
   };
 };

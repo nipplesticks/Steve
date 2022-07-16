@@ -10,13 +10,13 @@ std::unordered_map<GraphicsPipelineState*, Drawable::DrawQueue> Drawable::DRAW_Q
 Drawable::Drawable(const DM::Vec3f& position)
     : Transform(position)
 {
-  myWorldConstantBuffer.Create(sizeof(DefaultWorldMatrix));
+  myWorldConstantBuffer.Create(sizeof(DefaultConstantBufferContent));
   myLightBuffer.Create(sizeof(Light), MAX_LIGHTS);
-  DefaultWorldMatrix wb    = {};
-  DM::Mat4x4f world = GetWorldMatrix();
-  wb.worldMatrix = world.AsXmFloat4x4A();
-  wb.worldMatrixInverse = world.Inverse().AsXmFloat4x4A();
-  wb.numberOfLights     = myActiveLights;
+  DefaultConstantBufferContent wb    = {};
+  DM::Mat4x4f                  world = GetWorldMatrix();
+  wb.worldMatrix                     = world.AsXmFloat4x4A();
+  wb.worldMatrixInverse              = world.Inverse().AsXmFloat4x4A();
+  wb.numberOfLights                  = myActiveLights;
   myWorldConstantBuffer.UpdateNow(&wb, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(wb));
 }
 
@@ -40,13 +40,13 @@ void Drawable::BindWithDefaultResourceDescHeap()
   myResourceDescHeap_p = new ResourceDescriptorHeap;
   if (myTextureBuffer_p)
   {
-    myResourceDescHeap_p->Create(
-        {&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer}, {myTextureBuffer_p, &myLightBuffer}, {});
+    myResourceDescHeap_p->Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer},
+                                 {myTextureBuffer_p, &myLightBuffer},
+                                 {});
   }
   else
-    myResourceDescHeap_p->Create({&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer},
-                                 {&myLightBuffer},
-                                 {});
+    myResourceDescHeap_p->Create(
+        {&Camera::VIEW_PROJECTION_CB, &myWorldConstantBuffer}, {&myLightBuffer}, {});
 }
 
 void Drawable::SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHeap_p)
@@ -56,11 +56,12 @@ void Drawable::SetCustomResourceDescriptorHeap(ResourceDescriptorHeap* customHea
 
 void Drawable::UpdateWorldMatrixConstantBuffer()
 {
-  DefaultWorldMatrix wb    = {};
-  DM::Mat4x4f world     = GetWorldMatrix();
-  wb.worldMatrix        = world.AsXmFloat4x4A();
-  wb.worldMatrixInverse = world.Inverse().AsXmFloat4x4A();
-  wb.numberOfLights     = myActiveLights;
+  DefaultConstantBufferContent wb    = {};
+  DM::Mat4x4f                  world = GetWorldMatrix();
+  wb.worldMatrix                     = world.AsXmFloat4x4A();
+  wb.worldMatrixInverse              = world.Inverse().AsXmFloat4x4A();
+  wb.pickableId                      = myPickableId;
+  wb.numberOfLights                  = myActiveLights;
   myWorldConstantBuffer.UpdateNow(&wb, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(wb));
 }
 
@@ -80,6 +81,16 @@ void Drawable::SetLights(const std::vector<Light>& lights)
   std::vector<Light> asd(MAX_LIGHTS);
   memcpy(asd.data(), lights.data(), sizeof(Light) * myActiveLights);
   myLightBuffer.UpdateNow(asd.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
+}
+
+void Drawable::SetPickableId(uint pickableId)
+{
+  myPickableId = pickableId;
+}
+
+uint Drawable::GetPickableId(uint pickableId)
+{
+  return myPickableId;
 }
 
 void Drawable::Draw()

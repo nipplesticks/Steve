@@ -13,6 +13,7 @@ cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
   float4x4 worldInverse;
+  uint pickableId;
   uint numberOfLights;
 }
 
@@ -29,6 +30,7 @@ struct VS_OUT
   float4 pos : SV_POSITION;
   float4 uv : TEXCOORD;
   float4 nor : NORMAL;
+  uint pickableId : PICK_ID;
 };
 
 VS_OUT main(VS_IN vIn)
@@ -36,6 +38,7 @@ VS_OUT main(VS_IN vIn)
   VS_OUT vOut;
   
   float r = heightMap.SampleLevel(aSampler, vIn.uv.xy, 0).r;
+  r               = 0;
   float3 normal = bumpMap.SampleLevel(aSampler, vIn.uv.xy, 0).rgb;
   vIn.pos = float4(vIn.pos.xyz + vIn.nor.xyz * r, 1);
   vIn.pos = mul(vIn.pos, transpose(worldMat));
@@ -46,6 +49,7 @@ VS_OUT main(VS_IN vIn)
   vOut.pos = vIn.pos;
   vOut.uv = vIn.uv;
   vOut.nor = vIn.nor;
+  vOut.pickableId = pickableId;
   
   return vOut;
 }

@@ -1,3 +1,4 @@
+#include "DeferredOutput.hlsli"
 SamplerState aSampler : register(s0);
 Texture2D<float4> aTexture : register(t0);
 
@@ -8,9 +9,11 @@ struct Vertex
   float4 uv : TEXCOORD;
 };
 
-float4 main(Vertex vertex)
-    : SV_TARGET
+DeferredOutput main(Vertex vertex)
 {
+  DeferredOutput output;
+  GetDefaultDeferredOutput(output);
   float3 color = aTexture.Sample(aSampler, vertex.uv.xy).rgb;
-  return saturate(float4(color, 1.0f));
+  output.color = saturate(float4(color, 1.0f));
+  return output;
 }

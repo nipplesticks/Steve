@@ -3,6 +3,7 @@
 #include "../renderer/textureLoader/TextureLoader.h"
 #include "Star.h"
 #include <unordered_map>
+#include "../Input/KeyboardInput.h"
 
 float Map::LOD_MAX_DISTANCE = 10.0f;
 
@@ -24,7 +25,7 @@ void Map::Create(uint maxSubdivisions, float waterTiles, const DM::Vec2u& textur
   myHeightMapGenInput.Create(sizeof(GPUGenerationInput));
   myDiffuseMapGenInput.Create(sizeof(GPUGenerationInput));
   myTotalDetailLevels = maxSubdivisions;
-  myWorldMatrix.Create(sizeof(DefaultWorldMatrix));
+  myWorldMatrix.Create(sizeof(DefaultConstantBufferContent));
   myLights.Create(sizeof(Light), MAX_LIGHTS);
 
   uint waterDetailLevel = myTotalDetailLevels / 2;
@@ -51,15 +52,26 @@ void Map::Update(float dt, Camera* camera_p)
 {
   /*Rotate(0, dt * myRotationSpeed, 0);
   myWaterDrawable.Rotate(0, dt * myRotationSpeed, 0);*/
-
+  if (KeyboardInput::IsKeyPressed("rPlanetY+"))
+    Rotate(0, dt, 0);
+  if (KeyboardInput::IsKeyPressed("rPlanetY-"))
+    Rotate(0, -dt, 0);
+  if (KeyboardInput::IsKeyPressed("rPlanetX+"))
+    Rotate(dt, 0, 0);
+  if (KeyboardInput::IsKeyPressed("rPlanetX-"))
+    Rotate(-dt, 0, 0);
+  if (KeyboardInput::IsKeyPressed("rPlanetZ+"))
+    Rotate(0, 0, dt);
+  if (KeyboardInput::IsKeyPressed("rPlanetZ-"))
+    Rotate(0, 0, -dt);
+  
   std::vector<Light> lightVector(MAX_LIGHTS);
 
   for (uint i = 0; i < Star::Active_Stars.size(); i++)
   {
     lightVector[i] = Star::Active_Stars[i]->GetLight();
   }
-  myLights.UpdateNow(
-      lightVector.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
+  myLights.UpdateNow(lightVector.data(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
   _CalcDetailLevel(camera_p);
   myWaterOffset += dt * 0.01f;
@@ -69,11 +81,12 @@ void Map::Update(float dt, Camera* camera_p)
   wo.waterUV = myWaterOffset;
 
   myWaterDrawable.UpdateWorldMatrixConstantBuffer();
-  DM::Mat4x4f        worldMat = GetWorldMatrix();
-  DefaultWorldMatrix wm       = {};
-  wm.worldMatrix              = worldMat.AsXmFloat4x4A();
-  wm.worldMatrixInverse       = worldMat.Inverse().AsXmFloat4x4A();
-  wm.numberOfLights           = (uint)Star::Active_Stars.size();
+  DM::Mat4x4f                  worldMat = GetWorldMatrix();
+  DefaultConstantBufferContent wm       = {};
+  wm.worldMatrix                        = worldMat.AsXmFloat4x4A();
+  wm.worldMatrixInverse                 = worldMat.Inverse().AsXmFloat4x4A();
+  wm.pickableId                         = 0;
+  wm.numberOfLights                     = (uint)Star::Active_Stars.size();
   myWorldMatrix.UpdateNow(&wm, D3D12_RESOURCE_STATE_GENERIC_READ);
   myWaterOffsetBuffer.UpdateNow(&wo, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
@@ -148,21 +161,21 @@ void Map::Draw()
 void Map::_CreateIcosahedronAndSubdivide(
     IcosahedronSideDuringCreation icosahedronSide[ICOSAHEDRON_SIDES], uint subdivisions)
 {
-  float     phi                            = (1.0f + sqrt(5.0f)) * 0.5f;
-  float     a                              = 1.0f;
-  float     b                              = 1.0f / phi;
-  DM::Vec3f icosahedron[ICOSAHEDRON_SIDES] = {DM::Vec3f(0.0f, b, -a),
-                                              DM::Vec3f(b, a, 0.0f),
-                                              DM::Vec3f(-b, a, 0.0f),
-                                              DM::Vec3f(0.0f, b, a),
-                                              DM::Vec3f(0.0f, -b, a),
-                                              DM::Vec3f(-a, 0.0f, b),
-                                              DM::Vec3f(0.0f, -b, -a),
-                                              DM::Vec3f(a, 0.0f, -b),
-                                              DM::Vec3f(a, 0.0f, b),
-                                              DM::Vec3f(-a, 0.0f, -b),
-                                              DM::Vec3f(b, -a, 0.0f),
-                                              DM::Vec3f(-b, -a, 0.0f)};
+  float     phi             = (1.0f + sqrt(5.0f)) * 0.5f;
+  float     a               = 1.0f;
+  float     b               = 1.0f / phi;
+  DM::Vec3f icosahedron[12] = {DM::Vec3f(0.0f, b, -a),
+                               DM::Vec3f(b, a, 0.0f),
+                               DM::Vec3f(-b, a, 0.0f),
+                               DM::Vec3f(0.0f, b, a),
+                               DM::Vec3f(0.0f, -b, a),
+                               DM::Vec3f(-a, 0.0f, b),
+                               DM::Vec3f(0.0f, -b, -a),
+                               DM::Vec3f(a, 0.0f, -b),
+                               DM::Vec3f(a, 0.0f, b),
+                               DM::Vec3f(-a, 0.0f, -b),
+                               DM::Vec3f(b, -a, 0.0f),
+                               DM::Vec3f(-b, -a, 0.0f)};
 
   uint indices[] = {1, 2,  0,  2, 1, 3, 4, 5, 3, 8,  4, 3,  6, 7, 0,  9,  6, 0, 10, 11,
                     4, 11, 10, 6, 5, 9, 2, 9, 5, 11, 7, 8,  1, 8, 7,  10, 5, 2, 3,  1,
@@ -398,7 +411,7 @@ void Map::_FixWrappedUVCoords(std::vector<uint>& indices, std::vector<Vertex>& v
 
 void Map::_FixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>& vertices)
 {
-  uint northIdx  = UINT_MAX;
+  uint northIdx = UINT_MAX;
   for (uint i = 0; i < vertices.size(); i++)
   {
     if (northIdx != UINT_MAX /* && southIdx != UINT_MAX*/)
@@ -410,7 +423,7 @@ void Map::_FixSharedPoleVertices(std::vector<uint>& indices, std::vector<Vertex>
       southIdx = i;*/
   }
 
-  for (uint i = 0; i < indices.size(); i+=3)
+  for (uint i = 0; i < indices.size(); i += 3)
   {
     if (indices[i] == northIdx)
     {
@@ -485,13 +498,14 @@ void Map::_CalcDetailLevel(Camera* camera_p)
   myCurrentDetailLevel =
       myTotalDetailLevels - std::min((uint)(myTotalDetailLevels * t), myTotalDetailLevels);
   myCurrentDetailLevel = std::min(myCurrentDetailLevel, myTotalDetailLevels - 1);
-  myCurrentDetailLevel = std::max(myCurrentDetailLevel, 3u);
+  myCurrentDetailLevel = std::max(myCurrentDetailLevel, 0u);
 }
 
 void Map::_SetupGraphicPipelineState()
 {
   myGraphicPipeline.SetVertexShader("assets/shaders/PlanetVertexShader.hlsl");
   myGraphicPipeline.SetPixelShader("assets/shaders/PlanetPixelShader.hlsl");
+  //myGraphicPipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
   myGraphicPipeline.GenerateInputElementDesc();
   myGraphicPipeline.CreatePipelineState();
   for (uint i = 0; i < ICOSAHEDRON_SIDES; i++)
@@ -620,4 +634,5 @@ void Map::_CreateWater(const Icosahedron& icosahedron, uint waterDetailLevel, fl
   myWaterDrawable.SetMesh(&myWaterMesh);
   myWaterDrawable.SetGraphicsPipelineState(&myWaterGraphicPipeline);
   myWaterDrawable.SetCustomResourceDescriptorHeap(&myWaterResourceDescHeap);
+  myWaterDrawable.SetPickableId(1);
 }

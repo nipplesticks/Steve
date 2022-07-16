@@ -51,6 +51,8 @@ public:
   ConstantBuffer*   GetWorldMatrixConstantBuffer() const;
   StructuredBuffer* GetLightBuffer() const;
   void              SetLights(const std::vector<Light>& lights);
+  void              SetPickableId(uint pickableId);
+  uint              GetPickableId(uint pickableId);
 
   virtual void Draw();
 
@@ -73,4 +75,5 @@ protected:
   uint                    myActiveLights       = 0;
   ConstantBuffer          myWorldConstantBuffer;
   StructuredBuffer        myLightBuffer;
+  uint                    myPickableId = UINT_MAX;
 };

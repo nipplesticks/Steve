@@ -128,7 +128,7 @@ Camera::View Camera::GetDefaultView()
   view.height        = 720.0f;
   view.width         = 1280.0f;
   view.nearPlane     = 0.01f;
-  view.farPlane      = 1000.0f;
+  view.farPlane      = 100000.0f;
   view.isPerspective = true;
   return view;
 }

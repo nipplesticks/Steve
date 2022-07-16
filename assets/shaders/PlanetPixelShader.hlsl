@@ -15,6 +15,7 @@ cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
   float4x4 worldInverse;
+  uint pickableId;
   uint numberOfLights;
 }
 
@@ -22,20 +23,23 @@ cbuffer cbv2 : register(b2)
 {
   float4x4 WaterWorldMat;
   float4x4 WaterWorldMatInverse;
+  uint WaterPickableId;
   uint WaterNumberOfLights;
 }
 
-struct Vertex
+struct VS_OUT
 {
   float4 worldPos : WORLD_POS;
   float4 pos : SV_POSITION;
   float4 uv : TEXCOORD;
   float4 nor : NORMAL;
+  uint pickableId : PICK_ID;
 };
 
-DeferredOutput main(Vertex vertex)
+DeferredOutput main(VS_OUT vertex)
 {
   DeferredOutput output;
+  GetDefaultDeferredOutput(output);
   //return float4(vertex.uv.xy, 0, 1);
   // X: 0.917060, Y: -0.398749, Z: 0.000000
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
@@ -53,7 +57,7 @@ DeferredOutput main(Vertex vertex)
   output.position = vertex.worldPos;
   output.normal = vertex.nor;
   output.color = saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
-  output.pickableId = 0;
+  output.pickableId = vertex.pickableId;
   
   //return saturate(float4(finalColor + ambient + specularHighlight.rgb, 1.0f));
   //return (float4(vertex.nor.xyz + c.xyz * 0.0f, 1.0f));

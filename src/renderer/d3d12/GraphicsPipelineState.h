@@ -17,6 +17,8 @@ public:
   HRESULT SetDomainShader(const std::string& domainShader);
   HRESULT SetGeometryShader(const std::string& geometryShader);
   HRESULT SetPixelShader(const std::string& pixelShader);
+
+  void    AllowWireframe(bool flag);
   void    EnableBlending();
   void    GenerateInputElementDesc();
   void    SetInputElementDesc(const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs);
@@ -28,13 +30,14 @@ public:
 private:
   void _defaultValues();
 
-  ID3DBlob*            myVertexShader_p   = nullptr;
-  ID3DBlob*            myHullShader_p     = nullptr;
-  ID3DBlob*            myDomainShader_p   = nullptr;
-  ID3DBlob*            myGeometryShader_p = nullptr;
-  ID3DBlob*            myPixelShader_p    = nullptr;
-  ID3D12PipelineState* myPipelineState_p  = nullptr;
-  ID3D12PipelineState* myPipelineStateWireframe_p  = nullptr;
+  ID3DBlob*            myVertexShader_p           = nullptr;
+  ID3DBlob*            myHullShader_p             = nullptr;
+  ID3DBlob*            myDomainShader_p           = nullptr;
+  ID3DBlob*            myGeometryShader_p         = nullptr;
+  ID3DBlob*            myPixelShader_p            = nullptr;
+  ID3D12PipelineState* myPipelineState_p          = nullptr;
+  ID3D12PipelineState* myPipelineStateWireframe_p = nullptr;
+  bool                 myAllowWireframe           = true;
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> myInputElementDescs;
 };

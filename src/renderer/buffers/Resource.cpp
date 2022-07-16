@@ -57,7 +57,14 @@ void Resource::Init(Resource_Type resourceType,
   clearVal.Format             = format;
 
   if (resourceType == Resource_Type::RenderTarget)
+  {
     clearVal_p = &clearVal;
+    if (format == DXGI_FORMAT_R32_UINT)
+    {
+      FLOAT c[] = {UINT_MAXF, UINT_MAXF, UINT_MAXF, UINT_MAXF};
+      memcpy(clearVal.Color, c, sizeof(FLOAT) * 4);
+    }
+  }
 
   Init(&heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState, clearVal_p);
 

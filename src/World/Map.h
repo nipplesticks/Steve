@@ -13,6 +13,7 @@
 
 class Map : public Transform
 {
+
 public:
   static float LOD_MAX_DISTANCE;
 

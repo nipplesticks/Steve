@@ -33,7 +33,7 @@ public:
       SetName("RenderTarget_Normal");
       break;
     case Color:
-      SetName("RenderTarget_Normal");
+      SetName("RenderTarget_Color");
       break;
     case PickableID:
       SetName("RenderTarget_PickableID");

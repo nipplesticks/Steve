@@ -9,6 +9,7 @@ cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
   float4x4 worldInverse;
+  uint pickableId;
   uint numberOfLights;
 }
 
@@ -32,6 +33,7 @@ struct VS_OUT
   float4 tangent : TANGENT;
   float4 bitangent : BITANGENT;
   float4 nor : NORMAL;
+  uint pickableId : PICK_ID;
 };
 
 struct TangentBitangent
@@ -61,5 +63,6 @@ VS_OUT main(VS_IN vIn, uint pid : SV_VertexID)
   vOut.nor = vIn.nor;
   vOut.tangent = normalize(mul(tangents[pid / 3].tangent, transpose(worldMat)));
   vOut.bitangent = normalize(mul(tangents[pid / 3].bitangent, transpose(worldMat)));
+  vOut.pickableId = pickableId;
   return vOut;
 }

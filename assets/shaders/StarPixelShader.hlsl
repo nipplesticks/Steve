@@ -11,9 +11,9 @@ struct VS_OUT
 DeferredOutput main(VS_OUT vIn)
 {
   DeferredOutput output;
+  GetDefaultDeferredOutput(output);
   output.position = vIn.worldPos;
   output.normal = vIn.nor;
   output.color = float4(0.976f, 0.843f, 0.109f, 1.0f);
-  output.pickableId = 0;
   return output;
 }

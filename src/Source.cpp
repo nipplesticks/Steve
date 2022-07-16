@@ -8,6 +8,7 @@
 #include "renderer/d3d12/myRenderer.h"
 #include "renderer/mesh/MeshLoader.h"
 #include "renderer/textureLoader/TextureHandler.h"
+#include "tools/WorldMeshGen.h"
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
@@ -21,8 +22,31 @@ bool PlanetGeneration(Noise& heightNoise,
                       float& waterLevel,
                       float& planetScale);
 
+void LoadWorld(Mesh& m)
+{
+  
+}
+
 int main()
 {
+  // Earth area
+  // 510100000 * 1000000 m2
+  // A = 4*Pi*r^2
+  // r = sqrt(A / (4*Pi))
+  uint64 earthScale = 8000;
+  uint64 earthAreaKm2  = 510100000;
+  uint64 targetAreaKm2 = earthAreaKm2 / earthScale;
+
+  float planetRadiusMeters = (1000.f * (float)sqrt(targetAreaKm2 / (double)(4.0f * DM::PI)));
+
+  /*for (uint i = 1; i <= 12; i++)
+  {
+    WorldMeshGen::GetInstance()->Create("assets/world/world" + std::to_string(i) + ".bin", i);
+    std::cout << std::endl;
+  }*/
+
+
+
   Window wnd(1280, 720, "Steve in the house");
   //MyRenderer::ENABLE_DEBUG_CONTROLLER = true;
   MyRenderer::Init(wnd.GetHwnd());
@@ -44,27 +68,53 @@ int main()
   skybox.BindWithDefaultResourceDescHeap();
 
   FpsCamera camera;
-  camera.SetLookTo(0.0f, 0.0f, -1.0f);
-  camera.SetPosition(0, 0, 10);
+  camera.SetLookTo(0.0f, 0.0f, 1.0f);
+  camera.SetPosition(0.0f, (planetRadiusMeters + 2), 0);
 
   Star mainStar;
   {
     Light     l   = mainStar.GetLight();
     DM::Vec3f dir = l.direction;
-    mainStar.SetPosition(dir * -100);
+    mainStar.SetPosition(dir * -planetRadiusMeters*1.5f);
     mainStar.SetScale(10, 10, 10);
   }
+
+  /*Mesh testMesh;
+  LoadWorld(testMesh);
+  testMesh.CreateBuffers();
+  GraphicsPipelineState gs;
+  gs.SetVertexShader("assets/shaders/StarVertexShader.hlsl");
+  gs.SetPixelShader("assets/shaders/StarPixelShader.hlsl");
+  gs.GenerateInputElementDesc();
+  gs.CreatePipelineState();*/
+  /*const int numTT = 1;
+  Drawable  tt[numTT];
+  for (int i = 0; i < numTT; i++)
+  {
+    tt[i].SetMesh(&testMesh);
+    tt[i].SetGraphicsPipelineState(&gs);
+    tt[i].BindWithDefaultResourceDescHeap();
+    tt[i].SetLights({mainStar.GetLight()});
+    if (i < 5)
+    {
+      tt[i].SetRotation(0, 0, 0);
+    }
+
+    tt[i].UpdateWorldMatrixConstantBuffer();
+  }*/
+
 
   Noise heightMapGenerator  = {};
   Noise diffuseMapGenerator = {};
   float waterLevel          = 0.4f;
-  float planetScale         = 1.0f;
+  float planetScale         = planetRadiusMeters;
 
   Map planet;
   map_p = &planet;
-  planet.Create(8, 10);
+  planet.Create(11, 20, DM::Vec2u(1024 * 4));
   planet.SetWaterLevel(waterLevel);
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
+  planet.SetScale(planetScale, planetScale, planetScale);
 
   Timer frameTimer;
   frameTimer.Start();
@@ -94,8 +144,12 @@ int main()
     renderer_p->BeginFrame();
     renderer_p->Clear();
     planet.Draw();
+    /*for (int i = 0; i < numTT; i++)
+    {
+      tt[i].Draw();
+    }*/
     mainStar.Draw();
-    //skybox.Draw();
+    skybox.Draw();
     renderer_p->EndFrame();
     c++;
   }
@@ -119,6 +173,15 @@ void SetupInput()
   KeyboardInput::SetAnActionToKey("toggleCaptureMouse", (uint16)'M');
   KeyboardInput::SetAnActionToKey("rotatePlanetRight", (uint16)'H');
   KeyboardInput::SetAnActionToKey("rotatePlanetLeft", (uint16)'G');
+
+
+  KeyboardInput::SetAnActionToKey("rPlanetY+", (uint16)'L');
+  KeyboardInput::SetAnActionToKey("rPlanetY-", (uint16)'J');
+  KeyboardInput::SetAnActionToKey("rPlanetX+", (uint16)'I');
+  KeyboardInput::SetAnActionToKey("rPlanetX-", (uint16)'K');
+  KeyboardInput::SetAnActionToKey("rPlanetZ+", (uint16)'O');
+  KeyboardInput::SetAnActionToKey("rPlanetZ-", (uint16)'U');
+
 }
 
 void CreateRay(const DM::Vec2f& mousePos, Camera* camera_p)
@@ -272,7 +335,7 @@ bool PlanetGeneration(Noise& heightNoise,
   ImGui::Begin("Planet Generation Modifier");
 
   ImGui::Text("Generic");
-  ImGui::SliderFloat("planet size", &planetScale, 1, 10);
+  ImGui::SliderFloat("planet size", &planetScale, 1, 100000);
   somethingChanged |= ImGui::SliderFloat("waterLevel", &waterLevel, 0.0f, 2.0f);
   ImGui::Checkbox("WireFrame: ", &GraphicsPipelineState::WIRE_FRAME);
 

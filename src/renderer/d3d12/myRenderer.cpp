@@ -58,8 +58,8 @@ void MyRenderer::BeginFrame()
   D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptorHandle =
       myGraphicalInterface.deferredRenderTargetsHeap_p->GetCPUDescriptorHandleForHeapStart();
   renderTargetDescriptorHandle.ptr += myGraphicalInterface.currentBackbufferIndex *
-                     myGraphicalInterface.renderTargetDescriptorSize *
-                     RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
+                                      myGraphicalInterface.renderTargetDescriptorSize *
+                                      RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
 
   D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptorHandle =
       myGraphicalInterface.depthBufferHeap_p->GetCPUDescriptorHandleForHeapStart();
@@ -95,11 +95,16 @@ void MyRenderer::Clear(const DM::Vec4f& color)
                         myGraphicalInterface.renderTargetDescriptorSize *
                         RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
 
+  float pickClear[] = {UINT_MAXF, UINT_MAXF, UINT_MAXF, UINT_MAXF};
   for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
   {
-    myGraphicalInterface.commandList4_p->ClearRenderTargetView(
-        cpuDescHandle3, (FLOAT*)color.data, 0, NULL);
-    
+    if (RenderTarget::RenderTargetType(i) == RenderTarget::RenderTargetType::PickableID)
+      myGraphicalInterface.commandList4_p->ClearRenderTargetView(
+          cpuDescHandle3, pickClear, 0, NULL);
+    else
+      myGraphicalInterface.commandList4_p->ClearRenderTargetView(
+          cpuDescHandle3, (FLOAT*)color.data, 0, NULL);
+
     cpuDescHandle3.ptr += myGraphicalInterface.renderTargetDescriptorSize;
   }
 }
@@ -663,7 +668,8 @@ void MyRenderer::_CreateRenderTargets()
     HR_ASSERT(myGraphicalInterface.swapChain_p->GetBuffer(
         n, IID_PPV_ARGS(&myGraphicalInterface.renderTargets_pp[n])));
     myDevice_p->CreateRenderTargetView(myGraphicalInterface.renderTargets_pp[n], nullptr, cdh);
-    myGraphicalInterface.renderTargets_pp[n]->SetName(std::wstring(renderTargetName.begin(), renderTargetName.end()).c_str());
+    myGraphicalInterface.renderTargets_pp[n]->SetName(
+        std::wstring(renderTargetName.begin(), renderTargetName.end()).c_str());
     cdh.ptr += myGraphicalInterface.renderTargetDescriptorSize;
 
     for (uint i = 0; i < RenderTarget::RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES; i++)
@@ -882,9 +888,10 @@ void MyRenderer::_CreateDeferredQuad()
     myGraphicalInterface.deferredPipelineState.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
   myGraphicalInterface.deferredPipelineState.NumRenderTargets = 1;
   myGraphicalInterface.deferredPipelineState.RTVFormats[0]    = DXGI_FORMAT_R8G8B8A8_UNORM;
-  myGraphicalInterface.deferredPipelineState.DepthStencilState.DepthEnable = FALSE;
+  myGraphicalInterface.deferredPipelineState.DepthStencilState.DepthEnable   = FALSE;
   myGraphicalInterface.deferredPipelineState.DepthStencilState.StencilEnable = FALSE;
-  
+  myGraphicalInterface.deferredPipelineState.AllowWireframe(false);
+
   myGraphicalInterface.deferredPipelineState.CreatePipelineState();
 }
 

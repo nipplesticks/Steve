@@ -9,6 +9,7 @@ cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
   float4x4 worldInverse;
+  uint pickableId;
   uint numberOfLights;
 }
 

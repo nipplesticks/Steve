@@ -21,4 +21,7 @@ namespace DM
 
   using Mat4x4f = Mat4x4<float>;
   using Mat3x3f = Mat3x3<float>;
+  constexpr float PI  = DirectX::XM_PI;
+  constexpr float PI2 = DirectX::XM_2PI;
+  constexpr float PIDIV2 = DirectX::XM_PIDIV2;
 }

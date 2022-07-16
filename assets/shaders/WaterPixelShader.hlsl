@@ -12,6 +12,7 @@ cbuffer cbv1 : register(b1)
 {
   float4x4 worldMat;
   float4x4 worldInverse;
+  uint pickableId;
   uint numberOfLights;
 }
 SamplerState aSampler : register(s0);
@@ -26,11 +27,13 @@ struct VS_OUT
   float4 tangent : TANGENT;
   float4 bitangent : BITANGENT;
   float4 nor : NORMAL;
+  uint pickableId : PICK_ID;
 };
 
 DeferredOutput main(VS_OUT vIn)
 {
   DeferredOutput output;
+  GetDefaultDeferredOutput(output);
   float3 lightDir = normalize(float3(-0.917060, -0.398749, 0.000000));
   float3 T = normalize(vIn.tangent.xyz);
   float3 N = normalize(vIn.nor.xyz);
@@ -57,7 +60,7 @@ DeferredOutput main(VS_OUT vIn)
   output.position = vIn.worldPos;
   output.normal = float4(aNormal, 0.0f);
   output.color = float4(finalColor + ambient + specularHighlight.rgb, 0.9f);
-  output.pickableId = 0;
+  output.pickableId = vIn.pickableId;
   //return saturate(float4(finalColor + ambient + specularHighlight.rgb, 0.9f));
   //return float4(aNormal, 1.0f);
   return output;
