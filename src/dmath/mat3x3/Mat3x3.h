@@ -321,7 +321,7 @@ inline DirectX::XMMATRIX Mat3x3<T>::Load() const
   for (unsigned int i = 0; i < 3; i++)
     for (unsigned int j = 0; j < 3; j++)
       m.m[i][j] = static_cast<float>(data[i][j]);
-  return DirectX::XMLoadFloat3x3(m);
+  return DirectX::XMLoadFloat3x3(&m);
 }
 template <class T>
 inline void Mat3x3<T>::Store(const DirectX::XMMATRIX& mat)

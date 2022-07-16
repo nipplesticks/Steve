@@ -45,12 +45,23 @@ void WorldMeshGen::Create(const std::string& outPath, uint subdivisions)
 void WorldMeshGen::Load(const std::string&                inPath,
                         std::vector<std::vector<Vertex>>& vertices,
                         std::vector<std::vector<uint>>&   indices,
-                        DM::Vec3f&                        normal)
+                        std::vector<DM::Vec3f>&           sideNormals)
 {
   vertices.clear();
+  vertices.resize(ICOSAHEDRON_SIDES);
   indices.clear();
+  indices.resize(ICOSAHEDRON_SIDES);
+  sideNormals.clear();
+  sideNormals.resize(ICOSAHEDRON_SIDES);
   std::ifstream inFile;
   inFile.open(inPath, std::ios::binary);
+
+  if (!inFile)
+  {
+    std::cout << inPath << " is missing. Generating new world....\n";
+    Create(inPath, 12);
+    inFile.open(inPath, std::ios::binary);
+  }
   ASSERT(inFile);
   size_t numVerts = 0;
   size_t numInd   = 0;
@@ -60,9 +71,9 @@ void WorldMeshGen::Load(const std::string&                inPath,
   {
     inFile.read(static_cast<char*>((void*)&numVerts), sizeof(size_t));
     inFile.read(static_cast<char*>((void*)&numInd), sizeof(size_t));
-    inFile.read(static_cast<char*>((void*)&normal), sizeof(DM::Vec3f));
+    inFile.read(static_cast<char*>((void*)&sideNormals[i]), sizeof(DM::Vec3f));
     verts.resize(numVerts);
-    indices.resize(numInd);
+    indices[i].resize(numInd);
     inFile.read(static_cast<char*>((void*)verts.data()), sizeof(Vertex_Basic) * numVerts);
     inFile.read(static_cast<char*>((void*)indices[i].data()), sizeof(uint) * numInd);
     vertices[i].resize(numVerts);

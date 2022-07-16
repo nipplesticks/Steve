@@ -2,86 +2,64 @@
 #include "../utility/DMath.h"
 #include "../utility/Typedef.h"
 
-class Event
+namespace Event
 {
-public:
   enum Type
   {
+    // Mouse Events
     MouseMoved = 0,
     MouseWheel,
     MousePressed,
     MouseReleased,
+    // Key Events
     KeyDown,
     KeyUp,
     TextTyped,
+    // Window Events
+    LostFocus,
+    GainedFocus,
+    Resize,
     NREVENTS
   };
 
-public:
-  Event(Event::Type eventType);
-  void Signal();
-  Event::Type EventType;
-};
+  struct InputMouseEvent
+  {
+    union
+    {
+      DM::Vec2i MousePosition;
+      int       WheelDelta;
+      union
+      {
+        DM::Vec2i   MouseDelta;
+        uint MouseButton;
+      };
+    };
+  };
 
-class EventMouseMoved : public Event
-{
-public:
-  EventMouseMoved()
-      : Event(MouseMoved) {};
-  DM::Vec2i MousePosition;
-  DM::Vec2i MouseDelta;
-  bool      LButtonPressed = false;
-  bool      MButtonPressed = false;
-  bool      RButtonPressed = false;
-};
+  struct InputKeyEvent
+  {
+    uint16 KeyCode;
+  };
 
-class EventMousePressed : public Event
-{
-public:
-  EventMousePressed()
-      : Event(MousePressed) {};
-  DM::Vec2i MousePosition;
-  bool      LButtonPressed = false;
-  bool      MButtonPressed = false;
-  bool      RButtonPressed = false;
-};
+  struct WindowEvent
+  {
+    union
+    {
+      DM::Vec2u NewWindowSize;
+    };
+  };
 
-class EventMouseReleased : public Event
-{
-public:
-  EventMouseReleased()
-      : Event(MouseReleased) {};
-  DM::Vec2i MousePosition;
-  bool      LButtonReleased = false;
-  bool      MButtonReleased = false;
-  bool      RButtonReleased = false;
-};
+  struct Message
+  {
+    Type EventType;
+    union
+    {
+      InputMouseEvent MouseEvent;
+      InputKeyEvent   KeyEvent;
+      WindowEvent     WindowEvent;
+    };
+  };
 
-class EventMouseWheel : public Event
-{
-public:
-  EventMouseWheel()
-      : Event(MouseWheel) {};
-  int Delta = 0;
-};
-class EventKeyDown : public Event
-{
-public:
-  EventKeyDown()
-      : Event(KeyDown) {};
-  uint16 KeyCode = -1;
-};
-class EventKeyUp : public Event
-{
-public:
-  EventKeyUp()
-      : Event(KeyUp) {};
-  uint16 KeyCode = -1;
-};
-class EventTextTyped : public Event
-{
-public:
-  EventTextTyped()
-      : Event(TextTyped) {};
-  uint KeyCode = -1;
-};
+  void PushMessage(const Message& message);
+
+} // namespace Event

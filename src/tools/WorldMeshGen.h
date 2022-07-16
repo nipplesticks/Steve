@@ -1,8 +1,6 @@
 #pragma once
 #include "../src/renderer/mesh/Mesh.h"
 
-#define ICOSAHEDRON_SIDES 20
-
 class WorldMeshGen
 {
 private:
@@ -13,11 +11,11 @@ public:
   static WorldMeshGen* GetInstance();
 
 public:
-  void Create(const std::string & outPath, uint subdivisions);
-  void Load(const std::string&   inPath,
+  void Create(const std::string& outPath, uint subdivisions);
+  void Load(const std::string&                inPath,
             std::vector<std::vector<Vertex>>& vertices,
             std::vector<std::vector<uint>>&   indices,
-            DM::Vec3f&           normal);
+            std::vector<DM::Vec3f>&           sideNormals);
 
 private:
   struct Triangle
@@ -47,7 +45,7 @@ private:
   struct DetailLevel
   {
     std::vector<Vertex_Basic> vertices;
-    std::vector<uint>   indices;
+    std::vector<uint>         indices;
   };
   struct IcosahedronSide
   {
@@ -61,7 +59,7 @@ private:
 private:
   void
   _CreateIcosahedronAndSubdivide(IcosahedronSideDuringCreation icosahedronSide[ICOSAHEDRON_SIDES],
-                                      uint                          subdivitions);
+                                 uint                          subdivitions);
   void _Subdivide(DetailLevelDuringCreation& detail);
 
   void _CreateVertices(Icosahedron&                  icosahedron,

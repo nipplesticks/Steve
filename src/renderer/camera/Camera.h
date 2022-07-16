@@ -29,6 +29,8 @@ public:
   virtual void Move(float x, float y, float z);
   virtual void Rotate(float x, float y, float z);
   virtual void Rotate(const DM::Vec3f& rot);
+  virtual void RotateFromQuaternion(const DM::Vec4f& q);
+  virtual void RotateFromRotationMatrix(const DM::Mat3x3f& m);
   virtual void SetRotation(float x, float y, float z);
   virtual void SetRotation(const DM::Vec3f& axis);
   virtual void UseCustomUpVector(bool flag);

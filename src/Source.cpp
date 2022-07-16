@@ -1,4 +1,4 @@
-#include "Input/KeyboardInput.h"
+#include "Input/InputRouter.h"
 #include "World/Map.h"
 #include "World/Star.h"
 #include "events/EventHandler.h"
@@ -12,23 +12,20 @@
 #include "utility/Timer.h"
 #include "window/Window.h"
 #include <iostream>
+#include "player/LocalPlayer.h"
 
 Map* map_p = nullptr;
 
-void SetupInput();
-bool HandleInput(Camera* camera_p, float dt, Window* wnd_p);
 bool PlanetGeneration(Noise& heightNoise,
                       Noise& diffuseNoise,
                       float& waterLevel,
                       float& planetScale);
 
-void LoadWorld(Mesh& m)
-{
-  
-}
 
 int main()
 {
+  InputRouter::GetInstance();
+
   // Earth area
   // 510100000 * 1000000 m2
   // A = 4*Pi*r^2
@@ -38,21 +35,12 @@ int main()
   uint64 targetAreaKm2 = earthAreaKm2 / earthScale;
 
   float planetRadiusMeters = (1000.f * (float)sqrt(targetAreaKm2 / (double)(4.0f * DM::PI)));
-
-  /*for (uint i = 1; i <= 12; i++)
-  {
-    WorldMeshGen::GetInstance()->Create("assets/world/world" + std::to_string(i) + ".bin", i);
-    std::cout << std::endl;
-  }*/
-
-
-
-  Window wnd(1280, 720, "Steve in the house");
+  planetRadiusMeters       = 500;
+  Window wnd(1920, 1080, "Steve in the house");
   //MyRenderer::ENABLE_DEBUG_CONTROLLER = true;
   MyRenderer::Init(wnd.GetHwnd());
   Camera::InitViewProjectionCb();
   MyRenderer* renderer_p = MyRenderer::GetInstance();
-  SetupInput();
   MeshLoader::LoadMesh("assets/models/Skybox/sphere.obj", "skybox", true);
   MeshLoader::LoadMesh("assets/models/Skybox/sphere.obj", "star", false);
   TextureHandler::LoadTexture("assets/textures/skybox.jpg", "skybox");
@@ -67,9 +55,8 @@ int main()
   skybox.SetGraphicsPipelineState(&skyboxPipeline);
   skybox.BindWithDefaultResourceDescHeap();
 
-  FpsCamera camera;
-  camera.SetLookTo(0.0f, 0.0f, 1.0f);
-  camera.SetPosition(0.0f, (planetRadiusMeters + 2), 0);
+  LocalPlayer player;
+  player.SetPosition(0.0f, planetRadiusMeters, 0);
 
   Star mainStar;
   {
@@ -79,31 +66,6 @@ int main()
     mainStar.SetScale(10, 10, 10);
   }
 
-  /*Mesh testMesh;
-  LoadWorld(testMesh);
-  testMesh.CreateBuffers();
-  GraphicsPipelineState gs;
-  gs.SetVertexShader("assets/shaders/StarVertexShader.hlsl");
-  gs.SetPixelShader("assets/shaders/StarPixelShader.hlsl");
-  gs.GenerateInputElementDesc();
-  gs.CreatePipelineState();*/
-  /*const int numTT = 1;
-  Drawable  tt[numTT];
-  for (int i = 0; i < numTT; i++)
-  {
-    tt[i].SetMesh(&testMesh);
-    tt[i].SetGraphicsPipelineState(&gs);
-    tt[i].BindWithDefaultResourceDescHeap();
-    tt[i].SetLights({mainStar.GetLight()});
-    if (i < 5)
-    {
-      tt[i].SetRotation(0, 0, 0);
-    }
-
-    tt[i].UpdateWorldMatrixConstantBuffer();
-  }*/
-
-
   Noise heightMapGenerator  = {};
   Noise diffuseMapGenerator = {};
   float waterLevel          = 0.4f;
@@ -111,15 +73,14 @@ int main()
 
   Map planet;
   map_p = &planet;
-  planet.Create(11, 20, DM::Vec2u(1024 * 4));
-  planet.SetWaterLevel(waterLevel);
+  planet.Create();
   planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
   planet.SetScale(planetScale, planetScale, planetScale);
 
   Timer frameTimer;
   frameTimer.Start();
   uint c = 0;
-  while (wnd.IsOpen() && !KeyboardInput::IsKeyPressed("close"))
+  while (wnd.IsOpen())
   {
     float dt = (float)frameTimer.Stop();
     ImGui_ImplDX12_NewFrame();
@@ -127,27 +88,19 @@ int main()
     ImGui::NewFrame();
 
     wnd.PollEvents();
-    KeyboardInput::Update();
-    if (HandleInput(&camera, dt, &wnd))
-    {
-      if (PlanetGeneration(heightMapGenerator, diffuseMapGenerator, waterLevel, planetScale))
-      {
-        planet.SetWaterLevel(waterLevel);
-        planet.GenerateMap(heightMapGenerator, diffuseMapGenerator);
-      }
-      planet.SetScale(planetScale, planetScale, planetScale);
-    }
+    EventHandler::HandleEvents();
+
+//    float h = planet.GetHightLevelAt(player.GetPosition());
+
+    player.Update(dt, planet.GetScale().x);
+    wnd.SetMousePosition(player.mpLast.x, player.mpLast.y);
 
     mainStar.UpdateWorldMatrixConstantBuffer();
 
-    planet.Update(dt, &camera);
+    planet.Update(dt, player.GetCamera());
     renderer_p->BeginFrame();
     renderer_p->Clear();
     planet.Draw();
-    /*for (int i = 0; i < numTT; i++)
-    {
-      tt[i].Draw();
-    }*/
     mainStar.Draw();
     skybox.Draw();
     renderer_p->EndFrame();
@@ -155,33 +108,6 @@ int main()
   }
 
   return 0;
-}
-
-void SetupInput()
-{
-  KeyboardInput::SetAnActionToKey("forward", (uint16)'W');
-  KeyboardInput::SetAnActionToKey("back", (uint16)'S');
-  KeyboardInput::SetAnActionToKey("right", (uint16)'D');
-  KeyboardInput::SetAnActionToKey("left", (uint16)'A');
-  KeyboardInput::SetAnActionToKey("up", 32); // space
-  KeyboardInput::SetAnActionToKey("down", 17); // LCtrl
-  KeyboardInput::SetAnActionToKey("rollLeft", (uint16)'Q');
-  KeyboardInput::SetAnActionToKey("rollRight", (uint16)'E');
-  KeyboardInput::SetAnActionToKey("toggleLockMouse", (uint16)'F');
-  KeyboardInput::SetAnActionToKey("close", (uint16)0x1B); // escape
-  KeyboardInput::SetAnActionToKey("speed", (uint16)0x10); // shift
-  KeyboardInput::SetAnActionToKey("toggleCaptureMouse", (uint16)'M');
-  KeyboardInput::SetAnActionToKey("rotatePlanetRight", (uint16)'H');
-  KeyboardInput::SetAnActionToKey("rotatePlanetLeft", (uint16)'G');
-
-
-  KeyboardInput::SetAnActionToKey("rPlanetY+", (uint16)'L');
-  KeyboardInput::SetAnActionToKey("rPlanetY-", (uint16)'J');
-  KeyboardInput::SetAnActionToKey("rPlanetX+", (uint16)'I');
-  KeyboardInput::SetAnActionToKey("rPlanetX-", (uint16)'K');
-  KeyboardInput::SetAnActionToKey("rPlanetZ+", (uint16)'O');
-  KeyboardInput::SetAnActionToKey("rPlanetZ-", (uint16)'U');
-
 }
 
 void CreateRay(const DM::Vec2f& mousePos, Camera* camera_p)
@@ -220,110 +146,6 @@ void CreateRay(const DM::Vec2f& mousePos, Camera* camera_p)
   DM::Vec3f intersectionPoint = origin + (rayDir * t);
 
   std::cout << "Hit at: " << intersectionPoint.ToString() << std::endl;
-}
-
-bool HandleInput(Camera* camera_p, float dt, Window* wnd_p)
-{
-  static bool      lockMouse           = false;
-  static bool      disableMouseCapture = false;
-  static float     speed               = 0.001f;
-  static float     zoomSpeed           = 0.1f;
-  static float     rollSpeed           = 0.5f;
-  static DM::Vec2i mpLast;
-
-  if (KeyboardInput::IsKeyFirstPressedThisFrame("toggleLockMouse"))
-  {
-    lockMouse = !lockMouse;
-  }
-  if (KeyboardInput::IsKeyFirstPressedThisFrame("toggleCaptureMouse"))
-  {
-    ShowCursor(true);
-    lockMouse           = false;
-    disableMouseCapture = !disableMouseCapture;
-  }
-  {
-    std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseMoved);
-    EventHandler::ClearEvents(Event::Type::MouseMoved);
-    if (!events.empty())
-    {
-      if (!disableMouseCapture)
-      {
-        for (Event* event_p : events)
-        {
-          EventMouseMoved* mouseEvent_p = (EventMouseMoved*)event_p;
-          if (mouseEvent_p->RButtonPressed)
-            CreateRay(mouseEvent_p->MousePosition, camera_p);
-          float dx = ((float)mouseEvent_p->MouseDelta.x) * speed;
-          float dy = ((float)mouseEvent_p->MouseDelta.y) * speed;
-          if (!lockMouse)
-          {
-            mpLast = mouseEvent_p->MousePosition;
-            if (mouseEvent_p->MButtonPressed)
-            {
-              camera_p->Rotate(0, 0, mouseEvent_p->MouseDelta.x * rollSpeed * dt);
-            }
-            if (mouseEvent_p->LButtonPressed)
-              camera_p->Rotate(dy, dx, 0.0f);
-          }
-          else
-          {
-            int x = mpLast.x;
-            int y = mpLast.y;
-
-            dx = ((float)mouseEvent_p->MousePosition.x - x) * -speed;
-            dy = ((float)mouseEvent_p->MousePosition.y - y) * -speed;
-            camera_p->Rotate(dy, dx, 0.0f);
-            wnd_p->SetMousePosition(mpLast.x, mpLast.y);
-          }
-        }
-      }
-      for (uint i = 0; i < events.size(); i++)
-        delete events[i];
-    }
-  }
-  {
-    std::vector<Event*> events = EventHandler::GetEvents(Event::Type::MouseWheel);
-    EventHandler::ClearEvents(Event::Type::MouseWheel);
-    if (!events.empty())
-    {
-
-      for (uint i = 0; i < events.size(); i++)
-      {
-        EventMouseWheel* mouseEvent_p = (EventMouseWheel*)events[i];
-        if (mouseEvent_p->Delta)
-        {
-          float z = (float)mouseEvent_p->Delta * zoomSpeed * dt;
-        }
-        delete events[i];
-      }
-    }
-  }
-  float speedModifier = 1.0f;
-  if (KeyboardInput::IsKeyPressed("speed"))
-  {
-    speedModifier = 10.0f;
-  }
-  if (KeyboardInput::IsKeyPressed("forward"))
-    camera_p->Move(camera_p->GetRelativeForward() * dt * speedModifier);
-  if (KeyboardInput::IsKeyPressed("back"))
-    camera_p->Move(camera_p->GetRelativeForward() * -dt * speedModifier);
-  if (KeyboardInput::IsKeyPressed("right"))
-    camera_p->Move(camera_p->GetRelativeRight() * dt * speedModifier);
-  if (KeyboardInput::IsKeyPressed("left"))
-    camera_p->Move(camera_p->GetRelativeRight() * -dt * speedModifier);
-  if (KeyboardInput::IsKeyPressed("up"))
-    camera_p->Move(camera_p->GetRelativeUp() * dt * speedModifier);
-  if (KeyboardInput::IsKeyPressed("down"))
-    camera_p->Move(camera_p->GetRelativeUp() * -dt * speedModifier);
-
-  if (KeyboardInput::IsKeyPressed("rollRight"))
-    camera_p->Rotate(0, 0, dt);
-  if (KeyboardInput::IsKeyPressed("rollLeft"))
-    camera_p->Rotate(0, 0, -dt);
-
-  camera_p->SetAsMainCameraAndUpdate();
-
-  return disableMouseCapture;
 }
 
 bool PlanetGeneration(Noise& heightNoise,

@@ -51,16 +51,18 @@ DM::Vec3f FpsCamera::GetRelativeForward() const
 
 DM::Vec3f FpsCamera::GetRelativeUp() const
 {
-  DM::Vec3f u;
-  u.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
-  return u;
+  if (!myUseCustomUp)
+  {
+    DM::Vec3f u;
+    u.Store(DirectX::XMVector3Rotate(GetUp().Load(), myRotationQuat.Load()));
+    return u;
+  }
+  return myCustomUp;
 }
 
 DM::Vec3f FpsCamera::GetRelativeRight() const
 {
-  DM::Vec3f r;
-  r.Store(DirectX::XMVector3Rotate(GetRight().Load(), myRotationQuat.Load()));
-  return r;
+  return GetRelativeForward().Cross(GetRelativeUp()).Normalize();
 }
 
 void FpsCamera::SetLookTo(float x, float y, float z)

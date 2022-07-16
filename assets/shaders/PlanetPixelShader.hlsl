@@ -19,14 +19,6 @@ cbuffer cbv1 : register(b1)
   uint numberOfLights;
 }
 
-cbuffer cbv2 : register(b2)
-{
-  float4x4 WaterWorldMat;
-  float4x4 WaterWorldMatInverse;
-  uint WaterPickableId;
-  uint WaterNumberOfLights;
-}
-
 struct VS_OUT
 {
   float4 worldPos : WORLD_POS;

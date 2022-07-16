@@ -1,12 +1,8 @@
 #include "Event.h"
 #include "EventHandler.h"
 
-Event::Event(Event::Type eventType)
-{
-  EventType = eventType;
-}
 
-void Event::Signal()
+void Event::PushMessage(const Event::Message& message)
 {
-  EventHandler::PushEvent(this);
+  EventHandler::PushMessage(message);
 }

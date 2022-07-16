@@ -59,8 +59,21 @@ Window::~Window() { }
 
 bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
 {
+  Event::Message     m {};
   switch (aMessage)
   {
+  case WM_KILLFOCUS:
+  {
+    m.EventType = Event::LostFocus;
+    Event::PushMessage(m);
+    return true;
+  }
+  case WM_SETFOCUS:
+  {
+    m.EventType = Event::GainedFocus;
+    Event::PushMessage(m);
+    return true;
+  }
   case WM_DESTROY:
   {
     PostQuitMessage(0);
@@ -69,16 +82,17 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   }
   case WM_KEYDOWN:
   {
-    EventKeyDown* ev_p = new EventKeyDown();
-    ev_p->KeyCode      = static_cast<uint16>(aWParam);
-    ev_p->Signal();
+    m.EventType        = Event::KeyDown;
+    m.KeyEvent.KeyCode = static_cast<uint16>(aWParam);
+    Event::PushMessage(m);
     return true;
   }
   case WM_KEYUP:
   {
-    EventKeyUp* ev_p = new EventKeyUp();
-    ev_p->KeyCode    = static_cast<uint16>(aWParam);
-    ev_p->Signal();
+    m.EventType        = Event::KeyUp;
+    m.KeyEvent.KeyCode = static_cast<uint16>(aWParam);
+    Event::PushMessage(m);
+    return true;
   }
   case WM_CHAR:
   {
@@ -92,67 +106,47 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   {
-    uint               x = LOWORD(aLParam);
-    uint               y = HIWORD(aLParam);
-    DM::Vec2i          mp(x, y);
-    EventMousePressed* ev_p = new EventMousePressed();
-
-    ev_p->MousePosition  = mp;
-    ev_p->MButtonPressed = aWParam & MK_MBUTTON;
-    ev_p->LButtonPressed = aWParam & MK_LBUTTON;
-    ev_p->RButtonPressed = aWParam & MK_RBUTTON;
-    ev_p->Signal();
+    m.EventType = Event::MousePressed;
+    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
+    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MouseButton = aWParam & 0xffff;
 
     if (Window::IMGUI_READY)
     {
       ImGuiIO& io = ImGui::GetIO();
 
-      if (ev_p->LButtonPressed)
+      if (m.MouseEvent.MouseButton & MK_LBUTTON)
         io.AddMouseButtonEvent(0, true);
     }
-
+    Event::PushMessage(m);
     return true;
   }
   case WM_RBUTTONUP:
   case WM_LBUTTONUP:
   case WM_MBUTTONUP:
   {
-    uint                x = LOWORD(aLParam);
-    uint                y = HIWORD(aLParam);
-    DM::Vec2i           mp(x, y);
-    EventMouseReleased* ev_p = new EventMouseReleased();
-
-    ev_p->MousePosition   = mp;
-    ev_p->MButtonReleased = aMessage == WM_MBUTTONUP;
-    ev_p->LButtonReleased = aMessage == WM_LBUTTONUP;
-    ev_p->RButtonReleased = aMessage == WM_RBUTTONUP;
-    ev_p->Signal();
+    m.EventType                  = Event::MouseReleased;
+    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
+    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MouseButton     = aWParam & 0xffff;
 
     if (Window::IMGUI_READY)
     {
       ImGuiIO& io = ImGui::GetIO();
 
-      if (ev_p->LButtonReleased)
+      if (m.MouseEvent.MouseButton & MK_LBUTTON)
         io.AddMouseButtonEvent(0, false);
     }
-
+    Event::PushMessage(m);
     return true;
   }
   case WM_MOUSEMOVE:
   {
-    uint x = LOWORD(aLParam);
-    uint y = HIWORD(aLParam);
-
-    DM::Vec2i        mp(x, y);
-    EventMouseMoved* ev_p = new EventMouseMoved();
-    ev_p->MousePosition   = mp;
-    ev_p->MouseDelta      = mp - myLastMousePosition;
-    myLastMousePosition   = mp;
-    ev_p->MButtonPressed  = aWParam & MK_MBUTTON;
-    ev_p->LButtonPressed  = aWParam & MK_LBUTTON;
-    ev_p->RButtonPressed  = aWParam & MK_RBUTTON;
-    ev_p->Signal();
-
+    m.EventType = Event::MouseMoved;
+    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
+    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MouseDelta      = m.MouseEvent.MousePosition - myLastMousePosition;
+    Event::PushMessage(m);
     return true;
   }
     /* case WM_MOUSEWHEEL:

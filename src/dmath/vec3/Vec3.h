@@ -1,8 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
 #include <cstddef>
-#include <string>
 #include <sstream>
+#include <string>
 
 #pragma region ForwardDeclarations
 template <class U>
@@ -322,11 +322,18 @@ public:
   template <class U>
   Mat3x3<T> GetRotationFrom(const Vec3<U>& vec3);
   template <class U>
-  float       Dot(const Vec3<U>& Vec3) const;
-  float       Dot(const DirectX::XMINT3& xm) const;
-  float       Dot(const DirectX::XMUINT3& xm) const;
-  float       Dot(const DirectX::XMFLOAT3& xm) const;
-  float       Dot(const DirectX::XMFLOAT3A& xm) const;
+  float Dot(const Vec3<U>& Vec3) const;
+  float Dot(const DirectX::XMINT3& xm) const;
+  float Dot(const DirectX::XMUINT3& xm) const;
+  float Dot(const DirectX::XMFLOAT3& xm) const;
+  float Dot(const DirectX::XMFLOAT3A& xm) const;
+  template <class U>
+  float       Angle(const Vec3<U>& Vec3) const;
+  float       Angle(const DirectX::XMINT3& xm) const;
+  float       Angle(const DirectX::XMUINT3& xm) const;
+  float       Angle(const DirectX::XMFLOAT3& xm) const;
+  float       Angle(const DirectX::XMFLOAT3A& xm) const;
+  float       Angle(float dot, float lenSq1, float lenSq2) const;
   std::string ToString() const;
 #pragma endregion
 public:
@@ -1880,10 +1887,10 @@ template <class T>
 inline DirectX::XMVECTOR Vec3<T>::Load() const
 {
   DirectX::XMVECTOR v = DirectX::XMVectorZero();
-  v = DirectX::XMVectorSetX(v, static_cast<float>(x));
-  v = DirectX::XMVectorSetY(v, static_cast<float>(y));
-  v = DirectX::XMVectorSetZ(v, static_cast<float>(z));
-  v = DirectX::XMVectorSetW(v, static_cast<float>(0));
+  v                   = DirectX::XMVectorSetX(v, static_cast<float>(x));
+  v                   = DirectX::XMVectorSetY(v, static_cast<float>(y));
+  v                   = DirectX::XMVectorSetZ(v, static_cast<float>(z));
+  v                   = DirectX::XMVectorSetW(v, static_cast<float>(0));
   return v;
 }
 template <class T>
@@ -2113,6 +2120,50 @@ template <class T>
 inline float Vec3<T>::Dot(const DirectX::XMFLOAT3A& xm) const
 {
   return DirectX::XMVectorGetX(DirectX::XMVector3Dot(Load(), DirectX::XMLoadFloat3A(&xm)));
+}
+
+template <class T>
+template <class U>
+inline float Vec3<T>::Angle(const Vec3<U>& Vec3) const
+{
+  return Angle(x * Vec3.x + y * Vec3.y + z * Vec3.z, LengthSq(), Vec3.LengthSq());
+}
+template <class T>
+inline float Vec3<T>::Angle(const DirectX::XMINT3& xm) const
+{
+  return Angle(x * xm.x + y * xm.y + z * xm.z,
+               LengthSq(),
+               DirectX::XMVector3LengthSq(DirectX::XMLoadInt3(xm)));
+}
+
+template <class T>
+inline float Vec3<T>::Angle(const DirectX::XMUINT3& xm) const
+{
+  return Angle(x * xm.x + y * xm.y + z * xm.z,
+               LengthSq(),
+               DirectX::XMVector3LengthSq(DirectX::XMLoadUInt3(xm)));
+}
+
+template <class T>
+inline float Vec3<T>::Angle(const DirectX::XMFLOAT3& xm) const
+{
+  return Angle(x * xm.x + y * xm.y + z * xm.z,
+               LengthSq(),
+               DirectX::XMVector3LengthSq(DirectX::XMLoadFloat3(xm)));
+}
+
+template <class T>
+inline float Vec3<T>::Angle(const DirectX::XMFLOAT3A& xm) const
+{
+  return Angle(x * xm.x + y * xm.y + z * xm.z,
+               LengthSq(),
+               DirectX::XMVector3LengthSq(DirectX::XMLoadFloat3A(xm)));
+}
+
+template <class T>
+inline float Vec3<T>::Angle(float dot, float lenSq1, float lenSq2) const
+{
+  return acos(dot / sqrt(lenSq1 * lenSq2));
 }
 
 template <class T>

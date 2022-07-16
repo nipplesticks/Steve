@@ -58,6 +58,7 @@ public:
                       uint64                offset,
                       D3D12_RESOURCE_STATES stateAfter,
                       Resource*             resource_p);
+  void GetResource(Resource* source_p, void* dest_p, uint64 offset = 0, uint64 sizeofData = 0);
 
   ID3D12RootSignature* GetGraphicalRootSignature();
   ID3D12RootSignature* GetComputeRootSignature();

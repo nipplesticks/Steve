@@ -166,8 +166,10 @@
     <ClCompile Include="src\entity\Transform.cpp" />
     <ClCompile Include="src\events\Event.cpp" />
     <ClCompile Include="src\events\EventHandler.cpp" />
-    <ClCompile Include="src\Input\KeyboardInput.cpp" />
+    <ClCompile Include="src\events\Subscriber.cpp" />
+    <ClCompile Include="src\Input\InputRouter.cpp" />
     <ClCompile Include="src\Noise\PerlinNoise.cpp" />
+    <ClCompile Include="src\player\LocalPlayer.cpp" />
     <ClCompile Include="src\renderer\buffers\Resource.cpp" />
     <ClCompile Include="src\renderer\camera\Camera.cpp" />
     <ClCompile Include="src\renderer\camera\FpsCamera.cpp" />
@@ -181,12 +183,14 @@
     <ClCompile Include="src\renderer\textureLoader\TextureHandler.cpp" />
     <ClCompile Include="src\renderer\textureLoader\TextureLoader.cpp" />
     <ClCompile Include="src\Source.cpp" />
+    <ClCompile Include="src\utility\SettingsGlobals.cpp" />
     <ClCompile Include="src\window\Window.cpp" />
     <ClCompile Include="src\World\Map.cpp" />
     <ClCompile Include="src\World\Star.cpp" />
     <ClCompile Include="src\tools\WorldMeshGen.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\utility\SettingsGlobals.h" />
     <ClInclude Include="external\imgui\imconfig.h" />
     <ClInclude Include="external\imgui\imgui.h" />
     <ClInclude Include="external\imgui\imgui_impl_dx12.h" />
@@ -204,8 +208,10 @@
     <ClInclude Include="src\entity\Drawable.h" />
     <ClInclude Include="src\events\Event.h" />
     <ClInclude Include="src\events\EventHandler.h" />
-    <ClInclude Include="src\Input\KeyboardInput.h" />
+    <ClInclude Include="src\events\Subscriber.h" />
+    <ClInclude Include="src\Input\InputRouter.h" />
     <ClInclude Include="src\Noise\PerlinNoise.h" />
+    <ClInclude Include="src\player\LocalPlayer.h" />
     <ClInclude Include="src\renderer\buffers\ConstantBuffer.h" />
     <ClInclude Include="src\renderer\buffers\IndexBuffer.h" />
     <ClInclude Include="src\renderer\buffers\Rendertarget.h" />
@@ -381,6 +387,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </None>
     <None Include="assets\shaders\DeferredOutput.hlsli" />
+    <None Include="config\inputmapping.ini" />
+    <None Include="config\vkButtonMap.ini" />
     <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -414,6 +414,75 @@ void MyRenderer::ResourceUpdate(void*                 data_p,
   SafeRelease(&tempResource_p);
 }
 
+void MyRenderer::GetResource(Resource* source_p, void* dest_p, uint64 offset, uint64 sizeofData)
+{
+  ID3D12Resource*       tempResource_p = nullptr;
+  D3D12_HEAP_PROPERTIES heapProp       = {};
+  heapProp.Type                        = D3D12_HEAP_TYPE_READBACK;
+  heapProp.CPUPageProperty             = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+  heapProp.MemoryPoolPreference        = D3D12_MEMORY_POOL_UNKNOWN;
+
+  D3D12_RESOURCE_DESC resDesc = source_p->GetResource()->GetDesc();
+  D3D12_RESOURCE_DESC desc    = {};
+
+  UINT64 byteSize = source_p->GetBufferSize();
+  UINT64 rowSize  = source_p->GetRowPitch();
+  UINT   numRows  = source_p->GetNumberOfRows();
+
+  byteSize = sizeofData ? sizeofData : byteSize;
+
+  desc.Width              = byteSize;
+  desc.DepthOrArraySize   = 1;
+  desc.Dimension          = D3D12_RESOURCE_DIMENSION_BUFFER;
+  desc.Flags              = D3D12_RESOURCE_FLAG_NONE;
+  desc.Format             = DXGI_FORMAT_UNKNOWN;
+  desc.Height             = 1;
+  desc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  desc.MipLevels          = 1;
+  desc.SampleDesc.Count   = 1;
+  desc.SampleDesc.Quality = 0;
+
+  HR_ASSERT(myDevice_p->CreateCommittedResource(&heapProp,
+                                                D3D12_HEAP_FLAG_NONE,
+                                                &desc,
+                                                D3D12_RESOURCE_STATE_COPY_DEST,
+                                                nullptr,
+                                                IID_PPV_ARGS(&tempResource_p)));
+
+  myResourceUpdateAllocator_p->Reset();
+  myResourceUpdateCommandList4_p->Reset(myResourceUpdateAllocator_p, nullptr);
+
+  auto state = source_p->GetState();
+
+  _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
+                                source_p->GetResource(),
+                                state,
+                                D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+
+
+  
+
+  myResourceUpdateCommandList4_p->CopyResource(tempResource_p, source_p->GetResource());
+
+  _SetResourceTransitionBarrier(myResourceUpdateCommandList4_p,
+                                source_p->GetResource(),
+                                D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                state);
+
+  myResourceUpdateCommandList4_p->Close();
+  myResourceUpdateCommandQueue_p->ExecuteCommandLists(
+      1, reinterpret_cast<ID3D12CommandList**>(&myResourceUpdateCommandList4_p));
+  _HardWait(myResourceUpdateCommandQueue_p);
+
+  void* localData = nullptr;
+  D3D12_RANGE rng {};
+  rng.Begin = offset;
+  rng.End   = rng.Begin + byteSize;
+  tempResource_p->Map(0, &rng, reinterpret_cast<void**>(&localData));
+  SafeRelease(&tempResource_p);
+}
+
 ID3D12RootSignature* MyRenderer::GetGraphicalRootSignature()
 {
   return myGraphicalInterface.rootSignature_p;

@@ -1,23 +1,40 @@
 #include "EventHandler.h"
+#include "Subscriber.h"
 
-std::map<Event::Type, std::vector<Event*>> EventHandler::myEventMap;
+std::vector<Event::Message>                                            EventHandler::myEventQueue;
+std::unordered_map<Event::Type, std::unordered_map<Subscriber*, bool>> EventHandler::mySubscribers;
+bool EventHandler::FlushEvents = false;
 
-void EventHandler::PushEvent(Event* newEvent)
+void EventHandler::PushMessage(Event::Message message)
 {
-  myEventMap[newEvent->EventType].push_back(newEvent);
+  myEventQueue.push_back(message);
 }
 
-std::vector<Event*> EventHandler::GetEvents(Event::Type eventType)
+void EventHandler::HandleEvents()
 {
-  return myEventMap[eventType];
+  for (Event::Message& m : myEventQueue)
+  {
+    if (m.EventType == Event::LostFocus)
+      FlushEvents = true;
+    else if (m.EventType == Event::GainedFocus)
+      FlushEvents = false;
+    if (!FlushEvents)
+      for (auto& subscriber : mySubscribers[m.EventType])
+      {
+        if (subscriber.second)
+          subscriber.first->HandleEvent(m);
+      }
+  }
+  myEventQueue.clear();
 }
 
-void EventHandler::ClearEvents(Event::Type eventType)
+void EventHandler::StartSubscription(Event::Type type, Subscriber* subscriber_p)
 {
-  myEventMap[eventType].clear();
+  mySubscribers[type][subscriber_p] = true;
 }
 
-void EventHandler::ClearAll()
+void EventHandler::CancelSubscription(Event::Type type, Subscriber* subscriber_p)
 {
-  myEventMap.clear();
+  mySubscribers[type][subscriber_p] = false;
+  mySubscribers[type].erase(subscriber_p);
 }

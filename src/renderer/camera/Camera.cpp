@@ -54,21 +54,63 @@ void Camera::Rotate(float x, float y, float z)
 
 void Camera::Rotate(const DM::Vec3f& axis)
 {
-  DM::Vec4f xq;
-  DM::Vec4f yq;
-  DM::Vec4f zq;
-  xq = GetRelativeRight().AsXmAsXmFloat4A(0.0f);
-  yq = GetRelativeUp().AsXmAsXmFloat4A(0.0f);
-  zq = GetRelativeForward().AsXmAsXmFloat4A(0.0f);
+  if (!myUseCustomUp)
+  {
+    DM::Vec4f xq;
+    DM::Vec4f yq;
+    DM::Vec4f zq;
+    xq = GetRelativeRight().AsXmAsXmFloat4A(0.0f);
+    yq = GetRelativeUp().AsXmAsXmFloat4A(0.0f);
+    zq = GetRelativeForward().AsXmAsXmFloat4A(0.0f);
 
-  xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
-  yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));
-  zq.Store(DirectX::XMQuaternionRotationNormal(zq.Load(), axis.z));
+    xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
+    yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));
+    zq.Store(DirectX::XMQuaternionRotationNormal(zq.Load(), axis.z));
 
-  DM::Vec4f rot;
-  rot.Store(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()),
-                                          zq.Load()));
-  myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), rot.Load()));
+    DM::Vec4f rot;
+    rot.Store(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()),
+                                            zq.Load()));
+    myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), rot.Load()));
+  }
+  else
+  {
+    DM::Vec4f xq;
+    DM::Vec4f yq;
+    DM::Vec4f zq;
+    xq = GetRelativeRight().AsXmAsXmFloat4A(0.0f);
+    yq = GetRelativeUp().AsXmAsXmFloat4A(0.0f);
+    zq = GetRelativeForward().AsXmAsXmFloat4A(0.0f);
+
+    xq.Store(DirectX::XMQuaternionRotationNormal(xq.Load(), axis.x));
+    yq.Store(DirectX::XMQuaternionRotationNormal(yq.Load(), axis.y));
+    zq.Store(DirectX::XMQuaternionRotationNormal(zq.Load(), axis.z));
+
+    DM::Vec4f rot;
+    rot.Store(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()),
+                                            zq.Load()));
+
+    DM::Vec4f tRotQuat = myRotationQuat;
+    myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), rot.Load()));
+    DM::Vec3f f = GetRelativeForward();
+    DM::Vec3f r = GetRelativeRight();
+    DM::Vec3f lu = r.Cross(f).Normalize();
+    if (lu.Dot(myCustomUp) < 0.13f)
+    {
+      myRotationQuat = tRotQuat;
+      myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), yq.Load()));
+    }
+  }
+}
+
+void Camera::RotateFromQuaternion(const DM::Vec4f& q)
+{
+  myRotationQuat.Store(DirectX::XMQuaternionMultiply(myRotationQuat.Load(), q.Load()));
+}
+
+void Camera::RotateFromRotationMatrix(const DM::Mat3x3f& m)
+{
+  DM::Vec4f q = DirectX::XMQuaternionRotationMatrix(m.Load());
+  RotateFromQuaternion(q);
 }
 
 void Camera::SetRotation(float x, float y, float z)
@@ -171,5 +213,6 @@ void Camera::_init()
 {
   SetView(GetDefaultView());
   myPosition = DM::Vec3f();
+  myCustomUp = DM::Vec3f(0,1,0);
   myRotationQuat.Store(DirectX::XMQuaternionRotationRollPitchYaw(0, 0, 0));
 }
