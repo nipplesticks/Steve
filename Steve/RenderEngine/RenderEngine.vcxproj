@@ -79,11 +79,11 @@
     <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)External\include;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)External\include;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -191,16 +191,20 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\Device.h" />
+    <ClInclude Include="include\Render\Device.h" />
+    <ClInclude Include="include\Util\AlignMe.h" />
+    <ClInclude Include="include\Util\HRAssert.h" />
+    <ClInclude Include="include\Render\d3dx12.h" />
     <ClInclude Include="include\pch.h" />
-    <ClInclude Include="include\imconfig.h" />
-    <ClInclude Include="include\imgui.h" />
-    <ClInclude Include="include\imgui_impl_dx12.h" />
-    <ClInclude Include="include\imgui_impl_win32.h" />
-    <ClInclude Include="include\imgui_internal.h" />
-    <ClInclude Include="include\imstb_rectpack.h" />
-    <ClInclude Include="include\imstb_textedit.h" />
-    <ClInclude Include="include\imstb_truetype.h" />
+    <ClInclude Include="include\Imgui\imconfig.h" />
+    <ClInclude Include="include\Imgui\imgui.h" />
+    <ClInclude Include="include\Imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="include\Imgui\imgui_impl_win32.h" />
+    <ClInclude Include="include\Imgui\imgui_internal.h" />
+    <ClInclude Include="include\Imgui\imstb_rectpack.h" />
+    <ClInclude Include="include\Imgui\imstb_textedit.h" />
+    <ClInclude Include="include\Imgui\imstb_truetype.h" />
+    <ClInclude Include="include\Util\SafeRelease.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Device.cpp" />

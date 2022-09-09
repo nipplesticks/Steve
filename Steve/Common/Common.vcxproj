@@ -243,7 +243,16 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\AssertX.h" />
+    <ClInclude Include="include\DMath.h" />
+    <ClInclude Include="include\Mat3x3.h" />
+    <ClInclude Include="include\Mat4x4.h" />
     <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\SafeDelete.h" />
+    <ClInclude Include="include\Typedef.h" />
+    <ClInclude Include="include\Vec2.h" />
+    <ClInclude Include="include\Vec3.h" />
+    <ClInclude Include="include\Vec4.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">

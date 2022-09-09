@@ -18,31 +18,43 @@
     <ClInclude Include="include\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imconfig.h">
+    <ClInclude Include="include\Imgui\imconfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui.h">
+    <ClInclude Include="include\Imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui_impl_dx12.h">
+    <ClInclude Include="include\Imgui\imgui_impl_dx12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui_impl_win32.h">
+    <ClInclude Include="include\Imgui\imgui_impl_win32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imgui_internal.h">
+    <ClInclude Include="include\Imgui\imgui_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imstb_rectpack.h">
+    <ClInclude Include="include\Imgui\imstb_rectpack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imstb_textedit.h">
+    <ClInclude Include="include\Imgui\imstb_textedit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\imstb_truetype.h">
+    <ClInclude Include="include\Imgui\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Device.h">
+    <ClInclude Include="include\Render\d3dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Util\HRAssert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Util\AlignMe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Util\SafeRelease.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Render\Device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
