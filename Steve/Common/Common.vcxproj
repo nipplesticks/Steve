@@ -249,6 +249,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     <ClInclude Include="include\Mat4x4.h" />
     <ClInclude Include="include\pch.h" />
     <ClInclude Include="include\SafeDelete.h" />
+    <ClInclude Include="include\StringManip.h" />
     <ClInclude Include="include\Typedef.h" />
     <ClInclude Include="include\Vec2.h" />
     <ClInclude Include="include\Vec3.h" />

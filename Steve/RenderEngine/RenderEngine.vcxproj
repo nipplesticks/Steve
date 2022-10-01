@@ -191,6 +191,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h" />
     <ClInclude Include="include\Render\Device.h" />
     <ClInclude Include="include\Util\AlignMe.h" />
     <ClInclude Include="include\Util\HRAssert.h" />
@@ -207,7 +208,8 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Util\SafeRelease.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Device.cpp" />
+    <ClCompile Include="src\Render\DescriptorHeap\DescriptorHeap.cpp" />
+    <ClCompile Include="src\Render\Device.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

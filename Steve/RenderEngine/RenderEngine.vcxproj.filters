@@ -57,6 +57,9 @@
     <ClInclude Include="include\Render\Device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -83,7 +86,10 @@
     <ClCompile Include="src\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Device.cpp">
+    <ClCompile Include="src\Render\Device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\DescriptorHeap\DescriptorHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,11 +3,6 @@
 
 int main()
 {
-  Device d;
-  d.Print();
-
-
-
 
   return 0;
 }

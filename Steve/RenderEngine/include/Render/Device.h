@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Common/Typedef.h>
+
 struct ID3D12Device5;
 namespace Render
 {

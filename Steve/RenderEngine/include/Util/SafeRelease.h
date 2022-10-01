@@ -1,12 +1,15 @@
 #pragma once
 
-template <class Interface>
-static inline void SafeRelease(Interface** interfaceToRelease_pp)
+namespace Render
 {
-  if (*interfaceToRelease_pp != NULL)
+  template <class Interface>
+  static inline void SafeRelease(Interface** interfaceToRelease_pp)
   {
-    (*interfaceToRelease_pp)->Release();
+    if (*interfaceToRelease_pp != NULL)
+    {
+      (*interfaceToRelease_pp)->Release();
 
-    (*interfaceToRelease_pp) = NULL;
+      (*interfaceToRelease_pp) = NULL;
+    }
   }
-}
+} // namespace Render
