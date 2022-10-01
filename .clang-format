@@ -117,7 +117,7 @@ SpacesInSquareBrackets: false
 SpaceAfterTemplateKeyword: true
 
 SortUsingDeclarations: true
-SortIncludes: true
+SortIncludes: false
 
 # Comments are for developers, they should arrange them
 ReflowComments: false
