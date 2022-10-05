@@ -193,7 +193,15 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
   <ItemGroup>
     <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h" />
     <ClInclude Include="include\Render\Device.h" />
+    <ClInclude Include="include\Render\Pipelines\ComputationalPipelineState.h" />
+    <ClInclude Include="include\Render\Pipelines\GraphicalPipelineState.h" />
+    <ClInclude Include="include\Render\Resource\ConstantBuffer.h" />
+    <ClInclude Include="include\Render\Resource\IndexBuffer.h" />
+    <ClInclude Include="include\Render\Resource\Rendertarget.h" />
     <ClInclude Include="include\Render\Resource\Resource.h" />
+    <ClInclude Include="include\Render\Resource\StructuredBuffer.h" />
+    <ClInclude Include="include\Render\Resource\Texture2D.h" />
+    <ClInclude Include="include\Render\Resource\VertexBuffer.h" />
     <ClInclude Include="include\Util\AlignMe.h" />
     <ClInclude Include="include\Util\DXGIFormatUtil.h" />
     <ClInclude Include="include\Util\Typedef.h" />
@@ -211,6 +219,11 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Util\SafeRelease.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Render\Pipelines\ComputationalPipelineState.cpp" />
+    <ClCompile Include="src\Render\Pipelines\GraphicalPipelineState.cpp" />
+    <ClCompile Include="src\Render\Resource\ConstantBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\IndexBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\Rendertarget.cpp" />
     <ClCompile Include="src\Render\Resource\Resource.cpp" />
     <ClCompile Include="src\Render\DescriptorHeap\DescriptorHeap.cpp" />
     <ClCompile Include="src\Render\Device.cpp" />
@@ -227,6 +240,9 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClCompile Include="src\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="src\imgui\imgui_tables.cpp" />
     <ClCompile Include="src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Render\Resource\StructuredBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\Texture2D.cpp" />
+    <ClCompile Include="src\Render\Resource\VertexBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
