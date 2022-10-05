@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "PipelineState.h"
+
 namespace Render
 {
   enum RenderTargetType : uint32
@@ -13,7 +15,7 @@ namespace Render
     NUMBER_OF_RENDER_TARGET_TYPES
   };
 
-  class GraphicalPipelineState : public D3D12_GRAPHICS_PIPELINE_STATE_DESC
+  class GraphicalPipelineState : public PipelineState, public D3D12_GRAPHICS_PIPELINE_STATE_DESC
   {
   public:
     static bool USE_WIRE_FRAME;
@@ -32,7 +34,7 @@ namespace Render
 
     void CreatePipelineState(const std::string& name);
 
-    ID3D12PipelineState* GetPipelineState() const;
+    virtual ID3D12PipelineState* GetPipelineState() const override;
 
   private:
     void _initDefaultValues();

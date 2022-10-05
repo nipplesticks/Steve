@@ -1,10 +1,11 @@
 #pragma once
 #include <d3d12.h>
 #include <string>
+#include "PipelineState.h"
 
 namespace Render
 {
-  class ComputationalPipelineState : public D3D12_COMPUTE_PIPELINE_STATE_DESC
+  class ComputationalPipelineState : public PipelineState, public D3D12_COMPUTE_PIPELINE_STATE_DESC
   {
   public:
     ComputationalPipelineState();
@@ -12,7 +13,7 @@ namespace Render
 
     void                 SetComputeShader(const std::string& computeShader);
     void                 CreatePipelineState(const std::string& name);
-    ID3D12PipelineState* GetPipelineState() const;
+    virtual ID3D12PipelineState* GetPipelineState() const override;
 
   private:
     void _initDefaultValues();
