@@ -195,6 +195,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Render\Device.h" />
     <ClInclude Include="include\Render\Pipelines\ComputationalPipelineState.h" />
     <ClInclude Include="include\Render\Pipelines\GraphicalPipelineState.h" />
+    <ClInclude Include="include\Render\Pipelines\PipelineState.h" />
     <ClInclude Include="include\Render\Resource\ConstantBuffer.h" />
     <ClInclude Include="include\Render\Resource\IndexBuffer.h" />
     <ClInclude Include="include\Render\Resource\Rendertarget.h" />
@@ -217,8 +218,10 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Imgui\imstb_textedit.h" />
     <ClInclude Include="include\Imgui\imstb_truetype.h" />
     <ClInclude Include="include\Util\SafeRelease.h" />
+    <ClInclude Include="include\Render\Rootsignature.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Render\Rootsignature.cpp" />
     <ClCompile Include="src\Render\Pipelines\ComputationalPipelineState.cpp" />
     <ClCompile Include="src\Render\Pipelines\GraphicalPipelineState.cpp" />
     <ClCompile Include="src\Render\Resource\ConstantBuffer.cpp" />
