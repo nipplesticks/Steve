@@ -250,12 +250,14 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     <ClInclude Include="include\pch.h" />
     <ClInclude Include="include\SafeDelete.h" />
     <ClInclude Include="include\StringManip.h" />
+    <ClInclude Include="include\Transform.h" />
     <ClInclude Include="include\Typedef.h" />
     <ClInclude Include="include\Vec2.h" />
     <ClInclude Include="include\Vec3.h" />
     <ClInclude Include="include\Vec4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

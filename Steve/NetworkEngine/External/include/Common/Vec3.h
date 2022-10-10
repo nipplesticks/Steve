@@ -313,10 +313,10 @@ public:
   DirectX::XMFLOAT3A AsXmAsXmFloat3A() const;
   DirectX::XMFLOAT4A AsXmAsXmFloat4A(float w = 0.0f) const;
   template <class U>
-  Vec3<T> Cross(const Vec3<U>& vec3);
-  Vec3<T> Cross(const DirectX::XMFLOAT3& xm);
-  Vec3<T> Cross(const DirectX::XMFLOAT3A& xm);
-  Vec3<T> Cross(const DirectX::XMVECTOR& xm);
+  Vec3<T> Cross(const Vec3<U>& vec3) const;
+  Vec3<T> Cross(const DirectX::XMFLOAT3& xm) const;
+  Vec3<T> Cross(const DirectX::XMFLOAT3A& xm) const;
+  Vec3<T> Cross(const DirectX::XMVECTOR& xm) const;
   Vec3<T> Abs() const;
   Vec3<T> Normalize() const;
   template <class U>
@@ -2045,27 +2045,27 @@ inline Vec3<T> Vec3<T>::Normalize() const
 }
 template <class T>
 template <class U>
-inline Vec3<T> Vec3<T>::Cross(const Vec3<U>& vec3)
+inline Vec3<T> Vec3<T>::Cross(const Vec3<U>& vec3) const
 {
   Vec3<T> v = DirectX::XMVector3Cross(Load(), vec3.Load());
   return v;
 }
 
 template <class T>
-inline Vec3<T> Vec3<T>::Cross(const DirectX::XMFLOAT3& xm)
+inline Vec3<T> Vec3<T>::Cross(const DirectX::XMFLOAT3& xm) const
 {
   Vec3<T> v = DirectX::XMVector3Cross(Load(), DirectX::XMLoadFloat3(&xm));
   return v;
 }
 template <class T>
-inline Vec3<T> Vec3<T>::Cross(const DirectX::XMFLOAT3A& xm)
+inline Vec3<T> Vec3<T>::Cross(const DirectX::XMFLOAT3A& xm) const
 {
   Vec3<T> v = DirectX::XMVector3Cross(Load(), DirectX::XMLoadFloat3A(&xm));
   return v;
 }
 
 template <class T>
-inline Vec3<T> Vec3<T>::Cross(const DirectX::XMVECTOR& xm)
+inline Vec3<T> Vec3<T>::Cross(const DirectX::XMVECTOR& xm) const
 {
   Vec3<T> v = DirectX::XMVector3Cross(Load(), xm);
   return v;
@@ -2075,13 +2075,13 @@ template <class T>
 template <class U>
 inline Mat3x3<T> Vec3<T>::GetRotationFrom(const Vec3<U>& vec3)
 {
-  Vec3<T>     A    = *this;
+  Mat3x3<T> result;
+  /*Vec3<T>     A    = *this;
   Vec3<U>     B    = vec3;
   Vec3<T>     axis = A.Cross(B);
   const float cosA = A.Dot(B);
   const float k    = 1.0f / (1.0f + cosA);
 
-  Mat3x3<T> result;
   result._11 = (axis.x * axis.x * k) + cosA;
   result._12 = (axis.y * axis.x * k) - axis.z;
   result._13 = (axis.z * axis.x * k) + axis.y;
@@ -2090,9 +2090,27 @@ inline Mat3x3<T> Vec3<T>::GetRotationFrom(const Vec3<U>& vec3)
   result._23 = (axis.z * axis.y * k) - axis.x;
   result._31 = (axis.x * axis.z * k) - axis.y;
   result._32 = (axis.y * axis.z * k) + axis.x;
-  result._33 = (axis.z * axis.z * k) + cosA;
-
-  return result;
+  result._33 = (axis.z * axis.z * k) + cosA;*/
+  Vec3<T>   a  = vec3.Normalize();
+  Vec3<T>   b  = Normalize();
+  float     bl = vec3.Length();
+  Vec3<T>   v  = a.Cross(b);
+  float     s  = v.Length();
+  float     c  = a.Dot(b);
+  Mat3x3<T> vx;
+  vx._11 = 0;
+  vx._12 = -v[2];
+  vx._13 = v[1];
+  vx._21 = v[2];
+  vx._22 = 0;
+  vx._23 = -v[0];
+  vx._31 = -v[1];
+  vx._32 = v[0];
+  vx._33 = 0;
+  Mat3x3<T> r;
+  if (s != 0)
+    r = r + vx + vx * vx * ((1 - c) / std::pow(s, 2));
+  return r;
 }
 
 template <class T>

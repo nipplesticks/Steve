@@ -270,7 +270,8 @@ public:
   bool operator==(const DirectX::XMVECTOR& xm) const;
 
   // Bracket operator
-  T& operator[](unsigned int i) const;
+  T& operator[](unsigned int i);
+  T operator[](unsigned int i) const;
 #pragma endregion
 #pragma region MatrixOperators
   Vec4<T> operator*(const DirectX::XMMATRIX& mat) const;
@@ -1876,10 +1877,16 @@ inline bool Vec4<T>::operator==(const DirectX::XMVECTOR& xm) const
 }
 
 template <class T>
-inline T& Vec4<T>::operator[](unsigned int i) const
+inline T& Vec4<T>::operator[](unsigned int i)
 {
   return data[i];
 }
+template <class T>
+inline T Vec4<T>::operator[](unsigned int i) const
+{
+  return data[i];
+}
+
 
 #pragma endregion
 #pragma region MatrixOperators

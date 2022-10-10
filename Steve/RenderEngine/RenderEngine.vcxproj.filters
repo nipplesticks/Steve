@@ -99,6 +99,12 @@
     <ClInclude Include="include\Render\Pipelines\PipelineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Render\Geometry\Vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Render\Camera\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">

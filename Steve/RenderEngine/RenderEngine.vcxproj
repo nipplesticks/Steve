@@ -191,8 +191,10 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Render\Camera\Camera.h" />
     <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h" />
     <ClInclude Include="include\Render\Device.h" />
+    <ClInclude Include="include\Render\Geometry\Vertex.h" />
     <ClInclude Include="include\Render\Pipelines\ComputationalPipelineState.h" />
     <ClInclude Include="include\Render\Pipelines\GraphicalPipelineState.h" />
     <ClInclude Include="include\Render\Pipelines\PipelineState.h" />

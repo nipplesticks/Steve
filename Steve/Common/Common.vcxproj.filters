@@ -48,9 +48,15 @@
     <ClInclude Include="include\StringManip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

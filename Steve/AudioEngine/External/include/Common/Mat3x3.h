@@ -44,6 +44,20 @@ public:
   Mat3x3<T> operator*(const DirectX::XMMATRIX& mat) const;
 
   template <class U>
+  Mat3x3<T> operator+(const Mat3x3<U> mat) const;
+  Mat3x3<T> operator+(const DirectX::XMFLOAT3X3& mat) const;
+  Mat3x3<T> operator+(const DirectX::XMFLOAT4X4& mat) const;
+  Mat3x3<T> operator+(const DirectX::XMFLOAT4X4A& mat) const;
+  Mat3x3<T> operator+(const DirectX::XMMATRIX& mat) const;
+
+  template <class U>
+  Mat3x3<T> operator-(const Mat3x3<U> mat) const;
+  Mat3x3<T> operator-(const DirectX::XMFLOAT3X3& mat) const;
+  Mat3x3<T> operator-(const DirectX::XMFLOAT4X4& mat) const;
+  Mat3x3<T> operator-(const DirectX::XMFLOAT4X4A& mat) const;
+  Mat3x3<T> operator-(const DirectX::XMMATRIX& mat) const;
+
+  template <class U>
   Mat3x3<T>& operator*=(U v);
   template <class U>
   Mat3x3<T>& operator*=(const Mat4x4<U> mat);
@@ -257,6 +271,80 @@ inline Mat3x3<T> Mat3x3<T>::operator*(const DirectX::XMMATRIX& mat) const
 {
   Mat3x3<T> m = DirectX::XMMatrixMultiply(Load(), mat);
   return m;
+}
+template <class T>
+template <class U>
+inline Mat3x3<T> Mat3x3<T>::operator+(const Mat3x3<U> mat) const
+{
+  Mat3x3<T> m;
+  for (int y = 0; y < 3; y++)
+    for (int x = 0; x < 3; x++)
+      m(x, y) = (*this)(x, y) + mat(x, y);
+  return m;
+}
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator+(const DirectX::XMFLOAT3X3& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) + m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator+(const DirectX::XMFLOAT4X4& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) + m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator+(const DirectX::XMFLOAT4X4A& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) + m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator+(const DirectX::XMMATRIX& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) + m;
+}
+template <class T>
+template <class U>
+inline Mat3x3<T> Mat3x3<T>::operator-(const Mat3x3<U> mat) const
+{
+  Mat3x3<T> m;
+  for (int y = 0; y < 3; y++)
+    for (int x = 0; x < 3; x++)
+      m(x, y) = (*this)(x, y) - mat(x, y);
+  return m;
+}
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator-(const DirectX::XMFLOAT3X3& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) - m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator-(const DirectX::XMFLOAT4X4& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) - m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator-(const DirectX::XMFLOAT4X4A& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) - m;
+}
+
+template <class T>
+inline Mat3x3<T> Mat3x3<T>::operator-(const DirectX::XMMATRIX& mat) const
+{
+  Mat3x3<T> m = mat;
+  return (*this) - m;
 }
 
 template <class T>
