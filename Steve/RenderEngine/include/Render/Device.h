@@ -18,8 +18,12 @@ namespace Render
   public:
     static void           Init(uint16 debugLevel = 0x0000);
     static ID3D12Device5* GetDevice();
+    static uint32         GetSrvUavCbvDescriptorSize();
+    static uint32         GetRtvDescriptorHeapSize();
 
   private:
     static ID3D12Device5* gDevice_p;
+    static uint32         gSrvUavCbvDescriptorSize;
+    static uint32         gRtvDescriptorHeapSize;
   };
 }

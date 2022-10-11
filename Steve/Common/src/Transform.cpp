@@ -111,6 +111,26 @@ void Transform::SetCustomUp(const DM::Vec3f& up)
   myCustomUp.w = 0;
 }
 
+void Transform::SetForward(float x, float y, float z)
+{
+  SetForward(DM::Vec3f(x, y, z));
+}
+
+void Transform::SetForward(const DM::Vec3f& forward)
+{
+  DM::Vec3f   defaultForward = DEFAULT_FORWARD;
+  DM::Mat3x3f rotM           = defaultForward.GetRotationFrom(forward);
+  if (DirectX::XMMatrixIsIdentity(rotM.Load()))
+  {
+    SetRotation(0, 180, 0);
+  }
+  else
+  {
+    DM::Vec4f q = DirectX::XMQuaternionRotationMatrix(rotM.Load());
+    SetRotation(q);
+  }
+}
+
 const DM::Vec4f& Transform::GetPosition() const
 {
   return myPosition;

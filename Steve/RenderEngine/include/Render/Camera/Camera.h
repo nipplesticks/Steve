@@ -29,12 +29,13 @@ namespace Render
     ~Camera();
 
     DM::Mat4x4f GetViewMatrix() const;
-    DM::Mat4x4f GetProjectionMatrix() const;
+    const DM::Mat4x4f& GetProjectionMatrix() const;
     DM::Mat4x4f GetViewProjectionMatrix() const;
     void        SetView(const View& view);
     const View& GetView() const;
 
   private:
     View myView;
+    DM::Mat4x4f myProjectionMatrix;
   };
 } // namespace Render

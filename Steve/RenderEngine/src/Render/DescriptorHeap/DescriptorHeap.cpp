@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Render/DescriptorHeap/DescriptorHeap.h"
 
-
 using namespace Render;
 
 DescriptorHeap::DescriptorHeap()
@@ -15,9 +14,12 @@ void DescriptorHeap::Release()
 
 void DescriptorHeap::Create(const std::string& name)
 {
-  HR_ASSERT(Device::GetDevice()->CreateDescriptorHeap(this, IID_PPV_ARGS(&myDescHeap_p)));
+  if (myDescHeap_p == nullptr)
+  {
+    HR_ASSERT(Device::GetDevice()->CreateDescriptorHeap(this, IID_PPV_ARGS(&myDescHeap_p)));
+    myDescHeapSize = Device::GetDevice()->GetDescriptorHandleIncrementSize(Type);
+  }
   myDescHeap_p->SetName(String::ToWString(name).c_str());
-  myDescHeapSize = Device::GetDevice()->GetDescriptorHandleIncrementSize(Type);
 }
 
 ID3D12DescriptorHeap* DescriptorHeap::GetDescHeap()
@@ -30,12 +32,12 @@ uint32 DescriptorHeap::GetDescHeapSize() const
   return myDescHeapSize;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHeandle()
+D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHeandle() const
 {
   return myDescHeap_p->GetCPUDescriptorHandleForHeapStart();
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHeandle()
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHeandle() const
 {
   return myDescHeap_p->GetGPUDescriptorHandleForHeapStart();
 }

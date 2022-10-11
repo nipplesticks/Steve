@@ -37,6 +37,9 @@ public:
   virtual void SetCustomUp(float x, float y, float z);
   virtual void SetCustomUp(const DM::Vec3f& up);
 
+  virtual void SetForward(float x, float y, float z);
+  virtual void SetForward(const DM::Vec3f& forwrad);
+
   virtual const DM::Vec4f& GetPosition() const;
   virtual const DM::Vec4f& GetRotation() const;
   virtual const DM::Vec4f& GetScale() const;

@@ -4,35 +4,41 @@
 using namespace Render;
 
 Camera::Camera()
-  : Transform()
+    : Transform()
 {
   SetView(myView);
 }
 
-Camera::~Camera()
-{
-
-}
+Camera::~Camera() { }
 
 DM::Mat4x4f Camera::GetViewMatrix() const
 {
   return DM::Mat4x4f();
 }
 
-DM::Mat4x4f Camera::GetProjectionMatrix() const
+const DM::Mat4x4f& Camera::GetProjectionMatrix() const
 {
-  return DM::Mat4x4f();
+  return myProjectionMatrix;
 }
 
 DM::Mat4x4f Camera::GetViewProjectionMatrix() const
 {
-  return DM::Mat4x4f();
+  return DirectX::XMMatrixLookToLH(myPosition.Load(), GetForward().Load(), GetUp().Load());
 }
 
 void Camera::SetView(const View& view)
 {
   myView = view;
-  // Build projectionM,atrix;
+  if (myView.isPerspective)
+  {
+    myProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+        DM::ToRad(myView.fov), myView.width / myView.height, myView.nearPlane, myView.farPlane);
+  }
+  else
+  {
+    myProjectionMatrix = DirectX::XMMatrixOrthographicLH(
+        myView.width, myView.height, myView.nearPlane, myView.farPlane);
+  }
 }
 
 const View& Render::Camera::GetView() const

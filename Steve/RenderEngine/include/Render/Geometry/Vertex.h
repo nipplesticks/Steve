@@ -10,8 +10,11 @@ namespace Render
     DM::Vec4f normal;
     DM::Vec2f uv;
   };
-  struct VertexEx : public Vertex
+  struct VertexEx
   {
+    DM::Vec4f position;
+    DM::Vec4f normal;
+    DM::Vec2f uv;
     DM::Vec4f tangent;
     DM::Vec4f bitangent;
   };
