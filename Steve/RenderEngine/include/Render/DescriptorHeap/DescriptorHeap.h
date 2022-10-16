@@ -4,9 +4,6 @@
 #include <Common/Typedef.h>
 #include <d3d12.h>
 
-struct ID3D12DescriptorHeap;
-struct D3D12_DESCRIPTOR_HEAP_DESC;
-
 namespace Render
 {
   class DescriptorHeap : public D3D12_DESCRIPTOR_HEAP_DESC

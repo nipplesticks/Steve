@@ -104,7 +104,7 @@
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib</AdditionalDependencies>
@@ -132,7 +132,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib</AdditionalDependencies>
@@ -156,7 +156,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib</AdditionalDependencies>
@@ -184,7 +184,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib</AdditionalDependencies>

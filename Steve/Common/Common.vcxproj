@@ -104,23 +104,23 @@
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -145,23 +145,23 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -182,23 +182,23 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -223,23 +223,23 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I
+xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
 
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
 xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

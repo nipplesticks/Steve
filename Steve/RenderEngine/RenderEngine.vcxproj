@@ -103,8 +103,8 @@
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External /F /R /Y /I /S /E
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib;assimp-vc142-mtd.lib</AdditionalDependencies>
@@ -131,8 +131,8 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External /F /R /Y /I /S /E
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib;assimp-vc142-mt.lib</AdditionalDependencies>
@@ -155,8 +155,8 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External /F /R /Y /I /S /E
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib;assimp-vc142-mtd.lib</AdditionalDependencies>
@@ -183,23 +183,27 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I</Command>
+xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External /F /R /Y /I /S /E
+xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName) /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalDependencies>Common_$(Configuration).lib;assimp-vc142-mt.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Objects\Computational.h" />
+    <ClInclude Include="include\Objects\Drawable.h" />
+    <ClInclude Include="include\Render\Mesh\Mesh.h" />
     <ClInclude Include="include\Render\Camera\Camera.h" />
     <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h" />
     <ClInclude Include="include\Render\DescriptorHeap\ResourceDescriptorHeap.h" />
     <ClInclude Include="include\Render\Device.h" />
-    <ClInclude Include="include\Render\Geometry\Vertex.h" />
-    <ClInclude Include="include\Render\Pass\Pass.h" />
+    <ClInclude Include="include\Render\Mesh\MeshLoader.h" />
+    <ClInclude Include="include\Render\Mesh\Vertex.h" />
     <ClInclude Include="include\Render\Pipelines\ComputationalPipelineState.h" />
     <ClInclude Include="include\Render\Pipelines\GraphicalPipelineState.h" />
     <ClInclude Include="include\Render\Pipelines\PipelineState.h" />
+    <ClInclude Include="include\Render\Renderer.h" />
     <ClInclude Include="include\Render\Resource\ConstantBuffer.h" />
     <ClInclude Include="include\Render\Resource\IndexBuffer.h" />
     <ClInclude Include="include\Render\Resource\Rendertarget.h" />
@@ -223,8 +227,14 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Imgui\imstb_truetype.h" />
     <ClInclude Include="include\Util\SafeRelease.h" />
     <ClInclude Include="include\Render\Rootsignature.h" />
+    <ClInclude Include="include\Window\Window.h" />
+    <ClInclude Include="include\Window\WindowEvent.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\Render\Renderer.cpp" />
+    <ClCompile Include="src\Render\Mesh\MeshLoader.cpp" />
+    <ClCompile Include="src\Render\Mesh\Mesh.cpp" />
+    <ClCompile Include="src\Window\WindowEvent.cpp" />
     <ClCompile Include="src\Render\DescriptorHeap\ResourceDescriptorHeap.cpp" />
     <ClCompile Include="src\Render\Camera\Camera.cpp" />
     <ClCompile Include="src\Render\Rootsignature.cpp" />
@@ -252,6 +262,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClCompile Include="src\Render\Resource\StructuredBuffer.cpp" />
     <ClCompile Include="src\Render\Resource\Texture2D.cpp" />
     <ClCompile Include="src\Render\Resource\VertexBuffer.cpp" />
+    <ClCompile Include="src\Window\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

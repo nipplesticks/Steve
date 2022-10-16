@@ -1,5 +1,6 @@
 #ifndef PCH_H
 #define PCH_H
+#define NOMINMAX
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
@@ -22,5 +23,6 @@
 #include "Util/AlignMe.h"
 #include "Util/HRAssert.h"
 #include "Util/SafeRelease.h"
+#include "Window/WindowEvent.h"
 
 #endif //PCH_H
