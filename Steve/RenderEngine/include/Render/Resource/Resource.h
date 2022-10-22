@@ -27,6 +27,7 @@ namespace Render
       VertexBuffer,
       IndexBuffer,
       RenderTarget,
+      DepthBuffer,
       NrOfSupportedTypes
     };
 

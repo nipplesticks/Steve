@@ -6,6 +6,8 @@ using namespace Render;
 ID3D12Device5* Device::gDevice_p                = nullptr;
 uint32         Device::gSrvUavCbvDescriptorSize = 0u;
 uint32         Device::gRtvDescriptorHeapSize   = 0u;
+uint32         Device::gDsvDescriptorHeapSize   = 0u;
+uint32         Device::gSamplerDescriptorSize   = 0u;
 
 void Device::Init(uint16 debugLevel)
 {
@@ -52,6 +54,10 @@ void Device::Init(uint16 debugLevel)
       gDevice_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   gRtvDescriptorHeapSize =
       gDevice_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+  gDsvDescriptorHeapSize =
+      gDevice_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+  gSamplerDescriptorSize =
+      gDevice_p->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 }
 
 ID3D12Device5* Device::GetDevice()
@@ -67,4 +73,14 @@ uint32 Render::Device::GetSrvUavCbvDescriptorSize()
 uint32 Render::Device::GetRtvDescriptorHeapSize()
 {
   return gRtvDescriptorHeapSize;
+}
+
+uint32 Render::Device::GetDsvDescriptorHeapSize()
+{
+  return uint32();
+}
+
+uint32 Render::Device::GetSamplerDescriptorSize()
+{
+  return uint32();
 }

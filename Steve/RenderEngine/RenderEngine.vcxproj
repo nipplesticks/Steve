@@ -193,6 +193,9 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
   <ItemGroup>
     <ClInclude Include="include\Objects\Computational.h" />
     <ClInclude Include="include\Objects\Drawable.h" />
+    <ClInclude Include="include\Render\D3D12\CommandHandler.h" />
+    <ClInclude Include="include\Render\D3D12\Fence.h" />
+    <ClInclude Include="include\Render\D3D12\SwapChain.h" />
     <ClInclude Include="include\Render\Mesh\Mesh.h" />
     <ClInclude Include="include\Render\Camera\Camera.h" />
     <ClInclude Include="include\Render\DescriptorHeap\DescriptorHeap.h" />
@@ -205,6 +208,7 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Render\Pipelines\PipelineState.h" />
     <ClInclude Include="include\Render\Renderer.h" />
     <ClInclude Include="include\Render\Resource\ConstantBuffer.h" />
+    <ClInclude Include="include\Render\Resource\DepthBuffer.h" />
     <ClInclude Include="include\Render\Resource\IndexBuffer.h" />
     <ClInclude Include="include\Render\Resource\Rendertarget.h" />
     <ClInclude Include="include\Render\Resource\Resource.h" />
@@ -231,7 +235,11 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(Proje
     <ClInclude Include="include\Window\WindowEvent.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\Render\Renderer.cpp" />
+    <ClCompile Include="src\Render\Resource\DepthBuffer.cpp" />
+    <ClCompile Include="src\Render\D3D12\Fence.cpp" />
+    <ClCompile Include="src\Render\D3D12\SwapChain.cpp" />
+    <ClCompile Include="src\Render\D3D12\CommandHandler.cpp" />
+    <ClCompile Include="src\Render\Renderer.cpp" />
     <ClCompile Include="src\Render\Mesh\MeshLoader.cpp" />
     <ClCompile Include="src\Render\Mesh\Mesh.cpp" />
     <ClCompile Include="src\Window\WindowEvent.cpp" />

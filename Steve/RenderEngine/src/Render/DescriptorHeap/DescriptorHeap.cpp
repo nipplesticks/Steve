@@ -32,12 +32,12 @@ uint32 DescriptorHeap::GetDescHeapSize() const
   return myDescHeapSize;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHeandle() const
+D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHandle() const
 {
   return myDescHeap_p->GetCPUDescriptorHandleForHeapStart();
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHeandle() const
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHandle() const
 {
   return myDescHeap_p->GetGPUDescriptorHandleForHeapStart();
 }

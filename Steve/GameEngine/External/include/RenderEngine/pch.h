@@ -24,5 +24,7 @@
 #include "Util/HRAssert.h"
 #include "Util/SafeRelease.h"
 #include "Window/WindowEvent.h"
+#include "Window/Window.h"
+#include "Render/Pipelines/GraphicalPipelineState.h"
 
 #endif //PCH_H

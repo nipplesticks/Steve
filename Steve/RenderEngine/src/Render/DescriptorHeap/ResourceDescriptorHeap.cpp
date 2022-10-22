@@ -79,7 +79,7 @@ void ResourceDescriptorHeap::CreateAndBindResources(const std::string&          
   NumDescriptors = (UINT)cbvs.size() + (UINT)srvs.size() + (UINT)uavs.size();
   Create(name);
 
-  auto         handle        = GetCpuDescHeandle();
+  auto         handle        = GetCpuDescHandle();
   const uint32 cbvSrvUavSize = Device::GetSrvUavCbvDescriptorSize();
 
   for (auto& cbv : cbvs)
@@ -111,19 +111,19 @@ void ResourceDescriptorHeap::CreateAndBindResources(const std::string&          
 
 D3D12_GPU_DESCRIPTOR_HANDLE ResourceDescriptorHeap::GetCbvDescHandle() const
 {
-  return GetGpuDescHeandle();
+  return GetGpuDescHandle();
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE ResourceDescriptorHeap::GetSrvDescHandle() const
 {
-  auto handle = GetGpuDescHeandle();
+  auto handle = GetGpuDescHandle();
   handle.ptr += static_cast<uint64>(myNumCbvs) * Device::GetSrvUavCbvDescriptorSize();
   return handle;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE ResourceDescriptorHeap::GetUavDescHandle() const
 {
-  auto handle = GetGpuDescHeandle();
+  auto handle = GetGpuDescHandle();
   handle.ptr += (static_cast<uint64>(myNumCbvs) + myNumSrvs) * Device::GetSrvUavCbvDescriptorSize();
   return handle;
 }

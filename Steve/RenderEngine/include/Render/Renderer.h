@@ -1,8 +1,11 @@
 #pragma once
 
-#include "Window/WindowEvent.h"
 #include "DescriptorHeap/ResourceDescriptorHeap.h"
 #include "Resource/Rendertarget.h"
+#include "D3D12/CommandHandler.h"
+#include "D3D12/SwapChain.h"
+#include "D3D12/Fence.h"
+#include "Resource/DepthBuffer.h"
 
 namespace Render
 {
@@ -11,6 +14,7 @@ namespace Render
   class Resource;
   class Drawable;
   class Computational;
+  class Window;
 
   class Renderer : public Event::Subscriber
   {
@@ -20,6 +24,7 @@ namespace Render
     ~Renderer() = default;
 
   public:
+    static void      Init(const Window& window, bool enableDebug = false);
     static Renderer* GetInstance();
 
     void BeginFrame();
@@ -30,15 +35,26 @@ namespace Render
     void Draw(Drawable* drawable_p);
     void Compute(Computational* computational_p);
 
-    virtual void HandleEvent(const Event::Message& message);
+    virtual void HandleEvent(const Event::Message& message) override;
 
   private:
-    DescriptorHeap myRendertargetHeap;
-    DescriptorHeap myDeferredRendertargetHeap;
-    DescriptorHeap myDepthBufferHeap;
-    DescriptorHeap myImguiHeap;
-    RenderTarget   myDeferredRendertargets[NUM_SWAP_BUFFERS]
+    void _Init(HWND hwnd, uint16 width, uint16 height);
+    void _CreateRenderTargets(const DM::Vec2u& res);
+    void _CreateDepthBuffers(const DM::Vec2u& res);
+
+  private:
+    HWND             myTargetWindow = NULL;
+    DescriptorHeap   myRendertargetHeap;
+    DescriptorHeap   myDeferredRendertargetHeap;
+    DescriptorHeap   myDepthBufferHeap;
+    DescriptorHeap   myImguiHeap;
+    DepthBuffer      myDepthBuffers[NUM_SWAP_BUFFERS];
+    ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS];
+    RenderTarget     myDeferredRendertargets[NUM_SWAP_BUFFERS]
                                         [RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES];
     ResourceDescriptorHeap myDeferredResourceDescHeap[NUM_SWAP_BUFFERS];
+    CommandHandler         myGraphicsCommands;
+    SwapChain              mySwapChain;
+    Fence                  myFence;
   };
 } // namespace Render

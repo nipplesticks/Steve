@@ -41,9 +41,18 @@ void Resource::Init(Resource_Type      resourceType,
   desc.Width            = width;
   desc.Height           = height;
   desc.DepthOrArraySize = depth;
-  desc.Flags            = resourceType == Resource_Type::RenderTarget
-                              ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
-                              : D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+  desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+  switch (resourceType)
+  {
+  case Render::Resource::Resource_Type::RenderTarget:
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    break;
+  case Render::Resource::Resource_Type::DepthBuffer:
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    break;
+  default:
+    break;
+  }
   desc.Format           = format;
   if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
     desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
@@ -51,8 +60,18 @@ void Resource::Init(Resource_Type      resourceType,
   desc.SampleDesc.Count   = 1;
   desc.SampleDesc.Quality = 0;
 
-  myState = resourceType == Resource_Type::RenderTarget ? D3D12_RESOURCE_STATE_GENERIC_READ
-                                                        : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+  myState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+  switch (resourceType)
+  {
+  case Render::Resource::Resource_Type::RenderTarget:
+    myState = D3D12_RESOURCE_STATE_GENERIC_READ;
+    break;
+  case Render::Resource::Resource_Type::DepthBuffer:
+    break;
+    myState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+  default:
+    break;
+  }
 
   D3D12_CLEAR_VALUE* clearVal_p = nullptr;
 
@@ -68,8 +87,14 @@ void Resource::Init(Resource_Type      resourceType,
       memcpy(clearVal.Color, c, sizeof(FLOAT) * 4);
     }
   }
+  else if (resourceType == Resource_Type::DepthBuffer)
+  {
+    clearVal.DepthStencil.Depth = 1.0f;
+  }
 
   Init(name, &heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState, clearVal_p);
+
+
 
   if (resourceType == Resource_Type::VertexBuffer)
   {
@@ -262,6 +287,7 @@ D3D12_RESOURCE_DIMENSION Resource::_GetResourceDimension(Resource_Type resourceT
     return D3D12_RESOURCE_DIMENSION_UNKNOWN;
   case Resource::Resource_Type::Texture1D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+  case Resource::Resource_Type::DepthBuffer:
   case Resource::Resource_Type::RenderTarget:
   case Resource::Resource_Type::Texture2D:
     return D3D12_RESOURCE_DIMENSION_TEXTURE2D;

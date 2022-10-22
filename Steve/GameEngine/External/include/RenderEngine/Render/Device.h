@@ -20,10 +20,14 @@ namespace Render
     static ID3D12Device5* GetDevice();
     static uint32         GetSrvUavCbvDescriptorSize();
     static uint32         GetRtvDescriptorHeapSize();
+    static uint32         GetDsvDescriptorHeapSize();
+    static uint32         GetSamplerDescriptorSize();
 
   private:
     static ID3D12Device5* gDevice_p;
     static uint32         gSrvUavCbvDescriptorSize;
     static uint32         gRtvDescriptorHeapSize;
+    static uint32         gDsvDescriptorHeapSize;
+    static uint32         gSamplerDescriptorSize;
   };
-}
+} // namespace Render
