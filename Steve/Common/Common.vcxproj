@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{da38edbf-6cd2-4b55-b337-23cdaab48b87}</ProjectGuid>
+    <ProjectGuid>{18c66239-fbdf-4cbc-bdb9-cbca484fd8d8}</ProjectGuid>
     <RootNamespace>Common</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -70,21 +70,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)External\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)External\lib\;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)external\inc;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)external\lib;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(VC_SourcePath);$(ProjectDir)src;$(SourcePath)</SourcePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)inc;$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -94,34 +84,12 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -133,7 +101,6 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -142,27 +109,6 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -172,7 +118,6 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -180,25 +125,10 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
+      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)Render\external\lib\$(TargetName)_$(Configuration)$(TargetExt)
+echo f | xcopy $(ProjectDir)inc $(SolutionDir)Render\external\inc\$(ProjectName)\ /F /R /Y /I /S /E
+copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\external\lib\$(TargetName)_$(Configuration)$(TargetExt)
+echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectName)\ /F /R /Y /I /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -211,7 +141,6 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -220,50 +149,29 @@ xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(Pro
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)AudioEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)AudioEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)AudioEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)GameEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)GameEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NetworkEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)NetworkEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)NetworkEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)PhysicsEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)PhysicsEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)PhysicsEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E
-
-copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)RenderEngine\External\lib\$(TargetName)_$(Configuration)$(TargetExt)
-xcopy $(ProjectDir)External\ $(SolutionDir)RenderEngine\External\lib\External\ /F /R /Y /I /S /E
-xcopy $(ProjectDir)include\*.h $(SolutionDir)RenderEngine\External\include\$(ProjectName)\ /F /R /Y /I /S /E</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\AssertX.h" />
-    <ClInclude Include="include\DMath.h" />
-    <ClInclude Include="include\Mat3x3.h" />
-    <ClInclude Include="include\Mat4x4.h" />
-    <ClInclude Include="include\pch.h" />
-    <ClInclude Include="include\SafeDelete.h" />
-    <ClInclude Include="include\StringManip.h" />
-    <ClInclude Include="include\Transform.h" />
-    <ClInclude Include="include\Typedef.h" />
-    <ClInclude Include="include\Vec2.h" />
-    <ClInclude Include="include\Vec3.h" />
-    <ClInclude Include="include\Vec4.h" />
+    <ClInclude Include="inc\AssertX.h" />
+    <ClInclude Include="inc\DMath.h" />
+    <ClInclude Include="inc\Mat3x3.h" />
+    <ClInclude Include="inc\Mat4x4.h" />
+    <ClInclude Include="inc\SafeDelete.h" />
+    <ClInclude Include="inc\StringManip.h" />
+    <ClInclude Include="inc\Transform.h" />
+    <ClInclude Include="inc\Typedef.h" />
+    <ClInclude Include="inc\Vec2.h" />
+    <ClInclude Include="inc\Vec3.h" />
+    <ClInclude Include="inc\Vec4.h" />
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Transform.cpp" />
-    <ClCompile Include="src\pch.cpp">
+    <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
