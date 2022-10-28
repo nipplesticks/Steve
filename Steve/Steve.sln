@@ -4,10 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameEngine", "GameEngine\GameEngine.vcxproj", "{43343777-BD38-4024-8D81-DBD5874EA6E1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{18C66239-FBDF-4CBC-BDB9-CBCA484FD8D8} = {18C66239-FBDF-4CBC-BDB9-CBCA484FD8D8}
+		{4C234692-1FA9-4D7E-99D2-5A36B2C4E7BB} = {4C234692-1FA9-4D7E-99D2-5A36B2C4E7BB}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{18C66239-FBDF-4CBC-BDB9-CBCA484FD8D8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Render", "Render\Render.vcxproj", "{4C234692-1FA9-4D7E-99D2-5A36B2C4E7BB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{18C66239-FBDF-4CBC-BDB9-CBCA484FD8D8} = {18C66239-FBDF-4CBC-BDB9-CBCA484FD8D8}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

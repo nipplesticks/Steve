@@ -127,7 +127,11 @@
     <PostBuildEvent>
       <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\external\lib\$(TargetName)_$(Configuration)$(TargetExt)
 echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectName)\ /F /R /Y /I /S /E</Command>
+      <Message>Copy .lib and .h files</Message>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalDependencies>Common_Debug.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,17 +153,86 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="inc\Render.h" />
+    <ClInclude Include="inc\Imgui\imconfig.h" />
+    <ClInclude Include="inc\Imgui\imgui.h" />
+    <ClInclude Include="inc\Imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="inc\Imgui\imgui_impl_win32.h" />
+    <ClInclude Include="inc\Imgui\imgui_internal.h" />
+    <ClInclude Include="inc\Imgui\imstb_rectpack.h" />
+    <ClInclude Include="inc\Imgui\imstb_textedit.h" />
+    <ClInclude Include="inc\Imgui\imstb_truetype.h" />
+    <ClInclude Include="inc\Objects\Computational.h" />
+    <ClInclude Include="inc\Objects\Drawable.h" />
+    <ClInclude Include="inc\Render\Camera\Camera.h" />
+    <ClInclude Include="inc\Render\D3D12\CommandHandler.h" />
+    <ClInclude Include="inc\Render\D3D12\Fence.h" />
+    <ClInclude Include="inc\Render\D3D12\SwapChain.h" />
+    <ClInclude Include="inc\Render\d3dx12.h" />
+    <ClInclude Include="inc\Render\DescriptorHeap\DescriptorHeap.h" />
+    <ClInclude Include="inc\Render\DescriptorHeap\ResourceDescriptorHeap.h" />
+    <ClInclude Include="inc\Render\Device.h" />
+    <ClInclude Include="inc\Render\Mesh\Mesh.h" />
+    <ClInclude Include="inc\Render\Mesh\MeshLoader.h" />
+    <ClInclude Include="inc\Render\Mesh\Vertex.h" />
+    <ClInclude Include="inc\Render\Pipelines\ComputationalPipelineState.h" />
+    <ClInclude Include="inc\Render\Pipelines\GraphicalPipelineState.h" />
+    <ClInclude Include="inc\Render\Pipelines\PipelineState.h" />
+    <ClInclude Include="inc\Render\Renderer.h" />
+    <ClInclude Include="inc\Render\Resource\ConstantBuffer.h" />
+    <ClInclude Include="inc\Render\Resource\DepthBuffer.h" />
+    <ClInclude Include="inc\Render\Resource\IndexBuffer.h" />
+    <ClInclude Include="inc\Render\Resource\Rendertarget.h" />
+    <ClInclude Include="inc\Render\Resource\Resource.h" />
+    <ClInclude Include="inc\Render\Resource\StructuredBuffer.h" />
+    <ClInclude Include="inc\Render\Resource\Texture2D.h" />
+    <ClInclude Include="inc\Render\Resource\VertexBuffer.h" />
+    <ClInclude Include="inc\Render\Rootsignature.h" />
+    <ClInclude Include="inc\Util\AlignMe.h" />
+    <ClInclude Include="inc\Util\DXGIFormatUtil.h" />
+    <ClInclude Include="inc\Util\HRAssert.h" />
+    <ClInclude Include="inc\Util\SafeRelease.h" />
+    <ClInclude Include="inc\Util\Typedef.h" />
+    <ClInclude Include="inc\Window\Window.h" />
+    <ClInclude Include="inc\Window\WindowEvent.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Render.cpp" />
+    <ClCompile Include="src\imgui\imgui.cpp" />
+    <ClCompile Include="src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Render\Camera\Camera.cpp" />
+    <ClCompile Include="src\Render\D3D12\CommandHandler.cpp" />
+    <ClCompile Include="src\Render\D3D12\Fence.cpp" />
+    <ClCompile Include="src\Render\D3D12\SwapChain.cpp" />
+    <ClCompile Include="src\Render\DescriptorHeap\DescriptorHeap.cpp" />
+    <ClCompile Include="src\Render\DescriptorHeap\ResourceDescriptorHeap.cpp" />
+    <ClCompile Include="src\Render\Device.cpp" />
+    <ClCompile Include="src\Render\Mesh\Mesh.cpp" />
+    <ClCompile Include="src\Render\Mesh\MeshLoader.cpp" />
+    <ClCompile Include="src\Render\Pipelines\ComputationalPipelineState.cpp" />
+    <ClCompile Include="src\Render\Pipelines\GraphicalPipelineState.cpp" />
+    <ClCompile Include="src\Render\Renderer.cpp" />
+    <ClCompile Include="src\Render\Resource\ConstantBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\DepthBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\IndexBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\Rendertarget.cpp" />
+    <ClCompile Include="src\Render\Resource\Resource.cpp" />
+    <ClCompile Include="src\Render\Resource\StructuredBuffer.cpp" />
+    <ClCompile Include="src\Render\Resource\Texture2D.cpp" />
+    <ClCompile Include="src\Render\Resource\VertexBuffer.cpp" />
+    <ClCompile Include="src\Render\Rootsignature.cpp" />
+    <ClCompile Include="src\Window\Window.cpp" />
+    <ClCompile Include="src\Window\WindowEvent.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

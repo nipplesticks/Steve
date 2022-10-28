@@ -1,10 +1,12 @@
-#include <Windows.h>
-#include <Render/Render.h>
+#include <Render/Window/Window.h>
+#include <Render/Render/Renderer.h>
 
 int main()
 {
-  Render r;
-  r.Print();
-  system("pause");
+  Render::Window wnd(1280, 720);
+  Render::Renderer::Init(wnd);
+
+
+
   return 0;
 }

@@ -129,6 +129,7 @@
 echo f | xcopy $(ProjectDir)inc $(SolutionDir)Render\external\inc\$(ProjectName)\ /F /R /Y /I /S /E
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)GameEngine\external\lib\$(TargetName)_$(Configuration)$(TargetExt)
 echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectName)\ /F /R /Y /I /S /E</Command>
+      <Message>Copy .lib and .h files</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
