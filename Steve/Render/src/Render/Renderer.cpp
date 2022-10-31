@@ -34,26 +34,67 @@ Renderer* Render::Renderer::GetInstance()
 void Render::Renderer::BeginFrame()
 {
   myGraphicsCommands.Reset();
-  uint16 bufferIdx = mySwapChain.GetSwapBufferIndex();
-  myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[bufferIdx],
+  myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[myCurrentBufferIndex],
                                                RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
                                                D3D12_RESOURCE_STATE_RENDER_TARGET);
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandleRtv = myDeferredRendertargetHeap.GetCpuDescHandle(
-      bufferIdx, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
+      myCurrentBufferIndex, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
 
-  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandleDsv = myDepthBufferHeap.GetCpuDescHandle(bufferIdx);
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandleDsv =
+      myDepthBufferHeap.GetCpuDescHandle(myCurrentBufferIndex);
 
-
-
+  myGraphicsCommands.SetRenderTargets(
+      RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES, &cpuDescHandleRtv, &cpuDescHandleDsv);
 }
 
-void Render::Renderer::EndFrame() { }
+void Render::Renderer::EndFrame()
+{
+  myGraphicsCommands.Close();
+  myGraphicsCommands.Execute();
+  myGraphicsCommands.HardWait();
+  myGraphicsCommands.Reset();
+  myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[myCurrentBufferIndex],
+                                               RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
+                                               D3D12_RESOURCE_STATE_GENERIC_READ);
+
+  // DeferredPass
+  myGraphicsCommands.ResourceTransitionBarrier(myRenderTargets_pp[myCurrentBufferIndex],
+                                               1,
+                                               {D3D12_RESOURCE_STATE_PRESENT},
+                                               D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+  auto handle = myRendertargetHeap.GetCpuDescHandle(myCurrentBufferIndex);
+
+  myGraphicsCommands.SetRenderTargets(1, &handle, nullptr);
+  myGraphicsCommands.ClearRtv(handle);
+
+  // Draw deferred();
+
+  ImguiContext::Render(myGraphicsCommands.GetCommandList());
+
+  myGraphicsCommands.ResourceTransitionBarrier(myRenderTargets_pp[myCurrentBufferIndex],
+                                               1,
+                                               {D3D12_RESOURCE_STATE_RENDER_TARGET},
+                                               D3D12_RESOURCE_STATE_PRESENT);
+
+
+  myCurrentBufferIndex = mySwapChain.GetSwapBufferIndex();
+}
 
 void Render::Renderer::BeginCompute() { }
 
 void Render::Renderer::EndCompute() { }
 
-void Render::Renderer::Clear(const DM::Vec4f& color) { }
+void Render::Renderer::Clear(const DM::Vec4f& color)
+{
+  auto handle = myDepthBufferHeap.GetCpuDescHandle(myCurrentBufferIndex);
+  myGraphicsCommands.ClearDsv(handle);
+
+  handle = myDeferredRendertargetHeap.GetCpuDescHandle(
+      myCurrentBufferIndex, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
+
+  myGraphicsCommands.ClearRtv(handle, color, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
+}
 
 void Render::Renderer::Draw(Drawable* drawable_p) { }
 
@@ -66,7 +107,7 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
   myTargetWindow = hwnd;
   myGraphicsCommands.Create("GraphicsCommand", D3D12_COMMAND_LIST_TYPE_DIRECT);
   mySwapChain.Create(hwnd, width, height, NUM_SWAP_BUFFERS, myGraphicsCommands.GetCommandQueue());
-  myFence.Create("BasicFence");
+  myCurrentBufferIndex = mySwapChain.GetSwapBufferIndex();
 
   myRendertargetHeap.NumDescriptors = NUM_SWAP_BUFFERS;
   myRendertargetHeap.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;

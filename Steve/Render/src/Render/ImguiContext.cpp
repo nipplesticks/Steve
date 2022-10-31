@@ -36,3 +36,11 @@ Render::DescriptorHeap* Render::ImguiContext::GetDescHeap()
 {
   return &gDescHeap;
 }
+
+void Render::ImguiContext::Render(ID3D12GraphicsCommandList* commandList_p)
+{
+  ImGui::Render();
+  ID3D12DescriptorHeap* heap_p = gDescHeap.GetDescHeap();
+  commandList_p->SetDescriptorHeaps(1, &heap_p);
+  ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList_p);
+}

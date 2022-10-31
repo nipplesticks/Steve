@@ -21,6 +21,8 @@ void Render::CommandHandler::Create(const std::string&              name,
   myCommandList_p->SetName(String::ToWString(name + "_list").c_str());
 
   Close();
+
+  myFence.Create(name + "_Fence");
 }
 
 void Render::CommandHandler::Reset()
@@ -46,6 +48,11 @@ void Render::CommandHandler::Release()
   SafeRelease(&myCommandQueue_p);
 }
 
+void Render::CommandHandler::HardWait()
+{
+  myFence.HardWait(myCommandQueue_p);
+}
+
 void Render::CommandHandler::SetRenderTargets(uint32 numRenderTargetDesc,
                                               const D3D12_CPU_DESCRIPTOR_HANDLE* rtvCpuDescHandle_p,
                                               const D3D12_CPU_DESCRIPTOR_HANDLE* dsvCpuDescHandle_p)
@@ -69,9 +76,51 @@ void Render::CommandHandler::ResourceTransitionBarrier(Resource*             res
     desc[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
     desc[i].Transition.StateBefore = resources_p[i].GetState();
     desc[i].Transition.StateAfter  = after;
+    resources_p->SetState(after);
   }
 
   myCommandList_p->ResourceBarrier(numResources, desc);
+}
+
+void Render::CommandHandler::ResourceTransitionBarrier(
+    ID3D12Resource1*                          resources_p,
+    uint16                                    numResources,
+    const std::vector<D3D12_RESOURCE_STATES>& beforeStates,
+    D3D12_RESOURCE_STATES                     after)
+{
+  D3D12_RESOURCE_BARRIER desc[MAX_NUM_RESOURCE_TRANS_BARRIERS] = {};
+  ASSERT(!(numResources < MAX_NUM_RESOURCE_TRANS_BARRIERS));
+
+  for (uint16 i = 0; i < numResources; i++)
+  {
+    desc[i].Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    desc[i].Transition.pResource   = &resources_p[i];
+    desc[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    desc[i].Transition.StateBefore = beforeStates[i];
+    desc[i].Transition.StateAfter  = after;
+  }
+
+  myCommandList_p->ResourceBarrier(numResources, desc);
+}
+
+void Render::CommandHandler::ClearDsv(D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle, uint16 numDsv)
+{
+  for (uint16 i = 0; i < numDsv; i++)
+  {
+    myCommandList_p->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    dsvHandle.ptr += Device::GetDsvDescriptorHeapSize();
+  }
+}
+
+void Render::CommandHandler::ClearRtv(D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+                                      const DM::Vec4f&            clearColor,
+                                      uint16                      numRtvs)
+{
+  for (uint16 i = 0; i < numRtvs; i++)
+  {
+    myCommandList_p->ClearRenderTargetView(rtvHandle, clearColor.data, 0, nullptr);
+    rtvHandle.ptr += Device::GetRtvDescriptorHeapSize();
+  }
 }
 
 ID3D12CommandAllocator* Render::CommandHandler::GetCommandAllocator() const

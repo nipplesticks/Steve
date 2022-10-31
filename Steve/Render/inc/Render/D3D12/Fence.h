@@ -11,6 +11,8 @@ namespace Render
                 uint64             fenceValue = 0,
                 D3D12_FENCE_FLAGS  fenceFlags = D3D12_FENCE_FLAG_NONE);
 
+    void HardWait(ID3D12CommandQueue* commandQueue_p);
+
   private:
     HANDLE        myEventHandle;
     uint64        myFenceValue;

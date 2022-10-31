@@ -240,7 +240,6 @@ uint64 Resource::GetRowPitch()
 
 void Resource::SetState(D3D12_RESOURCE_STATES state)
 {
-  //MyRenderer::GetInstance()->ChangeResourceStateNow(GetResource(), myState, state);
   myState = state;
 }
 

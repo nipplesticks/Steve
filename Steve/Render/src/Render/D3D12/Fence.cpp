@@ -9,3 +9,16 @@ void Render::Fence::Create(const std::string& name, uint64 fenceValue, D3D12_FEN
   myFenceValue  = fenceValue + 1;
   myEventHandle = CreateEvent(0, FALSE, FALSE, _name.c_str());
 }
+
+void Render::Fence::HardWait(ID3D12CommandQueue* commandQueue_p)
+{
+  commandQueue_p->Signal(myFence_p, myFenceValue);
+
+  if (myFenceValue > myFence_p->GetCompletedValue())
+  {
+    myFence_p->SetEventOnCompletion(myFenceValue, myEventHandle);
+    WaitForMultipleObjects(1, &myEventHandle, TRUE, INFINITE);
+  }
+
+  myFenceValue++;
+}

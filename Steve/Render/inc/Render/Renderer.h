@@ -56,6 +56,6 @@ namespace Render
     ResourceDescriptorHeap myDeferredResourceDescHeap[NUM_SWAP_BUFFERS];
     CommandHandler         myGraphicsCommands;
     SwapChain              mySwapChain;
-    Fence                  myFence;
+    uint16                 myCurrentBufferIndex = 0;
   };
 } // namespace Render
