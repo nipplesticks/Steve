@@ -4,7 +4,7 @@
 using namespace Render;
 Renderer Renderer::gRenderer;
 
-static std::string RenderTargetTypeToString(RenderTargetType type)
+static inline std::string RenderTargetTypeToString(RenderTargetType type)
 {
   switch (type)
   {
@@ -31,7 +31,21 @@ Renderer* Render::Renderer::GetInstance()
   return &gRenderer;
 }
 
-void Render::Renderer::BeginFrame() { }
+void Render::Renderer::BeginFrame()
+{
+  myGraphicsCommands.Reset();
+  uint16 bufferIdx = mySwapChain.GetSwapBufferIndex();
+  myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[bufferIdx],
+                                               RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
+                                               D3D12_RESOURCE_STATE_RENDER_TARGET);
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandleRtv = myDeferredRendertargetHeap.GetCpuDescHandle(
+      bufferIdx, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
+
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandleDsv = myDepthBufferHeap.GetCpuDescHandle(bufferIdx);
+
+
+
+}
 
 void Render::Renderer::EndFrame() { }
 
@@ -65,6 +79,12 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
 
   _CreateRenderTargets(DM::Vec2u(width, height));
   _CreateDepthBuffers(DM::Vec2u(width, height));
+
+  // TODO init compute interface
+  // TODO create deffered rect
+
+  Rootsignature::Init();
+  ImguiContext::Init(myTargetWindow, NUM_SWAP_BUFFERS);
 }
 
 void Render::Renderer::_CreateRenderTargets(const DM::Vec2u& res)
@@ -109,7 +129,6 @@ void Render::Renderer::_CreateDepthBuffers(const DM::Vec2u& res)
   myDepthBufferHeap.NumDescriptors = NUM_SWAP_BUFFERS;
   myDepthBufferHeap.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
   myDepthBufferHeap.Create("DepthBufferHeap");
-
 
   D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
   dsvDesc.Format                        = DXGI_FORMAT_D32_FLOAT;

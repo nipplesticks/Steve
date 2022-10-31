@@ -155,6 +155,7 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
   <ItemGroup>
     <ClInclude Include="inc\Imgui\imconfig.h" />
     <ClInclude Include="inc\Imgui\imgui.h" />
+    <ClInclude Include="inc\Render\ImguiContext.h" />
     <ClInclude Include="inc\Imgui\imgui_impl_dx12.h" />
     <ClInclude Include="inc\Imgui\imgui_impl_win32.h" />
     <ClInclude Include="inc\Imgui\imgui_internal.h" />
@@ -197,6 +198,7 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Render\ImguiContext.cpp" />
     <ClCompile Include="src\imgui\imgui.cpp" />
     <ClCompile Include="src\imgui\imgui_demo.cpp" />
     <ClCompile Include="src\imgui\imgui_draw.cpp" />

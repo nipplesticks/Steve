@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Render/DescriptorHeap/DescriptorHeap.h"
+#include "Render/Renderer.h"
 
 using namespace Render;
 
@@ -32,12 +33,26 @@ uint32 DescriptorHeap::GetDescHeapSize() const
   return myDescHeapSize;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHandle() const
+D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuDescHandle(uint16 swapBufferIdx,
+                                                             uint16 numDescriptors) const
 {
-  return myDescHeap_p->GetCPUDescriptorHandleForHeapStart();
+  auto handle = myDescHeap_p->GetCPUDescriptorHandleForHeapStart();
+  _offsetDescHandlePtr(handle.ptr, swapBufferIdx, numDescriptors);
+
+  return handle;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHandle() const
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHandle(uint16 swapBufferIdx,
+                                                             uint16 numDescriptors) const
 {
-  return myDescHeap_p->GetGPUDescriptorHandleForHeapStart();
+  auto handle = myDescHeap_p->GetGPUDescriptorHandleForHeapStart();
+  _offsetDescHandlePtr(handle.ptr, swapBufferIdx, numDescriptors);
+  return handle;
+}
+
+void Render::DescriptorHeap::_offsetDescHandlePtr(size_t& ptr,
+                                                  uint16  swapBufferIdx,
+                                                  uint16  numDescriptors) const
+{
+  ptr += (uint64)swapBufferIdx * myDescHeapSize * numDescriptors;
 }

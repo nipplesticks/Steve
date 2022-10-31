@@ -4,6 +4,7 @@
 
 namespace Render
 {
+  class Resource;
   class CommandHandler
   {
   public:
@@ -14,8 +15,9 @@ namespace Render
     void Reset();
     void Close();
     void Execute();
-
     void Release();
+
+    void ResourceTransitionBarrier(Resource* resources_p, uint16 numResources, D3D12_RESOURCE_STATES after);
 
     ID3D12CommandAllocator*     GetCommandAllocator() const;
     ID3D12GraphicsCommandList4* GetCommandList() const;

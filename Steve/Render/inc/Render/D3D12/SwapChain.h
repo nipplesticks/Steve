@@ -22,7 +22,6 @@ namespace Render
 
   private:
     IDXGISwapChain4* mySwapChain_p   = nullptr;
-    uint16           myBackBufferIdx = 0;
     D3D12_VIEWPORT   myViewport      = {};
     D3D12_RECT       myRect          = {};
   };

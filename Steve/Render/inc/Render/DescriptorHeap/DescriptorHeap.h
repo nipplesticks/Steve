@@ -15,10 +15,12 @@ namespace Render
     void                  Create(const std::string& name);
     ID3D12DescriptorHeap* GetDescHeap();
     uint32                GetDescHeapSize() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCpuDescHandle() const;
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescHandle() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCpuDescHandle(uint16 swapBufferIdx = 0, uint16 numDescriptors = 1) const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescHandle(uint16 swapBufferIdx = 0, uint16 numDescriptors = 1) const;
 
   private:
+    void _offsetDescHandlePtr(size_t& ptr, uint16 swapBufferIdx, uint16 numDescriptors) const;
+
     ID3D12DescriptorHeap* myDescHeap_p = nullptr;
     uint32                myDescHeapSize = 0;
   };

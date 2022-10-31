@@ -34,7 +34,6 @@ void Render::SwapChain::Create(HWND               hwnd,
       commandQueue_p, hwnd, this, nullptr, nullptr, &swapChain1_p));
   HR_ASSERT(swapChain1_p->QueryInterface(IID_PPV_ARGS(&mySwapChain_p)));
   SafeRelease(&swapChain1_p);
-  myBackBufferIdx = mySwapChain_p->GetCurrentBackBufferIndex();
   SafeRelease(&factory_p);
   
   myViewport.Width    = (float)width;
@@ -51,7 +50,7 @@ void Render::SwapChain::Create(HWND               hwnd,
 
 uint16 Render::SwapChain::GetSwapBufferIndex() const
 {
-  return myBackBufferIdx;
+  return mySwapChain_p->GetCurrentBackBufferIndex();
 }
 
 IDXGISwapChain4* Render::SwapChain::GetSwapChain() const

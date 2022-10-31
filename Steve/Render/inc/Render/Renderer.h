@@ -7,6 +7,7 @@
 #include "D3D12/Fence.h"
 #include "Resource/DepthBuffer.h"
 #include "../Window/WindowEvent.h"
+#include "ImguiContext.h"
 
 namespace Render
 {
@@ -48,7 +49,6 @@ namespace Render
     DescriptorHeap   myRendertargetHeap;
     DescriptorHeap   myDeferredRendertargetHeap;
     DescriptorHeap   myDepthBufferHeap;
-    DescriptorHeap   myImguiHeap;
     DepthBuffer      myDepthBuffers[NUM_SWAP_BUFFERS];
     ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS];
     RenderTarget     myDeferredRendertargets[NUM_SWAP_BUFFERS]
