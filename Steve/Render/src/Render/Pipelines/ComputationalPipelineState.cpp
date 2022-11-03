@@ -48,9 +48,4 @@ void ComputationalPipelineState::CreatePipelineState(const std::string& name)
   myPipelineState_p->SetName(String::ToWString(name).c_str());
 }
 
-ID3D12PipelineState* ComputationalPipelineState::GetPipelineState() const
-{
-  return myPipelineState_p;
-}
-
 void ComputationalPipelineState::_initDefaultValues() { }

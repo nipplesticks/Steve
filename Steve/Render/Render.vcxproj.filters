@@ -242,5 +242,20 @@
     <ClCompile Include="src\Render\ImguiContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Pipelines\PipelineState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="inc\shaders\DefaultShaders\VertexShader.hlsl" />
+    <FxCompile Include="inc\shaders\DefaultShaders\PixelShader.hlsl" />
+    <FxCompile Include="inc\shaders\DeferredRendering\VertexShader.hlsl" />
+    <FxCompile Include="inc\shaders\DeferredRendering\PixelShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="inc\shaders\PixelOutput.hlsli" />
+    <None Include="inc\shaders\DeferredRendering\Datatypes.hlsli" />
+    <None Include="inc\shaders\DefaultShaders\Datatypes.hlsli" />
+    <None Include="inc\shaders\Buffers.hlsli" />
   </ItemGroup>
 </Project>

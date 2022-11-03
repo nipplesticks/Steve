@@ -251,7 +251,9 @@ void GraphicalPipelineState::CreatePipelineState(const std::string& name)
 
 ID3D12PipelineState* GraphicalPipelineState::GetPipelineState() const
 {
-  return myPipelineState_p;
+  if (USE_WIRE_FRAME && myAllowWireframe)
+    return myPipelineStateWireframe_p;
+  return PipelineState::GetPipelineState();
 }
 
 void GraphicalPipelineState::_initDefaultValues()

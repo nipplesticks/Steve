@@ -16,6 +16,7 @@ namespace Render
     static void            Init(HWND hwnd, uint16 numSwapBuffers);
     static bool            ImguiEnabled();
     static DescriptorHeap* GetDescHeap();
+    static void            Render(ID3D12GraphicsCommandList* commandList_p);
 
   private:
     static DescriptorHeap gDescHeap;

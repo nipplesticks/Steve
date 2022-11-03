@@ -44,7 +44,6 @@ namespace Render
     ID3DBlob*            myDomainShader_p           = nullptr;
     ID3DBlob*            myGeometryShader_p         = nullptr;
     ID3DBlob*            myPixelShader_p            = nullptr;
-    ID3D12PipelineState* myPipelineState_p          = nullptr;
     ID3D12PipelineState* myPipelineStateWireframe_p = nullptr;
     bool                 myAllowWireframe           = true;
 
