@@ -17,6 +17,7 @@ namespace Render
 
     uint16                GetSwapBufferIndex() const;
     IDXGISwapChain4*      GetSwapChain() const;
+    void                  Display();
     const D3D12_VIEWPORT& GetViewport() const;
     const D3D12_RECT&     GetScissorRect() const;
 

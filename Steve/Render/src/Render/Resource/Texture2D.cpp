@@ -8,3 +8,8 @@ void Texture2D::Create(
 {
   Init(Resource_Type::Texture2D, name, width, format, height);
 }
+
+uint32 Render::Texture2D::GetClassSize() const
+{
+  return sizeof(Texture2D);
+}

@@ -144,6 +144,9 @@
     <ClInclude Include="inc\Render\ImguiContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Render\DeferredPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -245,17 +248,20 @@
     <ClCompile Include="src\Render\Pipelines\PipelineState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\DeferredPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="inc\shaders\DefaultShaders\VertexShader.hlsl" />
-    <FxCompile Include="inc\shaders\DefaultShaders\PixelShader.hlsl" />
-    <FxCompile Include="inc\shaders\DeferredRendering\VertexShader.hlsl" />
-    <FxCompile Include="inc\shaders\DeferredRendering\PixelShader.hlsl" />
+    <FxCompile Include="Shaders\DefaultShaders\VertexShader.hlsl" />
+    <FxCompile Include="Shaders\DefaultShaders\PixelShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredRendering\VertexShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredRendering\PixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\shaders\PixelOutput.hlsli" />
-    <None Include="inc\shaders\DeferredRendering\Datatypes.hlsli" />
-    <None Include="inc\shaders\DefaultShaders\Datatypes.hlsli" />
-    <None Include="inc\shaders\Buffers.hlsli" />
+    <None Include="Shaders\PixelOutput.hlsli" />
+    <None Include="Shaders\DeferredRendering\Datatypes.hlsli" />
+    <None Include="Shaders\DefaultShaders\Datatypes.hlsli" />
+    <None Include="Shaders\Buffers.hlsli" />
   </ItemGroup>
 </Project>

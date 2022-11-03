@@ -140,5 +140,5 @@ bool ResourceDescriptorHeap::HasSrvs() const
 
 bool ResourceDescriptorHeap::HasUavs() const
 {
-  return myNumSrvs;
+  return myNumUavs;
 }

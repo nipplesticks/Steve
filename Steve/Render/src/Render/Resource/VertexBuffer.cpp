@@ -13,3 +13,8 @@ void VertexBuffer::Create(const std::string& name, uint32 vertexSize, uint32 num
        1,
        numVertices);
 }
+
+uint32 Render::VertexBuffer::GetClassSize() const
+{
+  return sizeof(VertexBuffer);
+}

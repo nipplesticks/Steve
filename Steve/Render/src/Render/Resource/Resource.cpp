@@ -77,20 +77,15 @@ void Resource::Init(Resource_Type      resourceType,
 
   D3D12_CLEAR_VALUE clearVal = {};
   clearVal.Format            = format;
+  clearVal_p = &clearVal;
 
-  if (resourceType == Resource_Type::RenderTarget)
-  {
-    clearVal_p = &clearVal;
-    if (format == DXGI_FORMAT_R32_UINT)
-    {
-      FLOAT c[] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
-      memcpy(clearVal.Color, c, sizeof(FLOAT) * 4);
-    }
-  }
-  else if (resourceType == Resource_Type::DepthBuffer)
+  if (resourceType == Resource_Type::DepthBuffer)
   {
     clearVal.DepthStencil.Depth = 1.0f;
   }
+
+  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+    clearVal_p = nullptr;
 
   Init(name, &heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState, clearVal_p);
 
@@ -199,28 +194,12 @@ void Resource::Init(const std::string&     name,
   myNumberOfRows = numRows;
 }
 
-void Resource::UpdateNow(void*                 data_p,
-                         D3D12_RESOURCE_STATES stateAfter,
-                         uint64                sizeofData,
-                         uint64                offset)
+void Render::Resource::Update(void*                 data_p,
+                              D3D12_RESOURCE_STATES stateAfter,
+                              uint64                sizeofData,
+                              uint64                offset)
 {
-  //MyRenderer::GetInstance()->ResourceUpdate(data_p, sizeofData, offset, stateAfter, this);
-  myState = stateAfter;
-}
-
-void Resource::UpdateForGraphic(void*                 data_p,
-                                D3D12_RESOURCE_STATES stateAfter,
-                                uint64                sizeofData,
-                                uint64                offset)
-{
-  ASSERT(false);
-}
-void Resource::UpdateForCompute(void*                 data_p,
-                                D3D12_RESOURCE_STATES stateAfter,
-                                uint64                sizeofData,
-                                uint64                offset)
-{
-  ASSERT(false);
+  Renderer::GetInstance()->ResourceUpdate(this, data_p, sizeofData, offset, stateAfter);
 }
 
 const DM::Vec3u& Resource::GetDimention() const
@@ -276,6 +255,11 @@ uint32 Resource::GetElementCount() const
 Resource::Resource_Type Resource::GetResourceType() const
 {
   return myResourceType;
+}
+
+uint32 Render::Resource::GetClassSize() const
+{
+  return sizeof(Resource);
 }
 
 D3D12_RESOURCE_DIMENSION Resource::_GetResourceDimension(Resource_Type resourceType)

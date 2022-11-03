@@ -26,5 +26,6 @@
 #include "Window/WindowEvent.h"
 #include "Window/Window.h"
 #include "Render/Pipelines/GraphicalPipelineState.h"
+#include "Render/Renderer.h"
 
 #endif //PCH_H

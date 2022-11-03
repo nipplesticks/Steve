@@ -53,18 +53,10 @@ namespace Render
               D3D12_RESOURCE_STATES  initialState,
               D3D12_CLEAR_VALUE*     clearValue = nullptr);
 
-    void UpdateNow(void*                 data_p,
-                   D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
-                   uint64                sizeofData = 0,
-                   uint64                offset     = 0);
-    void UpdateForGraphic(void*                 data_p,
-                          D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
-                          uint64                sizeofData = 0,
-                          uint64                offset     = 0);
-    void UpdateForCompute(void*                 data_p,
-                          D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
-                          uint64                sizeofData = 0,
-                          uint64                offset     = 0);
+    void Update(void*                 data_p,
+                D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_GENERIC_READ,
+                uint64                sizeofData = 0,
+                uint64                offset     = 0);
 
     uint64 GetRowPitch();
 
@@ -81,6 +73,7 @@ namespace Render
     uint32                GetElementCount() const;
     uint32                GetNumberOfRows() const;
     Resource_Type         GetResourceType() const;
+    virtual uint32        GetClassSize() const;
 
   protected:
     D3D12_RESOURCE_DIMENSION _GetResourceDimension(Resource_Type resourceType);

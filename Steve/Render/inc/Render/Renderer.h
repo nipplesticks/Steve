@@ -29,17 +29,28 @@ namespace Render
     static void      Init(const Window& window, bool enableDebug = false);
     static Renderer* GetInstance();
 
-    void BeginFrame();
+    void BeginFrame(const DM::Vec4f& clearColor = DM::Vec4f(0, 0, 0, 0));
     void EndFrame();
     void BeginCompute();
     void EndCompute();
-    void Clear(const DM::Vec4f& color = DM::Vec4f());
     void Draw(Drawable* drawable_p);
+    void Draw(Resource*               vertexBuffer_p,
+              Resource*               indexBuffer_p,
+              ResourceDescriptorHeap* rdh_p,
+              GraphicalPipelineState* gps_p);
     void Compute(Computational* computational_p);
 
     virtual void HandleEvent(const Event::Message& message) override;
 
+    void ResourceUpdate(Resource*             resource_p,
+                        void*                 data_p,
+                        uint64                dataSize,
+                        uint64                offset,
+                        D3D12_RESOURCE_STATES afterState);
+    void CopyResource(void* outData_p, Resource* resource_p, uint64 dataSize = 0, uint64 offset = 0);
+
   private:
+    void _Clear(const DM::Vec4f& clearColor);
     void _Init(HWND hwnd, uint16 width, uint16 height);
     void _CreateRenderTargets(const DM::Vec2u& res);
     void _CreateDepthBuffers(const DM::Vec2u& res);
@@ -53,9 +64,9 @@ namespace Render
     ID3D12Resource1* myRenderTargets_pp[NUM_SWAP_BUFFERS];
     RenderTarget     myDeferredRendertargets[NUM_SWAP_BUFFERS]
                                         [RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES];
-    ResourceDescriptorHeap myDeferredResourceDescHeap[NUM_SWAP_BUFFERS];
-    CommandHandler         myGraphicsCommands;
-    SwapChain              mySwapChain;
-    uint16                 myCurrentBufferIndex = 0;
+    CommandHandler myGraphicsCommands;
+    CommandHandler myUploadCommands;
+    SwapChain      mySwapChain;
+    uint16         myCurrentBufferIndex = 0;
   };
 } // namespace Render

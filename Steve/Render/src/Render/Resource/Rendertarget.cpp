@@ -14,3 +14,8 @@ RenderTargetType RenderTarget::GetRenderTargetType() const
 {
   return myRenderTargetType;
 }
+
+uint32 Render::RenderTarget::GetClassSize() const
+{
+  return sizeof(RenderTarget);
+}

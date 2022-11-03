@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Render/Renderer.h"
+#include "Render/DeferredPass.h"
 
 using namespace Render;
 Renderer Renderer::gRenderer;
@@ -23,6 +24,8 @@ static inline std::string RenderTargetTypeToString(RenderTargetType type)
 void Render::Renderer::Init(const Window& window, bool enableDebug)
 {
   Device::Init((Device::ENABLE_DEBUG_CONTROLLER | Device::ENABLE_DEBUG_LAYER) * enableDebug);
+  Rootsignature::Init();
+  ImguiContext::Init(window.GetHwnd(), NUM_SWAP_BUFFERS);
   gRenderer._Init(window.GetHwnd(), window.GetSize().x, window.GetSize().y);
 }
 
@@ -31,9 +34,13 @@ Renderer* Render::Renderer::GetInstance()
   return &gRenderer;
 }
 
-void Render::Renderer::BeginFrame()
+void Render::Renderer::BeginFrame(const DM::Vec4f& clearColor)
 {
+  ImGui_ImplDX12_NewFrame();
+  ImGui_ImplWin32_NewFrame();
+  ImGui::NewFrame();
   myGraphicsCommands.Reset();
+  
   myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[myCurrentBufferIndex],
                                                RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
                                                D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -45,10 +52,14 @@ void Render::Renderer::BeginFrame()
 
   myGraphicsCommands.SetRenderTargets(
       RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES, &cpuDescHandleRtv, &cpuDescHandleDsv);
+
+  _Clear(clearColor);
 }
 
 void Render::Renderer::EndFrame()
 {
+  // TODO flush draw queue
+
   myGraphicsCommands.Close();
   myGraphicsCommands.Execute();
   myGraphicsCommands.HardWait();
@@ -67,8 +78,12 @@ void Render::Renderer::EndFrame()
 
   myGraphicsCommands.SetRenderTargets(1, &handle, nullptr);
   myGraphicsCommands.ClearRtv(handle);
+  //myGraphicsCommands.BindGraphicalRootSignature();
 
-  // Draw deferred();
+  Draw(DeferredPass::GetVertexBuffer(),
+       DeferredPass::GetIndexBuffer(),
+       DeferredPass::GetResourceDescHeap(myCurrentBufferIndex),
+       DeferredPass::GetPipelineState());
 
   ImguiContext::Render(myGraphicsCommands.GetCommandList());
 
@@ -76,6 +91,11 @@ void Render::Renderer::EndFrame()
                                                1,
                                                {D3D12_RESOURCE_STATE_RENDER_TARGET},
                                                D3D12_RESOURCE_STATE_PRESENT);
+
+  myGraphicsCommands.Close();
+  myGraphicsCommands.Execute();
+  mySwapChain.Display();
+  myGraphicsCommands.HardWait();
 
 
   myCurrentBufferIndex = mySwapChain.GetSwapBufferIndex();
@@ -85,7 +105,7 @@ void Render::Renderer::BeginCompute() { }
 
 void Render::Renderer::EndCompute() { }
 
-void Render::Renderer::Clear(const DM::Vec4f& color)
+void Render::Renderer::_Clear(const DM::Vec4f& clearColor)
 {
   auto handle = myDepthBufferHeap.GetCpuDescHandle(myCurrentBufferIndex);
   myGraphicsCommands.ClearDsv(handle);
@@ -93,19 +113,146 @@ void Render::Renderer::Clear(const DM::Vec4f& color)
   handle = myDeferredRendertargetHeap.GetCpuDescHandle(
       myCurrentBufferIndex, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
 
-  myGraphicsCommands.ClearRtv(handle, color, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
+  myGraphicsCommands.ClearRtv(handle, clearColor, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
 }
 
 void Render::Renderer::Draw(Drawable* drawable_p) { }
+
+void Render::Renderer::Draw(Resource*               vertexBuffer_p,
+                            Resource*               indexBuffer_p,
+                            ResourceDescriptorHeap* rdh_p,
+                            GraphicalPipelineState* gps_p)
+{
+  ID3D12GraphicsCommandList4* cmd_p = myGraphicsCommands.GetCommandList();
+  cmd_p->SetPipelineState(gps_p->GetPipelineState());
+  auto& viewport = mySwapChain.GetViewport();
+  auto& sciRect  = mySwapChain.GetScissorRect();
+  cmd_p->RSSetViewports(1, &viewport);
+  cmd_p->RSSetScissorRects(1, &sciRect);
+  cmd_p->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  cmd_p->IASetVertexBuffers(0, 1, &vertexBuffer_p->GetView().vbv);
+  cmd_p->IASetIndexBuffer(&indexBuffer_p->GetView().ibv);
+
+  ID3D12DescriptorHeap* arr[1] = {rdh_p->GetDescHeap()};
+
+  cmd_p->SetDescriptorHeaps(1, arr);
+  if (rdh_p->HasCbvs())
+    cmd_p->SetGraphicsRootDescriptorTable(0, rdh_p->GetCbvDescHandle());
+  if (rdh_p->HasSrvs())
+    cmd_p->SetGraphicsRootDescriptorTable(1, rdh_p->GetSrvDescHandle());
+  if (rdh_p->HasUavs())
+    cmd_p->SetGraphicsRootDescriptorTable(2, rdh_p->GetUavDescHandle());
+
+  cmd_p->DrawIndexedInstanced(indexBuffer_p->GetElementCount(), 1, 0, 0, 0);
+}
 
 void Render::Renderer::Compute(Computational* computational_p) { }
 
 void Render::Renderer::HandleEvent(const Event::Message& message) { }
 
+void Render::Renderer::ResourceUpdate(Resource*             resource_p,
+                                      void*                 data_p,
+                                      uint64                dataSize,
+                                      uint64                offset,
+                                      D3D12_RESOURCE_STATES afterState)
+{
+  ID3D12Resource*       tmpResource_p = nullptr;
+  D3D12_HEAP_PROPERTIES heapProp      = {};
+  heapProp.Type                       = D3D12_HEAP_TYPE_UPLOAD;
+  heapProp.CPUPageProperty            = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+  heapProp.MemoryPoolPreference       = D3D12_MEMORY_POOL_UNKNOWN;
+
+  D3D12_RESOURCE_DESC resDesc  = resource_p->GetResource()->GetDesc();
+  UINT64              byteSize = resource_p->GetBufferSize();
+  UINT64              rowSize  = resource_p->GetRowPitch();
+  UINT                numRows  = resource_p->GetNumberOfRows();
+  D3D12_RESOURCE_DESC desc     = {};
+  desc.Width                   = byteSize;
+  desc.DepthOrArraySize        = 1;
+  desc.Dimension               = D3D12_RESOURCE_DIMENSION_BUFFER;
+  desc.Flags                   = D3D12_RESOURCE_FLAG_NONE;
+  desc.Format                  = DXGI_FORMAT_UNKNOWN;
+  desc.Height                  = 1;
+  desc.Layout                  = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  desc.MipLevels               = 1;
+  desc.SampleDesc.Count        = 1;
+  desc.SampleDesc.Quality      = 0;
+  HR_ASSERT(Device::GetDevice()->CreateCommittedResource(&heapProp,
+                                                         D3D12_HEAP_FLAG_NONE,
+                                                         &desc,
+                                                         D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                         nullptr,
+                                                         IID_PPV_ARGS(&tmpResource_p)));
+  D3D12_SUBRESOURCE_DATA srdDesc = {};
+  srdDesc.pData                  = data_p;
+  srdDesc.RowPitch               = rowSize;
+  srdDesc.SlicePitch             = srdDesc.RowPitch * numRows;
+
+  if (resource_p->GetResourceType() == Resource::Resource_Type::StructuredBuffer && dataSize > 0)
+  {
+    srdDesc.RowPitch   = dataSize;
+    srdDesc.SlicePitch = 1;
+  }
+
+  myUploadCommands.Reset();
+  myUploadCommands.ResourceTransitionBarrier(resource_p, 1, D3D12_RESOURCE_STATE_COPY_DEST);
+  UpdateSubresources(myUploadCommands.GetCommandList(),
+                     resource_p->GetResource(),
+                     tmpResource_p,
+                     offset,
+                     0,
+                     1,
+                     &srdDesc);
+  myUploadCommands.ResourceTransitionBarrier(resource_p, 1, afterState);
+
+  myUploadCommands.Close();
+  myUploadCommands.Execute();
+  myUploadCommands.HardWait();
+
+  SafeRelease(&tmpResource_p);
+}
+
+void Render::Renderer::CopyResource(void*     outData_p,
+                                    Resource* resource_p,
+                                    uint64    dataSize,
+                                    uint64    offset)
+{
+  
+
+  D3D12_HEAP_PROPERTIES readbackHeapProperties {CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK)};
+  D3D12_RESOURCE_DESC   readbackBufferDesc {CD3DX12_RESOURCE_DESC::Buffer(resource_p->GetBufferSize())};
+  ID3D12Resource1*      readbackBuffer_p = nullptr;
+  HR_ASSERT(Device::GetDevice()->CreateCommittedResource(&readbackHeapProperties,
+                                                         D3D12_HEAP_FLAG_NONE,
+                                                         &readbackBufferDesc,
+                                                         D3D12_RESOURCE_STATE_COPY_DEST,
+                                                         nullptr,
+                                                         IID_PPV_ARGS(&readbackBuffer_p)));
+  if (dataSize == 0)
+    dataSize = resource_p->GetBufferSize() - offset;
+
+  auto beforeState = resource_p->GetState();
+  myUploadCommands.Reset();
+  myUploadCommands.ResourceTransitionBarrier(
+      resource_p, 1, D3D12_RESOURCE_STATE_COPY_SOURCE);
+  myUploadCommands.GetCommandList()->CopyResource(readbackBuffer_p, resource_p->GetResource());
+  myUploadCommands.ResourceTransitionBarrier(resource_p, 1, beforeState);
+  myUploadCommands.Close();
+  myUploadCommands.Execute();
+  myUploadCommands.HardWait();
+
+  D3D12_RANGE readbackBufferRange{offset, dataSize};
+  HR_ASSERT(readbackBuffer_p->Map(0, &readbackBufferRange, &outData_p));
+  D3D12_RANGE emptyRange{};
+  readbackBuffer_p->Unmap(0, &emptyRange);
+  SafeRelease(&readbackBuffer_p);
+}
+
 void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
 {
   myTargetWindow = hwnd;
   myGraphicsCommands.Create("GraphicsCommand", D3D12_COMMAND_LIST_TYPE_DIRECT);
+  myUploadCommands.Create("UploadCommand", D3D12_COMMAND_LIST_TYPE_DIRECT);
   mySwapChain.Create(hwnd, width, height, NUM_SWAP_BUFFERS, myGraphicsCommands.GetCommandQueue());
   myCurrentBufferIndex = mySwapChain.GetSwapBufferIndex();
 
@@ -122,10 +269,8 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
   _CreateDepthBuffers(DM::Vec2u(width, height));
 
   // TODO init compute interface
-  // TODO create deffered rect
-
-  Rootsignature::Init();
-  ImguiContext::Init(myTargetWindow, NUM_SWAP_BUFFERS);
+  
+  DeferredPass::Init();
 }
 
 void Render::Renderer::_CreateRenderTargets(const DM::Vec2u& res)
@@ -160,8 +305,7 @@ void Render::Renderer::_CreateRenderTargets(const DM::Vec2u& res)
       defCdh.ptr += Device::GetRtvDescriptorHeapSize();
       renderTargets[j] = &myDeferredRendertargets[i][j];
     }
-    myDeferredResourceDescHeap[i].CreateAndBindResources(
-        "deferredResourceHeap_" + std::to_string(i), {}, renderTargets, {});
+    DeferredPass::AppendRenderTargets(renderTargets);
   }
 }
 
@@ -181,6 +325,6 @@ void Render::Renderer::_CreateDepthBuffers(const DM::Vec2u& res)
   {
     myDepthBuffers[i].Create("DepthBuffer_" + std::to_string(i), res.x, res.y);
     Device::GetDevice()->CreateDepthStencilView(myDepthBuffers[i].GetResource(), &dsvDesc, cdh);
-    cdh.ptr += Device::GetDsvDescriptorHeapSize();
+    cdh.ptr += myDepthBufferHeap.GetDescHeapSize();
   }
 }

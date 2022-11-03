@@ -37,6 +37,9 @@ namespace Render
                   const DM::Vec4f&            clearColor = DM::Vec4f(),
                   uint16                      numRtvs    = 1u);
 
+    void BindGraphicalRootSignature();
+    void BindComputationalRootSignature();
+
     ID3D12CommandAllocator*     GetCommandAllocator() const;
     ID3D12GraphicsCommandList4* GetCommandList() const;
     ID3D12CommandQueue*         GetCommandQueue() const;

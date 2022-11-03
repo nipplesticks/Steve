@@ -38,7 +38,7 @@ void Render::CommandHandler::Close()
 
 void Render::CommandHandler::Execute()
 {
-  myCommandQueue_p->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(myCommandList_p));
+  myCommandQueue_p->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&myCommandList_p));
 }
 
 void Render::CommandHandler::Release()
@@ -67,17 +67,34 @@ void Render::CommandHandler::ResourceTransitionBarrier(Resource*             res
                                                        D3D12_RESOURCE_STATES after)
 {
   D3D12_RESOURCE_BARRIER desc[MAX_NUM_RESOURCE_TRANS_BARRIERS] = {};
-  ASSERT(!(numResources < MAX_NUM_RESOURCE_TRANS_BARRIERS));
-
-  for (uint16 i = 0; i < numResources; i++)
+  ASSERT(numResources < MAX_NUM_RESOURCE_TRANS_BARRIERS);
+  if (resources_p->GetResourceType() == Resource::Resource_Type::RenderTarget)
   {
-    desc[i].Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    desc[i].Transition.pResource   = resources_p[i].GetResource();
-    desc[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    desc[i].Transition.StateBefore = resources_p[i].GetState();
-    desc[i].Transition.StateAfter  = after;
-    resources_p->SetState(after);
+    RenderTarget* ren_p = (RenderTarget*)resources_p;
+    for (uint16 i = 0; i < numResources; i++)
+    {
+      desc[i].Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+      desc[i].Transition.pResource   = ren_p[i].GetResource();
+      desc[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+      desc[i].Transition.StateBefore = ren_p[i].GetState();
+      desc[i].Transition.StateAfter  = after;
+      ren_p[i].SetState(after);
+    }
   }
+  else
+  {
+    for (uint16 i = 0; i < numResources; i++)
+    {
+      desc[i].Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+      desc[i].Transition.pResource   = resources_p[i].GetResource();
+      desc[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+      desc[i].Transition.StateBefore = resources_p[i].GetState();
+      desc[i].Transition.StateAfter  = after;
+      resources_p[i].SetState(after);
+    }
+  }
+
+
 
   myCommandList_p->ResourceBarrier(numResources, desc);
 }
@@ -89,7 +106,7 @@ void Render::CommandHandler::ResourceTransitionBarrier(
     D3D12_RESOURCE_STATES                     after)
 {
   D3D12_RESOURCE_BARRIER desc[MAX_NUM_RESOURCE_TRANS_BARRIERS] = {};
-  ASSERT(!(numResources < MAX_NUM_RESOURCE_TRANS_BARRIERS));
+  ASSERT(numResources < MAX_NUM_RESOURCE_TRANS_BARRIERS);
 
   for (uint16 i = 0; i < numResources; i++)
   {
@@ -121,6 +138,16 @@ void Render::CommandHandler::ClearRtv(D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     myCommandList_p->ClearRenderTargetView(rtvHandle, clearColor.data, 0, nullptr);
     rtvHandle.ptr += Device::GetRtvDescriptorHeapSize();
   }
+}
+
+void Render::CommandHandler::BindGraphicalRootSignature()
+{
+  myCommandList_p->SetGraphicsRootSignature(Rootsignature::GetGraphicRootsignature());
+}
+
+void Render::CommandHandler::BindComputationalRootSignature()
+{
+  myCommandList_p->SetComputeRootSignature(Rootsignature::GetComputeRootsignature());
 }
 
 ID3D12CommandAllocator* Render::CommandHandler::GetCommandAllocator() const

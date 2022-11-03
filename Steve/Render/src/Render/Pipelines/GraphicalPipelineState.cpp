@@ -4,6 +4,8 @@
 
 using namespace Render;
 
+bool GraphicalPipelineState::USE_WIRE_FRAME = false;
+
 GraphicalPipelineState::GraphicalPipelineState()
     : D3D12_GRAPHICS_PIPELINE_STATE_DESC {}
 {
@@ -139,6 +141,7 @@ void GraphicalPipelineState::SetPixelShader(const std::string& pixelShader)
     printf("%s\n", (char*)errorBlob_p->GetBufferPointer());
 
   PS.pShaderBytecode = myPixelShader_p->GetBufferPointer();
+  PS.BytecodeLength  = myPixelShader_p->GetBufferSize();
 }
 
 void GraphicalPipelineState::AllowWireframe(bool flag)

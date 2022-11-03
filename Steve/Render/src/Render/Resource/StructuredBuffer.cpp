@@ -13,3 +13,8 @@ void StructuredBuffer::Create(const std::string& name, uint32 elementSize, uint3
        1,
        numElements);
 }
+
+uint32 Render::StructuredBuffer::GetClassSize() const
+{
+  return sizeof(StructuredBuffer);
+}

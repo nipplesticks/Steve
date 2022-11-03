@@ -11,5 +11,6 @@ namespace Render
                 uint32             height,
                 DXGI_FORMAT        format    = DXGI_FORMAT_R8G8B8A8_UNORM,
                 bool               cpuAccess = false);
+    virtual uint32 GetClassSize() const;
   };
 } // namespace Render

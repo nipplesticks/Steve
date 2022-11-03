@@ -8,5 +8,6 @@ namespace Render
   {
   public:
     void Create(const std::string& name, uint32 size);
+    virtual uint32 GetClassSize() const;
   };
 }

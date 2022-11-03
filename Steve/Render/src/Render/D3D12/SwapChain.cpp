@@ -58,6 +58,11 @@ IDXGISwapChain4* Render::SwapChain::GetSwapChain() const
   return mySwapChain_p;
 }
 
+void Render::SwapChain::Display()
+{
+  HR_ASSERT(mySwapChain_p->Present(0, 0));
+}
+
 const D3D12_VIEWPORT& Render::SwapChain::GetViewport() const
 {
   return myViewport;
