@@ -9,7 +9,8 @@ int main()
 
   while (wnd.IsOpen())
   {
-    gRenderer_p->BeginFrame(DM::Vec4f(0, 0, 0, 0));
+    wnd.PollEvents();
+    gRenderer_p->BeginFrame();
 
 
 

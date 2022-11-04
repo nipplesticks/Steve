@@ -5,7 +5,13 @@ using namespace Render;
 
 void IndexBuffer::Create(const std::string& name, uint32 numIndices)
 {
-  Init(Resource_Type::IndexBuffer, name, numIndices * sizeof(uint32));
+  Init(Resource_Type::IndexBuffer,
+       name,
+       numIndices * sizeof(uint32),
+       DXGI_FORMAT_UNKNOWN,
+       1,
+       1,
+       numIndices);
 }
 
 uint32 Render::IndexBuffer::GetClassSize() const

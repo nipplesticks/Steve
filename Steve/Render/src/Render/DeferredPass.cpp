@@ -23,9 +23,9 @@ void Render::DeferredPass::Init()
 
   gVertexBuffer.Create("deferredVertexBuffer", sizeof(DeferredQuad), 4);
   gIndexBuffer.Create("deferredIndexBuffer", 6);
-  gVertexBuffer.Update(&quad[0]);
+  gVertexBuffer.Update(quad);
   uint32 indices[] = {0, 1, 2, 0, 2, 3};
-  gIndexBuffer.Update(&indices[0]);
+  gIndexBuffer.Update(indices);
   gGraphicalPipelineState.SetVertexShader("D:/Projects/Steve/Steve/Render/Shaders/DeferredRendering/VertexShader.hlsl");
   gGraphicalPipelineState.SetPixelShader("D:/Projects/Steve/Steve/Render/Shaders/DeferredRendering/PixelShader.hlsl");
   gGraphicalPipelineState.GenerateInputElementDesc();

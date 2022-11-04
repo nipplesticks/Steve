@@ -8,6 +8,7 @@ Texture2D<float4> colorTexture : register(t2);
 float4 main(VS_IN_OUT input)
     : SV_TARGET
 {
-  //return colorTexture.Sample(aSampler, input.uv);
-  return float4(input.position);
+  return colorTexture.Sample(aSampler, input.uv);
+  //return float4(input.position);
+  //return float4(1, 0, 0, 1);
 }

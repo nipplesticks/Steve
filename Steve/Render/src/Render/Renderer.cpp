@@ -78,7 +78,6 @@ void Render::Renderer::EndFrame()
 
   myGraphicsCommands.SetRenderTargets(1, &handle, nullptr);
   myGraphicsCommands.ClearRtv(handle);
-  //myGraphicsCommands.BindGraphicalRootSignature();
 
   Draw(DeferredPass::GetVertexBuffer(),
        DeferredPass::GetIndexBuffer(),

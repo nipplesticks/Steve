@@ -331,6 +331,13 @@ public:
       T z;
       T w;
     };
+    struct
+    {
+      T r;
+      T g;
+      T b;
+      T a;
+    };
     T data[4];
   };
 #pragma endregion
