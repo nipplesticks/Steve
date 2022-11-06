@@ -70,7 +70,7 @@ void Render::Renderer::EndFrame()
   if (myCamera_p)
   {
     CameraViewProjection cvp;
-    cvp.viewMatrix = myCamera_p->GetViewMatrix();
+    cvp.viewMatrix       = myCamera_p->GetViewMatrix();
     cvp.projectionMatrix = myCamera_p->GetProjectionMatrix();
     cvp.position         = myCamera_p->GetPosition();
     myCameraConstantbuffer.Update(&cvp, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(cvp));
@@ -224,13 +224,14 @@ void Render::Renderer::ResourceUpdate(Resource*             resource_p,
 
   myUploadCommands.Reset();
   myUploadCommands.ResourceTransitionBarrier(resource_p, 1, D3D12_RESOURCE_STATE_COPY_DEST);
-  UpdateSubresources(myUploadCommands.GetCommandList(),
-                     resource_p->GetResource(),
-                     tmpResource_p,
-                     offset,
-                     0,
-                     1,
-                     &srdDesc);
+  // TODO This returns 0, it should be the size of the buffer....
+  ASSERT(UpdateSubresources(myUploadCommands.GetCommandList(),
+                            resource_p->GetResource(),
+                            tmpResource_p,
+                            offset,
+                            0,
+                            1,
+                            &srdDesc));
   myUploadCommands.ResourceTransitionBarrier(resource_p, 1, afterState);
 
   myUploadCommands.Close();
@@ -279,7 +280,6 @@ Render::ConstantBuffer* Render::Renderer::GetCameraConstantBuffer()
 {
   return &myCameraConstantbuffer;
 }
-
 
 void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
 {

@@ -8,7 +8,7 @@
 int main()
 {
   Render::Window wnd(1280, 720);
-  Render::Renderer::Init(wnd, false);
+  Render::Renderer::Init(wnd, true);
   Render::Renderer* gRenderer_p = Render::Renderer::GetInstance();
 
   Render::MeshLoader::LoadMesh("assets/hot-girl/source/model.obj", "girl");

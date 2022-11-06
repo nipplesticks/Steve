@@ -27,7 +27,6 @@ void Render::Drawable::SetGraphicalPipelineState(GraphicalPipelineState* graphic
 void Render::Drawable::CreateGPUData()
 {
   myConstantBuffer.Create("Drawable_Constant_buffer", sizeof(MatrixConstantBuffer));
-
   myResourceDescHeap.CreateAndBindResources(
       "Drawable_Resource_Heap",
       {Renderer::GetInstance()->GetCameraConstantBuffer(), &myConstantBuffer},
