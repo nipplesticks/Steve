@@ -193,8 +193,8 @@ void Resource::Init(const std::string&     name,
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint  = {};
   Device::GetDevice()->GetCopyableFootprints(
       &resDesc, 0, 1, 0, &footPrint, &numRows, &rowSize, &bufferSize);
-  if (myResourceType == Resource_Type::Texture2D)
-    myBufferSize = bufferSize;
+  myBufferSize = bufferSize;
+  //if (myResourceType == Resource_Type::Texture2D)
   myRowPitch     = (uint64)rowSize;
   myNumberOfRows = numRows;
 }

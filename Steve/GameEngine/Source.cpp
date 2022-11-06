@@ -11,8 +11,9 @@ int main()
   Render::Renderer::Init(wnd, true);
   Render::Renderer* gRenderer_p = Render::Renderer::GetInstance();
 
-  Render::MeshLoader::LoadMesh("assets/hot-girl/source/model.obj", "girl");
+  Render::MeshLoader::LoadMesh("assets/hot-girl/source/model.obj", "girl", true);
   Render::GraphicalPipelineState state;
+  state.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
   state.SetVertexShader(Render::GraphicalPipelineState::DEFAULT_VERTEX_SHADER);
   state.SetPixelShader(Render::GraphicalPipelineState::DEFAULT_PIXEL_SHADER);
   state.GenerateInputElementDesc();
@@ -24,7 +25,7 @@ int main()
   woman.CreateGPUData();
 
   Render::Camera cam;
-  cam.SetPosition(0, 0.5f, -3);
+  cam.SetPosition(0, 0.5f, -2);
   
   while (wnd.IsOpen())
   {
