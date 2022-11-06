@@ -4,7 +4,11 @@
 
 using namespace Render;
 
-bool GraphicalPipelineState::USE_WIRE_FRAME = false;
+bool              GraphicalPipelineState::USE_WIRE_FRAME = false;
+const std::string GraphicalPipelineState::DEFAULT_VERTEX_SHADER =
+    "D:/Projects/Steve/Steve/Render/Shaders/DefaultShaders/VertexShader.hlsl";
+const std::string GraphicalPipelineState::DEFAULT_PIXEL_SHADER =
+    "D:/Projects/Steve/Steve/Render/Shaders/DefaultShaders/PixelShader.hlsl";
 
 GraphicalPipelineState::GraphicalPipelineState()
     : D3D12_GRAPHICS_PIPELINE_STATE_DESC {}
@@ -240,14 +244,14 @@ void GraphicalPipelineState::CreatePipelineState(const std::string& name)
   InputLayout.pInputElementDescs = myInputElementDescs.data();
   InputLayout.NumElements        = (UINT)myInputElementDescs.size();
   pRootSignature                 = Rootsignature::GetGraphicRootsignature();
-  HR_ASSERT(Device::GetDevice()->CreateGraphicsPipelineState(
-                this, IID_PPV_ARGS(&myPipelineState_p)));
+  HR_ASSERT(
+      Device::GetDevice()->CreateGraphicsPipelineState(this, IID_PPV_ARGS(&myPipelineState_p)));
 
   myPipelineState_p->SetName(String::ToWString(name).c_str());
 
   RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
   HR_ASSERT(Device::GetDevice()->CreateGraphicsPipelineState(
-                this, IID_PPV_ARGS(&myPipelineStateWireframe_p)));
+      this, IID_PPV_ARGS(&myPipelineStateWireframe_p)));
   myPipelineStateWireframe_p->SetName(String::ToWString(name + "_wf").c_str());
   RasterizerState.FillMode = before;
 }

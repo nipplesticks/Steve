@@ -3,6 +3,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include "Render/Mesh/Mesh.h"
+#include "Render/Texture/TextureHandler.h"
 
 using namespace Render;
 
@@ -30,7 +31,7 @@ uint64 Mesh::GetIndexBufferSize() const
   return myIndexBuffer.GetBufferSize();
 }
 
-void Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
+void Mesh::LoadFromFile(const std::string& path, const std::string& meshName, bool flipWindingOrder)
 {
   Assimp::Importer importer;
   const aiScene*   scene = importer.ReadFile(
@@ -70,9 +71,37 @@ void Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
     ASSERT_STR(false, "Unsupporet mesh: %s\n", path);
   }
 
+  size_t delimiter = path.find_last_of('/');
+
+  std::string sourcePath = path.substr(0, delimiter + 1);
+
   for (uint32 i = 0; i < scene->mNumMeshes; i++)
   {
     uint64 numVerts = scene->mMeshes[i]->mNumVertices;
+    aiMaterial* mat_p = scene->mMaterials[scene->mMeshes[i]->mMaterialIndex];
+    for (uint32 j = 0; j < mat_p->GetTextureCount(aiTextureType_DIFFUSE); j++)
+    {
+      aiString relativePathToTexture;
+      if (mat_p->GetTexture(aiTextureType_DIFFUSE, j, &relativePathToTexture) == aiReturn_SUCCESS)
+      {
+        std::string pathToTexture = sourcePath + std::string(relativePathToTexture.C_Str());
+        std::string texName       = meshName + "_diffuse_" + std::to_string(j);
+        TextureHandler::LoadTextureFromFile(pathToTexture, texName);
+        myTexturesMap.push_back(texName);
+      }
+    }
+    for (uint32 j = 0; j < mat_p->GetTextureCount(aiTextureType_NORMALS); j++)
+    {
+      aiString relativePathToTexture;
+      if (mat_p->GetTexture(aiTextureType_NORMALS, j, &relativePathToTexture) == aiReturn_SUCCESS)
+      {
+        std::string pathToTexture = sourcePath + std::string(relativePathToTexture.C_Str());
+        std::string texName       = meshName + "_bump_" + std::to_string(j);
+        TextureHandler::LoadTextureFromFile(pathToTexture, texName);
+        myTexturesMap.push_back(texName);
+      }
+    }
+    
     if (isVertexEx)
       vertEx.resize(vertEx.size() + numVerts);
     else
@@ -112,7 +141,7 @@ void Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
     {
       for (uint64 k = 0; k < scene->mMeshes[i]->mFaces[j].mNumIndices; k++)
       {
-        myIndices[indexOffset + it++] = scene->mMeshes[i]->mFaces[j].mIndices[k] + indexOffset;
+        myIndices[indexOffset + it++] = (uint32)scene->mMeshes[i]->mFaces[j].mIndices[k] + indexOffset;
       }
     }
     indexOffset += numIndices;
@@ -134,7 +163,8 @@ void Mesh::LoadFromFile(const std::string& path, bool flipWindingOrder)
 
   myNumIndices = (uint64)myIndices.size();
   myVertices = malloc(myNumVertices * myVertexSize);
-  memcpy(myVertices, vertices, myNumVertices * myVertexSize);
+  if (myVertices)
+    memcpy(myVertices, vertices, myNumVertices * myVertexSize);
 }
 
 void Mesh::SetVertices(void*                      vertices,
@@ -148,12 +178,11 @@ void Mesh::SetVertices(void*                      vertices,
 
 void Mesh::CreateBuffers(const std::string& name, bool deleteCpuData)
 {
-  myIndexBuffer.Create(name + "_IB", myNumIndices);
-  myVertexBuffer.Create(name + "_VB", myVertexSize, myNumVertices);
+  myIndexBuffer.Create(name + "_IB", (uint32)myNumIndices);
+  myVertexBuffer.Create(name + "_VB", (uint32)myVertexSize, (uint32)myNumVertices);
 
-  /*
-    TODO Upload Vertices to GPU
-  */
+  myIndexBuffer.Update(myIndices.data());
+  myVertexBuffer.Update(myVertices);
 
   if (deleteCpuData)
   {
@@ -191,4 +220,12 @@ void* Mesh::GetRawVertices()
 uint32* Mesh::GetRawIndices()
 {
   return myIndices.data();
+}
+
+std::vector<Resource*> Render::Mesh::GetTextures() const
+{
+  std::vector<Resource*> tex(myTexturesMap.size());
+  for (size_t i = 0; i < myTexturesMap.size(); i++)
+    tex[i] = TextureHandler::GetTexture(myTexturesMap[i]);
+  return tex;
 }

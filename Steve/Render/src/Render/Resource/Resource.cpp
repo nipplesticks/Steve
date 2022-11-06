@@ -17,7 +17,7 @@ void Resource::Init(Resource_Type      resourceType,
   myDimention.y      = height;
   myDimention.z      = depth;
   myBufferSize       = (width * height * depth);
-  myElementSize      = myBufferSize / nrOfElements;
+  myElementSize      = (uint32)myBufferSize / nrOfElements;
   myFormat           = format;
   myNumberOfElements = nrOfElements;
 
@@ -85,6 +85,11 @@ void Resource::Init(Resource_Type      resourceType,
   }
 
   if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+    clearVal_p = nullptr;
+
+  if (desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER &&
+      desc.Dimension != D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET &&
+      desc.Dimension != D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
     clearVal_p = nullptr;
 
   Init(name, &heapProp, &desc, D3D12_HEAP_FLAG_NONE, myState, clearVal_p);

@@ -2,8 +2,9 @@
 #include <Common/Typedef.h>
 #include "Vertex.h"
 #include <vector>
-#include "Render/Resource/IndexBuffer.h"
-#include "Render/Resource/VertexBuffer.h"
+#include "../Resource/IndexBuffer.h"
+#include "../Resource/VertexBuffer.h"
+#include "../Resource/Texture2D.h"
 
 namespace Render
 {
@@ -14,7 +15,7 @@ namespace Render
     const uint64& GetVertexSize() const;
     uint64        GetIndexBufferSize() const;
 
-    void LoadFromFile(const std::string& path, bool flipWindingOrder = false);
+    void LoadFromFile(const std::string& path, const std::string& meshName, bool flipWindingOrder = false);
     void SetVertices(void*                      vertices,
                      const std::vector<uint32>& indices,
                      uint64                     vertexCount,
@@ -29,6 +30,7 @@ namespace Render
     const uint64& GetNumberOfIndices() const;
     void*         GetRawVertices();
     uint32*       GetRawIndices();
+    std::vector<Resource*> GetTextures() const;
 
   private:
     uint64              myNumVertices = 0;
@@ -39,5 +41,6 @@ namespace Render
     VertexBuffer        myVertexBuffer;
     IndexBuffer         myIndexBuffer;
     void*               myVertices = nullptr;
+    std::vector<std::string> myTexturesMap;
   };
 } // namespace Render

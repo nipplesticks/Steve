@@ -18,7 +18,7 @@ MeshLoader::~MeshLoader()
 void MeshLoader::LoadMesh(const std::string& path, const std::string& name, bool flipWindingOrder)
 {
   myMeshes[name] = new Mesh;
-  myMeshes[name]->LoadFromFile(path, flipWindingOrder);
+  myMeshes[name]->LoadFromFile(path, name, flipWindingOrder);
   myMeshes[name]->CreateBuffers(name, true);
 }
 

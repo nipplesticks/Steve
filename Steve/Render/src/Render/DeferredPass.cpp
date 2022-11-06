@@ -26,6 +26,7 @@ void Render::DeferredPass::Init()
   gVertexBuffer.Update(quad);
   uint32 indices[] = {0, 1, 2, 0, 2, 3};
   gIndexBuffer.Update(indices);
+  // TODO Get the relative path to the shaders
   gGraphicalPipelineState.SetVertexShader("D:/Projects/Steve/Steve/Render/Shaders/DeferredRendering/VertexShader.hlsl");
   gGraphicalPipelineState.SetPixelShader("D:/Projects/Steve/Steve/Render/Shaders/DeferredRendering/PixelShader.hlsl");
   gGraphicalPipelineState.GenerateInputElementDesc();

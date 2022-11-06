@@ -8,6 +8,8 @@
 #include "Resource/DepthBuffer.h"
 #include "../Window/WindowEvent.h"
 #include "ImguiContext.h"
+#include "Resource/ConstantBuffer.h"
+#include "Camera/Camera.h"
 
 namespace Render
 {
@@ -29,7 +31,7 @@ namespace Render
     static void      Init(const Window& window, bool enableDebug = false);
     static Renderer* GetInstance();
 
-    void BeginFrame(const DM::Vec4f& clearColor = DM::Vec4f(0, 0, 0, 0));
+    void BeginFrame(Camera* Camera_p, const DM::Vec4f& clearColor = DM::Vec4f(0, 0, 0, 0));
     void EndFrame();
     void BeginCompute();
     void EndCompute();
@@ -48,6 +50,7 @@ namespace Render
                         uint64                offset,
                         D3D12_RESOURCE_STATES afterState);
     void CopyResource(void* outData_p, Resource* resource_p, uint64 dataSize = 0, uint64 offset = 0);
+    ConstantBuffer* GetCameraConstantBuffer();
 
   private:
     void _Clear(const DM::Vec4f& clearColor);
@@ -68,5 +71,7 @@ namespace Render
     CommandHandler myUploadCommands;
     SwapChain      mySwapChain;
     uint16         myCurrentBufferIndex = 0;
+    ConstantBuffer myCameraConstantbuffer;
+    Camera*        myCamera_p = nullptr;
   };
 } // namespace Render

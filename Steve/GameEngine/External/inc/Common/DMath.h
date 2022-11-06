@@ -20,6 +20,7 @@ namespace DM
   using Vec4f = Vec4<float>;
   using Vec4u = Vec4<uint32>;
 
+  using Color2 = Vec2<uint8>;
   using Color3 = Vec3<uint8>;
   using Color4 = Vec4<uint8>;
 

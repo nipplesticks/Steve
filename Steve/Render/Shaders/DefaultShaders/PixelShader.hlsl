@@ -1,7 +1,7 @@
 #include "Datatypes.hlsli"
 #include "../PixelOutput.hlsli"
 SamplerState      aSampler : register(s0);
-Texture2D<float4> diffuseMap : register(t2);
+Texture2D<float4> diffuseMap : register(t0);
 Texture2D<float4> bumpMap : register(t1);
 
 PixelOutput main(VS_OUT input)

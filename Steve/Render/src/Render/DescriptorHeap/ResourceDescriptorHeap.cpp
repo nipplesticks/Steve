@@ -71,9 +71,9 @@ void ResourceDescriptorHeap::CreateAndBindResources(const std::string&          
                                                     const std::vector<Resource*>& srvs,
                                                     const std::vector<Resource*>& uavs)
 {
-  myNumCbvs      = cbvs.size();
-  myNumSrvs      = srvs.size();
-  myNumUavs      = uavs.size();
+  myNumCbvs      = (uint32)cbvs.size();
+  myNumSrvs      = (uint32)srvs.size();
+  myNumUavs      = (uint32)uavs.size();
   Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   NumDescriptors = (UINT)cbvs.size() + (UINT)srvs.size() + (UINT)uavs.size();
@@ -88,7 +88,7 @@ void ResourceDescriptorHeap::CreateAndBindResources(const std::string&          
 
     uint64 bufSizeAligned  = AlignAs256(cbv->GetBufferSize());
     cbvDesc.BufferLocation = cbv->GetResource()->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes    = bufSizeAligned;
+    cbvDesc.SizeInBytes    = (uint32)bufSizeAligned;
 
     Device::GetDevice()->CreateConstantBufferView(&cbvDesc, handle);
     handle.ptr += cbvSrvUavSize;

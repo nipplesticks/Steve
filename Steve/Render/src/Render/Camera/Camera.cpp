@@ -13,7 +13,7 @@ Camera::~Camera() { }
 
 DM::Mat4x4f Camera::GetViewMatrix() const
 {
-  return DM::Mat4x4f();
+  return DirectX::XMMatrixLookToLH(myPosition.Load(), GetForward().Load(), GetUp().Load());
 }
 
 const DM::Mat4x4f& Camera::GetProjectionMatrix() const
@@ -23,7 +23,7 @@ const DM::Mat4x4f& Camera::GetProjectionMatrix() const
 
 DM::Mat4x4f Camera::GetViewProjectionMatrix() const
 {
-  return DirectX::XMMatrixLookToLH(myPosition.Load(), GetForward().Load(), GetUp().Load());
+  return GetViewMatrix() * GetProjectionMatrix();
 }
 
 void Camera::SetView(const View& view)

@@ -163,8 +163,8 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
     <ClInclude Include="inc\Imgui\imstb_rectpack.h" />
     <ClInclude Include="inc\Imgui\imstb_textedit.h" />
     <ClInclude Include="inc\Imgui\imstb_truetype.h" />
-    <ClInclude Include="inc\Objects\Computational.h" />
-    <ClInclude Include="inc\Objects\Drawable.h" />
+    <ClInclude Include="inc\Render\Objects\Computational.h" />
+    <ClInclude Include="inc\Render\Objects\Drawable.h" />
     <ClInclude Include="inc\Render\Camera\Camera.h" />
     <ClInclude Include="inc\Render\D3D12\CommandHandler.h" />
     <ClInclude Include="inc\Render\D3D12\Fence.h" />
@@ -189,6 +189,9 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
     <ClInclude Include="inc\Render\Resource\Texture2D.h" />
     <ClInclude Include="inc\Render\Resource\VertexBuffer.h" />
     <ClInclude Include="inc\Render\Rootsignature.h" />
+    <ClInclude Include="inc\Render\Texture\Image.h" />
+    <ClInclude Include="inc\Render\Texture\stb_image.h" />
+    <ClInclude Include="inc\Render\Texture\TextureHandler.h" />
     <ClInclude Include="inc\Util\AlignMe.h" />
     <ClInclude Include="inc\Util\DXGIFormatUtil.h" />
     <ClInclude Include="inc\Util\HRAssert.h" />
@@ -199,6 +202,9 @@ echo f | xcopy $(ProjectDir)inc $(SolutionDir)GameEngine\external\inc\$(ProjectN
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Render\Objects\Drawable.cpp" />
+    <ClCompile Include="src\Render\Texture\TextureHandler.cpp" />
+    <ClCompile Include="src\Render\Texture\Image.cpp" />
     <ClCompile Include="src\Render\DeferredPass.cpp" />
     <ClCompile Include="src\Render\Pipelines\PipelineState.cpp" />
     <ClCompile Include="src\Render\ImguiContext.cpp" />

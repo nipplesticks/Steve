@@ -42,10 +42,10 @@
     <ClInclude Include="inc\Imgui\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\Objects\Computational.h">
+    <ClInclude Include="inc\Render\Objects\Computational.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\Objects\Drawable.h">
+    <ClInclude Include="inc\Render\Objects\Drawable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\Render\Camera\Camera.h">
@@ -145,6 +145,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\Render\DeferredPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Render\Texture\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Render\Texture\Image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Render\Texture\TextureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -249,6 +258,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\DeferredPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Texture\Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Texture\TextureHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Objects\Drawable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

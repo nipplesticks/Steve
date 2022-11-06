@@ -19,6 +19,8 @@ namespace Render
   {
   public:
     static bool USE_WIRE_FRAME;
+    static const std::string DEFAULT_VERTEX_SHADER;
+    static const std::string DEFAULT_PIXEL_SHADER;
     GraphicalPipelineState();
     ~GraphicalPipelineState();
     void SetVertexShader(const std::string& vertexShader);

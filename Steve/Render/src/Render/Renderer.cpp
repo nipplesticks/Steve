@@ -1,9 +1,17 @@
 #include "pch.h"
 #include "Render/Renderer.h"
 #include "Render/DeferredPass.h"
+#include "Render/Objects/Drawable.h"
 
 using namespace Render;
 Renderer Renderer::gRenderer;
+
+struct CameraViewProjection
+{
+  DM::Mat4x4f viewMatrix;
+  DM::Mat4x4f projectionMatrix;
+  DM::Vec4f   position;
+};
 
 static inline std::string RenderTargetTypeToString(RenderTargetType type)
 {
@@ -34,13 +42,14 @@ Renderer* Render::Renderer::GetInstance()
   return &gRenderer;
 }
 
-void Render::Renderer::BeginFrame(const DM::Vec4f& clearColor)
+void Render::Renderer::BeginFrame(Camera* camera_p, const DM::Vec4f& clearColor)
 {
+  myCamera_p = camera_p;
   ImGui_ImplDX12_NewFrame();
   ImGui_ImplWin32_NewFrame();
   ImGui::NewFrame();
   myGraphicsCommands.Reset();
-  
+
   myGraphicsCommands.ResourceTransitionBarrier(myDeferredRendertargets[myCurrentBufferIndex],
                                                RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES,
                                                D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -58,7 +67,21 @@ void Render::Renderer::BeginFrame(const DM::Vec4f& clearColor)
 
 void Render::Renderer::EndFrame()
 {
-  // TODO flush draw queue
+  if (myCamera_p)
+  {
+    CameraViewProjection cvp;
+    cvp.viewMatrix = myCamera_p->GetViewMatrix();
+    cvp.projectionMatrix = myCamera_p->GetProjectionMatrix();
+    cvp.position         = myCamera_p->GetPosition();
+    myCameraConstantbuffer.Update(&cvp, D3D12_RESOURCE_STATE_GENERIC_READ, sizeof(cvp));
+  }
+
+  for (auto& drawable : Drawable::gDrawQueue)
+  {
+    Draw(drawable);
+  }
+
+  Drawable::gDrawQueue.clear();
 
   myGraphicsCommands.Close();
   myGraphicsCommands.Execute();
@@ -96,7 +119,6 @@ void Render::Renderer::EndFrame()
   mySwapChain.Display();
   myGraphicsCommands.HardWait();
 
-
   myCurrentBufferIndex = mySwapChain.GetSwapBufferIndex();
 }
 
@@ -115,7 +137,14 @@ void Render::Renderer::_Clear(const DM::Vec4f& clearColor)
   myGraphicsCommands.ClearRtv(handle, clearColor, RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES);
 }
 
-void Render::Renderer::Draw(Drawable* drawable_p) { }
+void Render::Renderer::Draw(Drawable* drawable_p)
+{
+  drawable_p->UpdateConstantbuffer();
+  Mesh*                   m_p   = drawable_p->GetMesh();
+  ResourceDescriptorHeap* rdh_p = drawable_p->GetResourceDescriptorHeap();
+  GraphicalPipelineState* gps_p = drawable_p->GetGraphicalPipelineState();
+  Draw(m_p->GetVertexBuffer(), m_p->GetIndexBuffer(), rdh_p, gps_p);
+}
 
 void Render::Renderer::Draw(Resource*               vertexBuffer_p,
                             Resource*               indexBuffer_p,
@@ -161,7 +190,7 @@ void Render::Renderer::ResourceUpdate(Resource*             resource_p,
   heapProp.CPUPageProperty            = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
   heapProp.MemoryPoolPreference       = D3D12_MEMORY_POOL_UNKNOWN;
 
-  D3D12_RESOURCE_DESC resDesc  = resource_p->GetResource()->GetDesc();
+  //D3D12_RESOURCE_DESC resDesc  = resource_p->GetResource()->GetDesc();
   UINT64              byteSize = resource_p->GetBufferSize();
   UINT64              rowSize  = resource_p->GetRowPitch();
   UINT                numRows  = resource_p->GetNumberOfRows();
@@ -216,11 +245,11 @@ void Render::Renderer::CopyResource(void*     outData_p,
                                     uint64    dataSize,
                                     uint64    offset)
 {
-  
 
   D3D12_HEAP_PROPERTIES readbackHeapProperties {CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK)};
-  D3D12_RESOURCE_DESC   readbackBufferDesc {CD3DX12_RESOURCE_DESC::Buffer(resource_p->GetBufferSize())};
-  ID3D12Resource1*      readbackBuffer_p = nullptr;
+  D3D12_RESOURCE_DESC   readbackBufferDesc {
+      CD3DX12_RESOURCE_DESC::Buffer(resource_p->GetBufferSize())};
+  ID3D12Resource1* readbackBuffer_p = nullptr;
   HR_ASSERT(Device::GetDevice()->CreateCommittedResource(&readbackHeapProperties,
                                                          D3D12_HEAP_FLAG_NONE,
                                                          &readbackBufferDesc,
@@ -232,20 +261,25 @@ void Render::Renderer::CopyResource(void*     outData_p,
 
   auto beforeState = resource_p->GetState();
   myUploadCommands.Reset();
-  myUploadCommands.ResourceTransitionBarrier(
-      resource_p, 1, D3D12_RESOURCE_STATE_COPY_SOURCE);
+  myUploadCommands.ResourceTransitionBarrier(resource_p, 1, D3D12_RESOURCE_STATE_COPY_SOURCE);
   myUploadCommands.GetCommandList()->CopyResource(readbackBuffer_p, resource_p->GetResource());
   myUploadCommands.ResourceTransitionBarrier(resource_p, 1, beforeState);
   myUploadCommands.Close();
   myUploadCommands.Execute();
   myUploadCommands.HardWait();
 
-  D3D12_RANGE readbackBufferRange{offset, dataSize};
+  D3D12_RANGE readbackBufferRange {offset, dataSize};
   HR_ASSERT(readbackBuffer_p->Map(0, &readbackBufferRange, &outData_p));
-  D3D12_RANGE emptyRange{};
+  D3D12_RANGE emptyRange {};
   readbackBuffer_p->Unmap(0, &emptyRange);
   SafeRelease(&readbackBuffer_p);
 }
+
+Render::ConstantBuffer* Render::Renderer::GetCameraConstantBuffer()
+{
+  return &myCameraConstantbuffer;
+}
+
 
 void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
 {
@@ -267,9 +301,16 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
   _CreateRenderTargets(DM::Vec2u(width, height));
   _CreateDepthBuffers(DM::Vec2u(width, height));
 
+  myCameraConstantbuffer.Create("CameraConstantBuffer", sizeof(CameraViewProjection));
+
   // TODO init compute interface
-  
+
   DeferredPass::Init();
+
+#ifndef _DEBUG
+  BeginFrame(nullptr);
+  EndFrame();
+#endif
 }
 
 void Render::Renderer::_CreateRenderTargets(const DM::Vec2u& res)
