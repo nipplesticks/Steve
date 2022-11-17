@@ -24,11 +24,11 @@ public:
   virtual void SetOrigin(float x, float y, float z);
   virtual void SetOrigin(const DM::Vec3f& origin);
 
-  virtual void Move(float x, float y, float z);
-  virtual void Move(const DM::Vec3f& translation);
+  virtual void Move(float x, float y, float z, bool relative = true);
+  virtual void Move(const DM::Vec3f& translation, bool relative = true);
 
-  virtual void Rotate(float x, float y, float z);
-  virtual void Rotate(const DM::Vec3f& axis);
+  virtual void Rotate(float x, float y, float z, bool relative = true);
+  virtual void Rotate(const DM::Vec3f& axis, bool relative = true);
 
   virtual void Scale(float x, float y, float z);
   virtual void Scale(const DM::Vec3f& scale);

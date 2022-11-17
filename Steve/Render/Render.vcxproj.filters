@@ -281,5 +281,6 @@
     <None Include="Shaders\DeferredRendering\Datatypes.hlsli" />
     <None Include="Shaders\DefaultShaders\Datatypes.hlsli" />
     <None Include="Shaders\Buffers.hlsli" />
+    <None Include="Shaders\DeferredRendering\LightCalculations.hlsli" />
   </ItemGroup>
 </Project>

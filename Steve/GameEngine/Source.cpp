@@ -12,7 +12,9 @@ int main()
   Render::Renderer::Init(wnd, false);
   Render::Renderer* gRenderer_p = Render::Renderer::GetInstance();
 
-  Render::MeshLoader::LoadMesh("assets/hot-girl/source/model.obj", "girl");
+  //Render::MeshLoader::LoadMesh("assets/hot-girl/source/model.obj", "model");
+  Render::MeshLoader::LoadMesh("assets/cat/12221_Cat_v1_l3.obj", "model");
+  //Render::MeshLoader::LoadMesh("assets/Bulbasaur/Bulbasaur.FBX", "model");
   Render::GraphicalPipelineState state;
   //state.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
   state.SetVertexShader(Render::GraphicalPipelineState::DEFAULT_VERTEX_SHADER);
@@ -20,12 +22,13 @@ int main()
   state.GenerateInputElementDesc();
   state.CreatePipelineState("womanState");
 
-  Render::Drawable woman;
-  woman.SetMesh(Render::MeshLoader::GetMesh("girl"));
-  woman.SetGraphicalPipelineState(&state);
-  woman.CreateGPUData();
+  Render::Drawable model;
+  model.SetMesh(Render::MeshLoader::GetMesh("model"));
+  model.SetGraphicalPipelineState(&state);
+  model.CreateGPUData();
 
-  //woman.SetScale(1, -1, 1);
+  model.SetScale(.01f);
+  model.SetRotation(90, 0, 0);
 
   Render::Camera cam;;
   cam.SetPosition(0, 0, -2);
@@ -36,7 +39,7 @@ int main()
 
   float rSpeedD = 90.0f;
   float mSpeedD = 1.f;
-
+  float modelRSpeedD = 22.5f;
   while (wnd.IsOpen())
   {
     float dt = timer.Stop();
@@ -45,6 +48,7 @@ int main()
 
     float rSpeed = rSpeedD * dt;
     float mSpeed = mSpeedD * dt;
+    float modelRSpeed = modelRSpeedD * dt;
 
     if (GetAsyncKeyState('D'))
       cam.Rotate(0, rSpeed, 0);
@@ -75,8 +79,8 @@ int main()
     std::cout << "\rfor: " << cam.GetForward().ToString()
               << " pos: " << cam.GetPosition().ToString() << "up: " << cam.GetUp().ToString();
 
-
-    woman.Draw();
+    model.Rotate(0, modelRSpeed, 0, false);
+    model.Draw();
 
     gRenderer_p->EndFrame();
   }

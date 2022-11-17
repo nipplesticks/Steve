@@ -64,36 +64,49 @@ void Transform::SetOrigin(const DM::Vec3f& origin)
   myOrigin.w = 1.0f;
 }
 
-void Transform::Move(float x, float y, float z)
+void Transform::Move(float x, float y, float z, bool relative)
 {
-  Move(DM::Vec3f(x, y, z));
+  Move(DM::Vec3f(x, y, z), relative);
 }
 
-void Transform::Move(const DM::Vec3f& translation)
+void Transform::Move(const DM::Vec3f& translation, bool relative)
 {
-  SetPosition(myPosition + GetForward() * translation.z + GetUp() * translation.y + GetRight() * translation.x);
+  if (relative)
+    SetPosition(myPosition + GetForward() * translation.z + GetUp() * translation.y +
+                GetRight() * translation.x);
+  else
+    SetPosition(myPosition + translation);
 }
 
-void Transform::Rotate(float x, float y, float z)
+void Transform::Rotate(float x, float y, float z, bool relative)
 {
-  Rotate(DM::Vec3f(x, y, z));
+  Rotate(DM::Vec3f(x, y, z), relative);
 }
 
-void Transform::Rotate(const DM::Vec3f& axis)
+void Transform::Rotate(const DM::Vec3f& axis, bool relative)
 {
-  DM::Vec4f xq = GetRight();
-  DM::Vec4f yq = GetUp();
-  DM::Vec4f zq = GetForward();
+  if (relative)
+  {
+    DM::Vec4f xq = GetRight();
+    DM::Vec4f yq = GetUp();
+    DM::Vec4f zq = GetForward();
 
-  xq = DirectX::XMQuaternionRotationNormal(xq.Load(), DM::ToRad(axis.x));
-  yq = DirectX::XMQuaternionRotationNormal(yq.Load(), DM::ToRad(axis.y));
-  zq = DirectX::XMQuaternionRotationNormal(zq.Load(), DM::ToRad(axis.z));
+    xq = DirectX::XMQuaternionRotationNormal(xq.Load(), DM::ToRad(axis.x));
+    yq = DirectX::XMQuaternionRotationNormal(yq.Load(), DM::ToRad(axis.y));
+    zq = DirectX::XMQuaternionRotationNormal(zq.Load(), DM::ToRad(axis.z));
 
-  DM::Vec4f rot =
-      DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()), zq.Load());
+    DM::Vec4f rot =
+        DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()), zq.Load());
 
-  myRotation = DirectX::XMQuaternionMultiply(
-      myRotation.Load(), rot.Load());
+    myRotation = DirectX::XMQuaternionMultiply(
+        myRotation.Load(), rot.Load());
+  }
+  else
+  {
+    DM::Vec4f rotation = DirectX::XMQuaternionRotationRollPitchYaw(
+        DM::ToRad(axis.x), DM::ToRad(axis.y), DM::ToRad(axis.z));
+    myRotation.Store(DirectX::XMQuaternionMultiply(myRotation.Load(), rotation.Load()));
+  }
 }
 
 void Transform::Scale(float x, float y, float z)

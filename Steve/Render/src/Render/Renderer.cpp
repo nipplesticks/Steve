@@ -292,6 +292,8 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
   myRendertargetHeap.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
   myRendertargetHeap.Create("RendertargetHeap");
 
+  myCameraConstantbuffer.Create("CameraConstantBuffer", sizeof(CameraViewProjection));
+
   myDeferredRendertargetHeap.NumDescriptors =
       NUM_SWAP_BUFFERS * RenderTargetType::NUMBER_OF_RENDER_TARGET_TYPES;
   myDeferredRendertargetHeap.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -300,7 +302,6 @@ void Render::Renderer::_Init(HWND hwnd, uint16 width, uint16 height)
   _CreateRenderTargets(DM::Vec2u(width, height));
   _CreateDepthBuffers(DM::Vec2u(width, height));
 
-  myCameraConstantbuffer.Create("CameraConstantBuffer", sizeof(CameraViewProjection));
 
   // TODO init compute interface
 

@@ -42,7 +42,10 @@ void Render::DeferredPass::AppendRenderTargets(const std::vector<Resource*>& ren
   static uint16 swapBuffer = 0;
   gResourceDescHeap.push_back(ResourceDescriptorHeap());
   gResourceDescHeap.back().CreateAndBindResources(
-      "deferredDescHeap_" + std::to_string(swapBuffer), {}, renderTargets, {});
+      "deferredDescHeap_" + std::to_string(swapBuffer),
+      {Renderer::GetInstance()->GetCameraConstantBuffer()},
+      renderTargets,
+      {});
 }
 
 VertexBuffer* Render::DeferredPass::GetVertexBuffer()
