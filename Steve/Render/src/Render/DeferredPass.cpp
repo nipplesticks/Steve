@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Render/DeferredPass.h"
+#include "Render/Mesh/Vertex.h"
 
 using namespace Render;
 
@@ -10,18 +11,12 @@ std::vector<ResourceDescriptorHeap> DeferredPass::gResourceDescHeap;
 
 void Render::DeferredPass::Init()
 {
-  struct DeferredQuad
-  {
-    DM::Vec4f position;
-    DM::Vec2f uv;
-  };
+  VertexLight quad[] = {{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+                         {{-1.0f, 1.0f, 0.0f, 1.0f}, {0.0f, -1.0f}},
+                         {{1.0f, 1.0f, 0.0f, 1.0f}, {1.0f, -1.0f}},
+                         {{1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}}};
 
-  DeferredQuad quad[] = {{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-                         {{-1.0f, 1.0f, 0.0f, 1.0F}, {0.0f, -1.0f}},
-                         {{1.0f, 1.0f, 0.0f, 1.0F}, {1.0f, -1.0f}},
-                         {{1.0f, -1.0f, 0.0f, 1.0F}, {1.0f, 0.0f}}};
-
-  gVertexBuffer.Create("deferredVertexBuffer", sizeof(DeferredQuad), 4);
+  gVertexBuffer.Create("deferredVertexBuffer", sizeof(VertexLight), 4);
   gIndexBuffer.Create("deferredIndexBuffer", 6);
   gVertexBuffer.Update(quad);
   uint32 indices[] = {0, 1, 2, 0, 2, 3};

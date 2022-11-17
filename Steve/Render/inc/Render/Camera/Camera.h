@@ -7,7 +7,7 @@ namespace Render
   {
     View()
     {
-      fov           = 75.f;
+      fov           = 45.f;
       width         = 1280.0f;
       height        = 720.0f;
       nearPlane     = 0.1f;

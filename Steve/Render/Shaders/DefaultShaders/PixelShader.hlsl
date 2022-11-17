@@ -13,6 +13,5 @@ PixelOutput main(VS_OUT input)
   output.normal =
       float4(normalize(mul(bumpMap.Sample(aSampler, input.uv).rgb * 2.0f - 1.0f, TBN)), 0.0f);
   output.color = diffuseMap.Sample(aSampler, input.uv);
-
   return output;
 }

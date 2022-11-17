@@ -71,7 +71,7 @@ void Transform::Move(float x, float y, float z)
 
 void Transform::Move(const DM::Vec3f& translation)
 {
-  SetPosition(myPosition + translation);
+  SetPosition(myPosition + GetForward() * translation.z + GetUp() * translation.y + GetRight() * translation.x);
 }
 
 void Transform::Rotate(float x, float y, float z)
@@ -81,8 +81,19 @@ void Transform::Rotate(float x, float y, float z)
 
 void Transform::Rotate(const DM::Vec3f& axis)
 {
+  DM::Vec4f xq = GetRight();
+  DM::Vec4f yq = GetUp();
+  DM::Vec4f zq = GetForward();
+
+  xq = DirectX::XMQuaternionRotationNormal(xq.Load(), DM::ToRad(axis.x));
+  yq = DirectX::XMQuaternionRotationNormal(yq.Load(), DM::ToRad(axis.y));
+  zq = DirectX::XMQuaternionRotationNormal(zq.Load(), DM::ToRad(axis.z));
+
+  DM::Vec4f rot =
+      DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(xq.Load(), yq.Load()), zq.Load());
+
   myRotation = DirectX::XMQuaternionMultiply(
-      myRotation.Load(), DirectX::XMQuaternionRotationRollPitchYawFromVector(DM::ToRad(axis).Load()));
+      myRotation.Load(), rot.Load());
 }
 
 void Transform::Scale(float x, float y, float z)
@@ -119,7 +130,8 @@ void Transform::SetForward(float x, float y, float z)
 void Transform::SetForward(const DM::Vec3f& forward)
 {
   DM::Vec3f   defaultForward = DEFAULT_FORWARD;
-  DM::Mat3x3f rotM           = defaultForward.GetRotationFrom(forward);
+  DM::Vec3f   nFor           = forward.Normalize();
+  DM::Mat3x3f rotM           = defaultForward.GetRotationFrom(nFor);
   if (DirectX::XMMatrixIsIdentity(rotM.Load()))
   {
     SetRotation(0, 180, 0);
@@ -165,7 +177,7 @@ DM::Vec4f Transform::GetRight() const
 {
   DM::Vec3f f = GetForward();
   DM::Vec3f u = GetUp();
-  return f.Cross(u).Normalize();
+  return u.Cross(f).Normalize();
 }
 
 DM::Vec4f Transform::GetUp() const

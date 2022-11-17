@@ -13,7 +13,7 @@ namespace Render
 
   public:
     static void
-    LoadMesh(const std::string& path, const std::string& name, bool flipWindingOrder = false);
+    LoadMesh(const std::string& path, const std::string& name);
     static Mesh* GetMesh(const std::string& name);
 
   private:

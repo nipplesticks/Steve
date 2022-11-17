@@ -13,13 +13,12 @@ cbuffer cbv1 : register(b1)
 VS_OUT main(VS_IN input)
 {
   VS_OUT output;
-  output.worldPosition = mul(input.position, worldMatrices.worldMatrix);
+  output.worldPosition = mul(input.position, transpose(worldMatrices.worldMatrix));
   output.position =
-      mul(output.worldPosition, mul(cameraBuffer.view, cameraBuffer.projection));
-  output.normal = normalize(mul(input.normal, worldMatrices.worldMatrix));
-  output.tangent = normalize(mul(input.tangent, worldMatrices.worldMatrix));
-  output.bitangent = normalize(mul(input.bitangent, worldMatrices.worldMatrix));
+      mul(output.worldPosition, transpose(mul(cameraBuffer.projection, cameraBuffer.view)));
+  output.normal    = normalize(mul(input.normal, transpose(worldMatrices.worldMatrix)));
+  output.tangent   = normalize(mul(input.tangent, transpose(worldMatrices.worldMatrix)));
+  output.bitangent = normalize(mul(input.bitangent, transpose(worldMatrices.worldMatrix)));
   output.uv        = input.uv;
-
   return output;
 }

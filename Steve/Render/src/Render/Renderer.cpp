@@ -224,7 +224,6 @@ void Render::Renderer::ResourceUpdate(Resource*             resource_p,
 
   myUploadCommands.Reset();
   myUploadCommands.ResourceTransitionBarrier(resource_p, 1, D3D12_RESOURCE_STATE_COPY_DEST);
-  // TODO This returns 0, it should be the size of the buffer....
   ASSERT(UpdateSubresources(myUploadCommands.GetCommandList(),
                             resource_p->GetResource(),
                             tmpResource_p,

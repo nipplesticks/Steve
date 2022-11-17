@@ -10,22 +10,27 @@ namespace DM
 {
   using Vec2i = Vec2<int32>;
   using Vec2f = Vec2<float>;
+  using Vec2fA = __declspec(align(16))Vec2<float>;
   using Vec2u = Vec2<uint32>;
 
   using Vec3i = Vec3<int32>;
   using Vec3f = Vec3<float>;
+  using Vec3fA = __declspec(align(16))Vec3<float>;
   using Vec3u = Vec3<uint32>;
 
   using Vec4i = Vec4<int32>;
   using Vec4f = Vec4<float>;
+  using Vec4fA = __declspec(align(16))Vec4<float>;
   using Vec4u = Vec4<uint32>;
 
   using Color2 = Vec2<uint8>;
   using Color3 = Vec3<uint8>;
   using Color4 = Vec4<uint8>;
 
-  using Mat4x4f          = Mat4x4<float>;
   using Mat3x3f          = Mat3x3<float>;
+  using Mat3x3fA          = __declspec(align(64))Mat3x3<float>;
+  using Mat4x4f          = Mat4x4<float>;
+  using Mat4x4fA          = __declspec(align(64))Mat4x4<float>;
   constexpr float PI     = DirectX::XM_PI;
   constexpr float PI2    = DirectX::XM_2PI;
   constexpr float PIDIV2 = DirectX::XM_PIDIV2;

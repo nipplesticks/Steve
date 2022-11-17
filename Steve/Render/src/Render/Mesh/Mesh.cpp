@@ -31,15 +31,11 @@ uint64 Mesh::GetIndexBufferSize() const
   return myIndexBuffer.GetBufferSize();
 }
 
-void Mesh::LoadFromFile(const std::string& path, const std::string& meshName, bool flipWindingOrder)
+void Mesh::LoadFromFile(const std::string& path, const std::string& meshName)
 {
   Assimp::Importer importer;
   const aiScene*   scene = importer.ReadFile(
-      path.c_str(),
-      aiProcess_Triangulate | (aiProcess_FlipWindingOrder * flipWindingOrder) |
-          aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals | aiProcess_PreTransformVertices |
-          aiProcess_SortByPType | aiProcess_RemoveRedundantMaterials | aiProcess_GenUVCoords |
-          aiProcess_OptimizeMeshes | aiProcess_CalcTangentSpace | aiProcess_MakeLeftHanded);
+      path.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
 
   ASSERT_STR(!(!scene || !scene->HasMeshes()), "Failed to load %s\n", path.c_str());
 
@@ -173,6 +169,11 @@ void Mesh::SetVertices(void*                      vertices,
                        uint64                     vertexSize)
 {
   myIndices = indices;
+  myNumIndices = indices.size();
+  myNumVertices = vertexCount;
+  myVertexSize  = vertexSize;
+  myVertices = malloc(vertexCount * vertexSize);
+
   memcpy(myVertices, vertices, vertexSize * vertexCount);
 }
 

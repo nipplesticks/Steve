@@ -16,8 +16,7 @@ void Resource::Init(Resource_Type      resourceType,
   myDimention.x      = width;
   myDimention.y      = height;
   myDimention.z      = depth;
-  myBufferSize       = (width * height * depth);
-  myElementSize      = (uint32)myBufferSize / nrOfElements;
+  myElementSize      = (uint32)width / nrOfElements;
   myFormat           = format;
   myNumberOfElements = nrOfElements;
 
@@ -38,6 +37,7 @@ void Resource::Init(Resource_Type      resourceType,
   if (resourceType == Resource_Type::ConstantBuffer ||
       resourceType == Resource_Type::StructuredBuffer)
     width = AlignAs256(width);
+  myBufferSize       = (width * height * depth);
   desc.Width            = width;
   desc.Height           = height;
   desc.DepthOrArraySize = depth;
@@ -193,8 +193,8 @@ void Resource::Init(const std::string&     name,
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT footPrint  = {};
   Device::GetDevice()->GetCopyableFootprints(
       &resDesc, 0, 1, 0, &footPrint, &numRows, &rowSize, &bufferSize);
-  myBufferSize = bufferSize;
-  //if (myResourceType == Resource_Type::Texture2D)
+  if (myResourceType == Resource_Type::Texture2D)
+    myBufferSize = bufferSize;
   myRowPitch     = (uint64)rowSize;
   myNumberOfRows = numRows;
 }

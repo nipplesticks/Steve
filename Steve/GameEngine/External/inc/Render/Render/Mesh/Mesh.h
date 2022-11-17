@@ -15,7 +15,7 @@ namespace Render
     const uint64& GetVertexSize() const;
     uint64        GetIndexBufferSize() const;
 
-    void LoadFromFile(const std::string& path, const std::string& meshName, bool flipWindingOrder = false);
+    void LoadFromFile(const std::string& path, const std::string& meshName);
     void SetVertices(void*                      vertices,
                      const std::vector<uint32>& indices,
                      uint64                     vertexCount,
