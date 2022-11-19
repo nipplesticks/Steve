@@ -33,15 +33,12 @@ namespace Render
 
     struct Mouse
     {
+      DM::Vec2i MousePosition;
       union
       {
-        DM::Vec2i MousePosition;
         int       WheelDelta;
-        union
-        {
-          DM::Vec2i MouseDelta;
-          uint32    MouseButton;
-        };
+        DM::Vec2i MouseDelta;
+        uint32    MouseButton;
       };
     };
 
@@ -57,7 +54,7 @@ namespace Render
         struct
         {
           DM::Vec2u NewWindowSize;
-          bool isFullscreen;
+          bool      isFullscreen;
         };
         DM::Vec2i Position;
       };
@@ -75,8 +72,7 @@ namespace Render
       };
     };
 
-
-   class Subscriber
+    class Subscriber
     {
     public:
       Subscriber() = default;
@@ -87,7 +83,7 @@ namespace Render
       void UnSubscribe(Event::Type eventType);
       void UnSubscribeAll();
 
-      Subscriber&  operator                                   =(const Subscriber& other);
+      Subscriber&  operator=(const Subscriber& other);
       virtual void HandleEvent(const Event::Message& message) = 0;
 
     private:

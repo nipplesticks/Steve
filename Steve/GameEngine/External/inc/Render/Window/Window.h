@@ -22,6 +22,7 @@ namespace Render
     HWND GetHwnd() const;
 
     DM::Vec2u GetSize() const;
+    void      SetMousePosition(const DM::Vec2i& mousePosition);
 
   private:
     std::string myTitle;

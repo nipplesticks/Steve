@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Window/Window.h"
+#include <windowsx.h>
 
 using namespace Render;
 
@@ -43,7 +44,6 @@ Window::Window(uint16 x, uint16 y, const std::string& title)
 
   std::wstring wndTitle(myTitle.begin(), myTitle.end());
 
-
   myHwnd = CreateWindowEx(exStyle,
                           CLASS_NAME,
                           wndTitle.data(),
@@ -57,7 +57,7 @@ Window::Window(uint16 x, uint16 y, const std::string& title)
                           windowClass.hInstance,
                           this);
 
-  POINT position = {80, 80};
+  POINT position = {300, 80};
 
   AdjustWindowRectEx(&rc, style, FALSE, exStyle);
 
@@ -131,9 +131,12 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   {
+    POINT p;
+    p.x = GET_X_LPARAM(aLParam);
+    p.y = GET_Y_LPARAM(aLParam);
     m.EventType                  = Event::MousePressed;
-    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
-    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MousePosition.x = p.x;
+    m.MouseEvent.MousePosition.y = p.y;
     m.MouseEvent.MouseButton     = aWParam & 0xffff;
 
     /*if (Window::IMGUI_READY)
@@ -150,9 +153,12 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   case WM_LBUTTONUP:
   case WM_MBUTTONUP:
   {
+    /*POINT p;
+    p.x = GET_X_LPARAM(aLParam);
+    p.y = GET_Y_LPARAM(aLParam);*/
     m.EventType                  = Event::MouseReleased;
-    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
-    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MousePosition.x = GET_X_LPARAM(aLParam);
+    m.MouseEvent.MousePosition.y = GET_Y_LPARAM(aLParam);
     m.MouseEvent.MouseButton     = aWParam & 0xffff;
 
     /*if (Window::IMGUI_READY)
@@ -167,10 +173,14 @@ bool Window::ProcessEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
   }
   case WM_MOUSEMOVE:
   {
+    POINT p;
+    p.x = GET_X_LPARAM(aLParam);
+    p.y = GET_Y_LPARAM(aLParam);
     m.EventType                  = Event::MouseMoved;
-    m.MouseEvent.MousePosition.x = LOWORD(aLParam);
-    m.MouseEvent.MousePosition.y = HIWORD(aLParam);
+    m.MouseEvent.MousePosition.x = p.x;
+    m.MouseEvent.MousePosition.y = p.y;
     m.MouseEvent.MouseDelta      = m.MouseEvent.MousePosition - myLastMousePosition;
+    myLastMousePosition          = m.MouseEvent.MousePosition;
     Event::EventHandler::PushMessage(m);
     return true;
   }
@@ -212,4 +222,13 @@ DM::Vec2u Window::GetSize() const
   GetWindowRect(myHwnd, &rc);
 
   return DM::Vec2u(rc.right - rc.left, rc.bottom - rc.top);
+}
+
+void Render::Window::SetMousePosition(const DM::Vec2i& mousePosition)
+{
+  POINT p;
+  p.x = mousePosition.x;
+  p.y = mousePosition.y;
+  ClientToScreen(myHwnd, &p);
+  SetCursorPos(p.x, p.y);
 }
